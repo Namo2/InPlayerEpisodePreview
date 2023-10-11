@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>InPlayerEpisodePreview</title>
+</head>
+<body>
+    <div data-role="page" class="page type-interior pluginConfigurationPage inPlayerEpisodePreviewConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox,emby-linkbutton">
+
+        <div data-role="content">
+            <div class="content-primary">
+
+                <form class="inPlayerEpisodePreviewConfigurationForm">
+                    <br />
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="chkInjectScript" />
+                            <span>Inject client script into jellyfin-web</span>
+                        </label>
+                        <div class="fieldDescription checkboxFieldDescription">If on, the plugin will attempt to inject the client-side script tag in jellyfin-web that allows for smooth previews.</div>
+                        <div class="fieldDescription checkboxFieldDescription">Without this, all this plugin does is providing a data endpoint</div>
+                        <div class="fieldDescription checkboxFieldDescription"><strong>Especially ideal for Docker/combo installs. Recommended to be kept on.</strong></div>
+                    </div>
+
+                    <br />
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save</span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+                let pluginId = "73833d5f-0bcb-45dc-ab8b-7ce668f4345d";
+
+                $('.jellyscrubConfigurationPage').on('pageshow', () => {
+                    let page = this;
+
+                    Dashboard.showLoadingMsg();
+
+                    ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                        page.querySelector('#chkInjectScript').checked = config.InjectClientScript;
+
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+                $('.jellyscrubConfigurationForm').off('submit.plugin').on('submit.plugin', () => {
+                    Dashboard.showLoadingMsg();
+
+                    let form = this;
+
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.InjectClientScript = form.querySelector('#chkInjectScript').checked;
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(Dashboard.processPluginConfigurationUpdateResult);
+                    });
+
+                    return false;
+                });
+        </script>
+    </div>
+</body>
+</html>

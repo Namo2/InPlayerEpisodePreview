@@ -274,10 +274,10 @@ dist
 BenchmarkDotNet.Artifacts
 
 # Ignore web artifacts from native builds
-web/
-web-src.*
-MediaBrowser.WebDashboard/jellyfin-web
-apiclient/generated
+node_modules/
+
+# Ignore JetBrains Rider run configs
+.run/
 
 # Omnisharp crash logs
 mono_crash.*.json

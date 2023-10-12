@@ -56,7 +56,7 @@ public class InPlayerPreviewController : ControllerBase
         EncodingHelper encodingHelper)
     {
         _assembly = Assembly.GetExecutingAssembly();
-        _playerPreviewScriptPath = GetType().Namespace + ".inPlayerPreview.js";
+        _playerPreviewScriptPath = $"{InPlayerEpisodePreviewPlugin.Instance?.GetType().Namespace}.Web.inPlayerPreview.js";
 
         _libraryManager = libraryManager;
         _itemRepository = itemRepository;
@@ -85,6 +85,7 @@ public class InPlayerPreviewController : ControllerBase
     public ActionResult GetClientScript()
     {
         var scriptStream = _assembly.GetManifestResourceStream(_playerPreviewScriptPath);
+        _logger.LogError("InPlayerEpisodePreviewPlugin: {0}", _playerPreviewScriptPath);
         if (scriptStream == null)
             return NotFound();
 

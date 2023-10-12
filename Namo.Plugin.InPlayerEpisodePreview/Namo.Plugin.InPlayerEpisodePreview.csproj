@@ -15,6 +15,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
-    <EmbeddedResource Include="Api\inPlayerPreview.js" />
+    <EmbeddedResource Include="Web\inPlayerPreview.js" />
   </ItemGroup>
 </Project>

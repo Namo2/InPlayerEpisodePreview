@@ -15,6 +15,21 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
+    <None Remove="Web\inPlayerPreview.js" />
     <EmbeddedResource Include="Web\inPlayerPreview.js" />
+    <None Remove="Web\inPlayerPreviewStyle.css" />
+    <EmbeddedResource Include="Web\inPlayerPreviewStyle.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(ProjectDir)Web\inPlayerPreview.js"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="web-client\extension\inPlayerPreview.js" />
+    <None Include="$(ProjectDir)JMPClient-Stubs\inPlayerPreviewPlugin.js"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="web-client\extension\inPlayerPreviewPlugin.js" />
+    <None Include="$(ProjectDir)JMPClient-Stubs\nativeshell.js"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="web-client\extension\nativeshell.js" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,44 @@
+﻿.selectedListItem {
+    height: 22vh;
+}
+
+.previewListItem {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.previewListItemContent {
+    width: 100%;
+    height: 16.5vh;
+    position: relative;
+    top: 0.5em
+}
+
+.previewPopup {
+    animation: 140ms ease-out 0s 1 normal both running scaleup;
+    position: fixed;
+    margin: 0px;
+    bottom: 1.5vh;
+    left: 68vw;
+    width: 30vw;
+}
+
+.previewPopupTitle {
+    height: 4vh;
+}
+
+.previewPopupScroller {
+    height: 60vh;
+}
+
+.previewEpisodeImageCard {
+    width: 12vw;
+    height: 15vh;
+    left: 1em;
+}
+
+.previewEpisodeDescription {
+    position: absolute;
+    right: 1em;
+    left: 13.5vw;
+}

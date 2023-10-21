@@ -5,4 +5,5 @@ export interface ProgramData {
     activeMediaSourceId: string;
     activeSeasonIndex: number;
     seasons: Season[];
+    isSeries: boolean;
 }

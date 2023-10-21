@@ -42,6 +42,7 @@ const authService: AuthService = isJMPClient ? new JMPAuthService(ServerConnecti
 const programDataStore: ProgramDataStore = new ProgramDataStore();
 // @ts-ignore
 const dataLoader: DataLoader = isJMPClient ? new JMPDataLoader(authService, programDataStore, ServerConnections, window) : new WebDataLoader(authService, programDataStore);
+
 // @ts-ignore
 isJMPClient ? new JMPDataFetcher(programDataStore, dataLoader, events, playbackManager) : new WebDataFetcher(programDataStore, dataLoader, authService, logger)
 
@@ -57,7 +58,7 @@ function viewShowEventHandler(): void {
         // @ts-ignore
         currentRoutePath = Emby.Page.currentRouteInfo.path;
 
-    if (videoPaths.includes(currentRoutePath))
+    if (videoPaths.includes(currentRoutePath) && programDataStore.isSeries)
         loadVideoView();
     else if (videoPaths.includes(previousRoutePath))
         unloadVideoView();

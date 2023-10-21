@@ -8,37 +8,45 @@ export class ProgramDataStore {
         // init the _programData field with empty values
         this.clear();
     }
-    
-    public getUserId(): string {
+
+    public get userId(): string {
         return this._programData.userId;
     }
-    
-    public getActiveMediaSourceId(): string {
-        return this._programData.activeMediaSourceId;
-    }
-    
-    public getActiveSeasonIndex(): number {
-        return this._programData.activeSeasonIndex;
-    }
-    
-    public getSeasons(): Season[] {
-        return this._programData.seasons;
-    }
-    
-    public setUserId(userId: string): void {
+
+    public set userId(userId: string) {
         this._programData.userId = userId;
     }
     
-    public setActiveMediaSourceId(activeMediaSourceId: string): void {
+    public get activeMediaSourceId(): string {
+        return this._programData.activeMediaSourceId;
+    }
+
+    public set activeMediaSourceId(activeMediaSourceId: string) {
         this._programData.activeMediaSourceId = activeMediaSourceId;
     }
     
-    public setActiveSeasonIndex(activeSeasonIndex: number): void {
+    public get activeSeasonIndex(): number {
+        return this._programData.activeSeasonIndex;
+    }
+
+    public set activeSeasonIndex(activeSeasonIndex: number) {
         this._programData.activeSeasonIndex = activeSeasonIndex;
     }
     
-    public setSeasons(seasons: Season[]): void {
+    public get seasons(): Season[] {
+        return this._programData.seasons;
+    }
+
+    public set seasons(seasons: Season[]) {
         this._programData.seasons = seasons;
+    }
+    
+    public get isSeries(): boolean {
+        return this._programData.isSeries;
+    }
+
+    public set isSeries(isSeries: boolean) {
+        this._programData.isSeries = isSeries;
     }
 
     public clear() {
@@ -47,6 +55,7 @@ export class ProgramDataStore {
             activeMediaSourceId: '',
             activeSeasonIndex: 0,
             seasons: [],
+            isSeries: false
         };
     }
 }

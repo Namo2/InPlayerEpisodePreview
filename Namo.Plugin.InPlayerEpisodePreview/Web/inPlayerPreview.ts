@@ -12,6 +12,9 @@ import {WebDataLoader} from "./Services/DataLoader/WebDataLoader";
 import {DialogBackdropContainerTemplate} from "./Components/DialogBackdropContainerTemplate";
 import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
 import {EpisodeElementTemplate} from "./Components/EpisodeElementTemplate";
+import {JMPPlaybackHandler} from "./Services/PlaybackHandler/JMPPlaybackHandler";
+import {PlaybackHandler} from "./Services/PlaybackHandler/PlaybackHandler";
+import {WebPlaybackHandler} from "./Services/PlaybackHandler/WebPlaybackHandler";
 
 let isJMPClient = false;
 
@@ -37,7 +40,8 @@ document.body.appendChild(inPlayerPreviewStyle);
 // const cssInjector: CssInjector = new CssInjector();
 // cssInjector.injectCss('/Web/inPlayerPreviewStyle.css', document.body);
 
-// @ts-ignore: ServerConnections is defined by JMP
+
+// @ts-ignore
 const authService: AuthService = isJMPClient ? new JMPAuthService(ServerConnections, window) : new WebAuthService();
 const programDataStore: ProgramDataStore = new ProgramDataStore();
 // @ts-ignore
@@ -45,6 +49,9 @@ const dataLoader: DataLoader = isJMPClient ? new JMPDataLoader(authService, prog
 
 // @ts-ignore
 isJMPClient ? new JMPDataFetcher(programDataStore, dataLoader, events, playbackManager) : new WebDataFetcher(programDataStore, dataLoader, authService, logger)
+
+// @ts-ignore
+let playbackHandler: PlaybackHandler = isJMPClient ? new JMPPlaybackHandler(playbackManager) : new WebPlaybackHandler();
 
 const videoPaths = ['playback/video/index.html', '/video'];
 let previousRoutePath = null;
@@ -89,7 +96,7 @@ function viewShowEventHandler(): void {
 
             let episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
             for (let i = 0; i < episodesForCurrentSeason.length; i++) {
-                let episode = new EpisodeElementTemplate(contentDiv, i, episodesForCurrentSeason[i], dataLoader);
+                let episode = new EpisodeElementTemplate(contentDiv, i, episodesForCurrentSeason[i], dataLoader, playbackHandler);
                 episode.render((e) => {
                     // hide episode content for all existing episodes in the preview list
                     document.querySelectorAll(".previewListItemContent").forEach((element) => {

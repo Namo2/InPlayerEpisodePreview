@@ -6,14 +6,8 @@ import {AuthService} from "../AuthService/AuthService";
 export class JMPDataLoader extends DataLoader {
     private _apiClient: any;
 
-    constructor(protected authService: AuthService, protected programDataStore: ProgramDataStore, serverConnections: any, window: any) {
+    constructor(protected authService: AuthService, protected programDataStore: ProgramDataStore, private serverConnections: any, private window: any) {
         super(authService, programDataStore);
-
-        this._apiClient = serverConnections
-            ? serverConnections.currentApiClient()
-            : window.ApiClient;
-        
-        this._baseUrl = this.getServerUrl();
     }
 
     /*
@@ -21,5 +15,15 @@ export class JMPDataLoader extends DataLoader {
      */
     private getServerUrl() {
         return this._apiClient.serverAddress() ?? '';
+    }
+    
+    getBaseUrl(): string {
+        this._apiClient = this.serverConnections
+            ? this.serverConnections.currentApiClient() // @ts-ignore
+            : this.window.ApiClient;
+
+        this._baseUrl = this.getServerUrl();
+        
+        return this._baseUrl;
     }
 }

@@ -2,15 +2,11 @@
 
 export class JMPAuthService implements AuthService {
     private readonly _authHeader: string = 'Authorization';
-    private readonly _apiClient: any;
+    private _apiClient: any;
     private _authHeaderValue: string;
     
-    constructor(serverConnections: any, window: any) {
-        this._apiClient = serverConnections
-            ? serverConnections.currentApiClient()
-            : window.ApiClient;
-        
-        this.setAuthHeaderValue(`MediaBrowser Token=${this._apiClient.accessToken()}`)
+    constructor(private serverConnections: any, private window: any) {
+
     }
 
     public getAuthHeader(): string {
@@ -26,6 +22,12 @@ export class JMPAuthService implements AuthService {
     }
 
     public addAuthHeaderIntoHttpRequest(request: XMLHttpRequest): void {
+        this._apiClient = this.serverConnections
+            ? this.serverConnections.currentApiClient() // @ts-ignore
+            : this.window.ApiClient;
+
+        this.setAuthHeaderValue(`MediaBrowser Token=${this._apiClient.accessToken()}`)
+        
         request.setRequestHeader(this._authHeader, this.getAuthHeaderValue());
     }
     

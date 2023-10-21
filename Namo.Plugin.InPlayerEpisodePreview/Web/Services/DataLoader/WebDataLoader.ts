@@ -6,4 +6,8 @@ export class WebDataLoader extends DataLoader {
     constructor(protected authService: AuthService, protected programDataStore: ProgramDataStore) {
         super(authService, programDataStore);
     }
+    
+    getBaseUrl(): string {
+        return '';
+    }
 }

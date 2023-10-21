@@ -36,7 +36,6 @@ document.body.appendChild(inPlayerPreviewStyle);
 // const cssInjector: CssInjector = new CssInjector();
 // cssInjector.injectCss('/Web/inPlayerPreviewStyle.css', document.body);
 
-// authService
 // @ts-ignore: ServerConnections is defined by JMP
 const authService: AuthService = isJMPClient ? new JMPAuthService(ServerConnections, window) : new WebAuthService();
 const programDataStore: ProgramDataStore = new ProgramDataStore();
@@ -67,29 +66,29 @@ function viewShowEventHandler(): void {
 
     function loadVideoView(): void {
         // add preview button to the page
-        // let previewButtonContainer = document.createElement('div');
-        // document.getElementsByClassName('buttons')[0].querySelector('.osdTimeText').after(previewButtonContainer);
         let parent = document.querySelector('.buttons').lastElementChild.parentElement;
         let index = Array.prototype.indexOf.call(parent.children, document.querySelector('.osdTimeText'));
         let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
-        previewButton.render(() => {
+        previewButton.render(previewButtonClickHandler);
+        
+        function previewButtonClickHandler() {
             let dialogBackdrop = new DialogBackdropContainerTemplate(document.body, -1);
             dialogBackdrop.render(() => {});
-            
+
             let dialogContainer = new DialogContainerTemplate(document.body, -1);
             dialogContainer.render(() => {
                 document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()));
                 document.body.removeChild(document.getElementById(dialogContainer.getElementId()));
             });
-            
+
             let contentDiv = document.getElementById('popupContentContainer');
             contentDiv.innerHTML = ""; // remove old content
 
-            document.getElementById('popupTitleContainer').querySelector('.actionSheetTitle').textContent = programDataStore.getSeasons()[programDataStore.getActiveSeasonIndex()].seasonName;
-            
-            let episodesForCurrentSeason = programDataStore.getSeasons()[programDataStore.getActiveSeasonIndex()].episodes;
+            document.getElementById('popupTitleContainer').querySelector('.actionSheetTitle').textContent = programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName;
+
+            let episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
             for (let i = 0; i < episodesForCurrentSeason.length; i++) {
-                let episode = new EpisodeElementTemplate(contentDiv, i, episodesForCurrentSeason[i]);
+                let episode = new EpisodeElementTemplate(contentDiv, i, episodesForCurrentSeason[i], dataLoader);
                 episode.render((e) => {
                     // hide episode content for all existing episodes in the preview list
                     document.querySelectorAll(".previewListItemContent").forEach((element) => {
@@ -101,24 +100,24 @@ function viewShowEventHandler(): void {
                     let episodeContainer = document.querySelector(`[data-id="${episodesForCurrentSeason[i].IndexNumber}"]`).querySelector('.previewListItemContent');
                     episodeContainer.classList.remove('hide');
                     episodeContainer.classList.add('selectedListItem');
-                    
+
                     e.stopPropagation();
                 });
-                
-                if (episodesForCurrentSeason[i].Id === programDataStore.getActiveMediaSourceId()) {
+
+                if (episodesForCurrentSeason[i].Id === programDataStore.activeMediaSourceId) {
                     let episodeNode = document.querySelector(`[data-id="${episodesForCurrentSeason[i].IndexNumber}"]`).querySelector('.previewListItemContent');
                     episodeNode.classList.remove('hide');
                     episodeNode.classList.add('selectedListItem');
                 }
             }
-            
-            let seasons = programDataStore.getSeasons();
-            seasons[programDataStore.getActiveSeasonIndex()].episodes = episodesForCurrentSeason;
-            programDataStore.setSeasons(seasons);
+
+            let seasons = programDataStore.seasons;
+            seasons[programDataStore.activeSeasonIndex].episodes = episodesForCurrentSeason;
+            programDataStore.seasons = seasons;
 
             // scroll to the episode that is currently playing
             contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView();
-        });
+        }
     }
 
     function unloadVideoView(): void {

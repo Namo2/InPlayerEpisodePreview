@@ -14,7 +14,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
                 class="listItem listItem-button actionSheetMenuItem emby-button previewListItem" 
                 is="emby-button" 
                 data-id="${this.episode.IndexNumber}">
-                <button class="listItem" type="button">
+                <button class="listItem previewEpisodeTitle" type="button">
                     <span>${this.episode.IndexNumber}</span>
                     <div class="listItemBody actionsheetListItemBody">
                         <span class="actionSheetItemText">${this.episode.Name}</span>

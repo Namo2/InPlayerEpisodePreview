@@ -1,8 +1,9 @@
 ﻿import {BaseTemplate} from "./BaseTemplate";
 import {Episode} from "../Models/Episode";
+import {DataLoader} from "../Services/DataLoader/DataLoader";
 
 export class EpisodeElementTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private dataLoader: DataLoader) {
         super(container, positionAfterIndex);
         this.setElementId(`episode-${episode.IndexNumber}`);
     }
@@ -22,7 +23,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
                 <div class="previewListItemContent hide">
                     <button class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast previewEpisodeImageCard" 
                             data-action="link" 
-                            style="background-image: url('../Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}');">
+                            style="background-image: url('${this.dataLoader.getBaseUrl()}/Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}');">
                     </button>
                     <span class="previewEpisodeDescription">${this.episode.Description}</span>
                 </div>

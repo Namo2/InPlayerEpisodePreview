@@ -10,67 +10,46 @@ export class WebDataFetcher extends DataFetcher {
 
         const {fetch: originalFetch} = window;
         window.fetch = async (...args) => {
-            // let [resource, config] = args;
             let resource: URL = args[0] as URL;
             let config: RequestInit = args[1];
-
+            
             if (config) {
                 let auth = config.headers[this.authService.getAuthHeader()];
                 this.authService.setAuthHeaderValue(auth ? auth : '');
             }
-
+            
             this.logger.debug(`Fetching data`);
             const response = await originalFetch(resource, config);
 
             let url = new URL(resource);
-            let urlParts = url.pathname.split('/');
-            let urlDictionary = sortUrlPartsIntoDictionary(urlParts.slice(1));
-
-            for (const key of Object.keys(urlDictionary)) {
-                // save the userId for later use
-                if (!this.getProgramDataStore().getUserId() && key === 'Users') {
-                    this.getProgramDataStore().setUserId(urlDictionary[key]);
-                }
-
-                if (key === 'PlaybackInfo') {
-                    this.getProgramDataStore().setActiveMediaSourceId(urlDictionary['Items']);
-                    continue;
-                }
-
-                if (key === 'Items') {
-                    let handleResponseFunction = (data) => handleItemResponse(data);
-                    if (!urlDictionary[key])
-                        handleResponseFunction = (data) => this.saveEpisodeData(data);
-
-                    response.clone().json().then(handleResponseFunction);
-                    continue;
-                }
-
-                if (key === 'Episodes') {
-                    response.clone().json().then((data) => this.saveEpisodeData(data));
-                }
+            let urlPathname = url.pathname;
+            
+            if (urlPathname.includes('PlaybackInfo')) {
+                this.logger.debug('Received PlaybackInfo');
+                
+                // save the media id of the currently played video
+                this.getProgramDataStore().activeMediaSourceId = extractKeyFromString(urlPathname, 'Items/', '/');
+                
+            } else if (urlPathname.includes('Episodes')) {
+                this.logger.debug('Received Episodes');
+                
+                this.getProgramDataStore().userId = extractKeyFromString(url.search, 'UserId=', '&');
+                response.clone().json().then((data) => this.saveEpisodeData(data));
+                
+            } else if (urlPathname.includes('Items') && url.search.includes('ParentId')) {
+                this.logger.debug('Received Episode Items');
+                
+                this.getProgramDataStore().userId = extractKeyFromString(urlPathname, 'Users/', '/');
+                response.clone().json().then((data) => this.saveEpisodeData(data));
             }
 
             return response;
 
-            function sortUrlPartsIntoDictionary(urlParts) {
-                let urlPartsDictionary = {};
-                for (let i = 0; i < urlParts.length; i++) {
-                    if (i % 2 === 0)
-                        urlPartsDictionary[urlParts[i]] = urlParts[i + 1];
-                }
+            function extractKeyFromString(searchString: string, startString: string, endString: string): string {
+                let startIndex = searchString.indexOf(startString) + startString.length;
+                let endIndex = searchString.indexOf(endString, startIndex);
 
-                return urlPartsDictionary;
-            }
-
-            function handleItemResponse(data) {
-                if (data.Type === 'Movie') {
-                    document.getElementById('popupPreviewButton').classList.add('hide');
-                    logger.debug(`Found movie -- hiding preview button`)
-                } else if (data.Type === 'Series') {
-                    document.getElementById('popupPreviewButton').classList.remove('hide');
-                    logger.debug(`Found series -- showing preview button`)
-                }
+                return searchString.substring(startIndex, endIndex);
             }
         };
     }

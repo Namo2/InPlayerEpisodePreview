@@ -12,8 +12,20 @@ export class DataFetcher {
     protected getProgramDataStore(): ProgramDataStore {
         return this.programDataStore;
     }
+
+    public checkIfDataIsEpisodeData(episodeData: EpisodeDto): boolean {
+        return episodeData 
+            && episodeData.Items 
+            && episodeData.Items.length > 0 
+            && episodeData.Items[0].Type !== 'Movie';
+    }
     
     public saveEpisodeData(episodeData: EpisodeDto): void {
+        if (!this.checkIfDataIsEpisodeData(episodeData))
+            return;
+        
+        this.programDataStore.isSeries = true;
+        
         // get all different seasonIds
         let seasonIds: Set<string> = new Set<string> (episodeData.Items.map((episode: Episode) => episode.SeasonId))
 
@@ -41,10 +53,13 @@ export class DataFetcher {
             });
             
             seasons.push(season);
+            if (!season.episodes.every((episode: Episode) => episode.Id !== this.programDataStore.activeMediaSourceId))
+                this.programDataStore.activeSeasonIndex = seasons.length - 1;
+            
             value = iterator.next();
         }
-        this.programDataStore.setSeasons(seasons);
-
+        this.programDataStore.seasons = seasons;
+        
         function groupBy<T>(arr: T[], fn: (item: T) => any) {
             return arr.reduce<Record<string, T[]>>((prev, curr) => {
                 const groupKey = fn(curr);

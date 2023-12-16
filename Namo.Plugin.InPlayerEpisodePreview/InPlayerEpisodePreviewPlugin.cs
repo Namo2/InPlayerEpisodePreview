@@ -21,7 +21,7 @@ public class InPlayerEpisodePreviewPlugin : BasePlugin<PluginConfiguration>, IHa
     public override Guid Id => Guid.Parse("73833d5f-0bcb-45dc-ab8b-7ce668f4345d");
 
     /// <inheritdoc />
-    public override string Description => "Smooth mouse-over video scrubbing previews.";
+    public override string Description => "Adds episode preview functionality to Jellyfin.";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InPlayerEpisodePreviewPlugin"/> class.

@@ -40,6 +40,7 @@ export interface Episode {
 }
 
 export interface UserData {
+    PlayedPercentage?: number
     PlaybackPositionTicks: number
     PlayCount: number
     IsFavorite: boolean

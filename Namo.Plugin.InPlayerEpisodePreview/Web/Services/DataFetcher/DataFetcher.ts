@@ -51,6 +51,7 @@ export class DataFetcher {
                 
                 return episode;
             });
+            season.episodes.sort((a: Episode, b: Episode) => a.IndexNumber - b.IndexNumber);
             
             seasons.push(season);
             if (!season.episodes.every((episode: Episode) => episode.Id !== this.programDataStore.activeMediaSourceId))

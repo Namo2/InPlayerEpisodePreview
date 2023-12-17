@@ -19,16 +19,4 @@
     <None Remove="Web\inPlayerPreview.js" />
     <EmbeddedResource Include="Web\inPlayerPreview.js" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Include="$(ProjectDir)Web\inPlayerPreview.js"
-          CopyToOutputDirectory="PreserveNewest"
-          Link="web-client\extension\inPlayerPreview.js" />
-    <None Include="$(ProjectDir)JMPClient-Stubs\inPlayerPreviewPlugin.js"
-          CopyToOutputDirectory="PreserveNewest"
-          Link="web-client\extension\inPlayerPreviewPlugin.js" />
-    <None Include="$(ProjectDir)JMPClient-Stubs\nativeshell.js"
-          CopyToOutputDirectory="PreserveNewest"
-          Link="web-client\extension\nativeshell.js" />
-  </ItemGroup>
 </Project>

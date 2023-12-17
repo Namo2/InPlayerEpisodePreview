@@ -11,10 +11,11 @@ import {JMPDataLoader} from "./Services/DataLoader/JMPDataLoader";
 import {WebDataLoader} from "./Services/DataLoader/WebDataLoader";
 import {DialogBackdropContainerTemplate} from "./Components/DialogBackdropContainerTemplate";
 import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
-import {EpisodeElementTemplate} from "./Components/EpisodeElementTemplate";
 import {JMPPlaybackHandler} from "./Services/PlaybackHandler/JMPPlaybackHandler";
 import {PlaybackHandler} from "./Services/PlaybackHandler/PlaybackHandler";
 import {WebPlaybackHandler} from "./Services/PlaybackHandler/WebPlaybackHandler";
+import {ListElementFactory} from "./ListElementFactory";
+import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 
 let isJMPClient = false;
 
@@ -39,7 +40,6 @@ inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {position: absol
 document.body.appendChild(inPlayerPreviewStyle);
 // const cssInjector: CssInjector = new CssInjector();
 // cssInjector.injectCss('/Web/inPlayerPreviewStyle.css', document.body);
-
 
 // @ts-ignore
 const authService: AuthService = isJMPClient ? new JMPAuthService(ServerConnections, window) : new WebAuthService();
@@ -80,10 +80,10 @@ function viewShowEventHandler(): void {
         previewButton.render(previewButtonClickHandler);
         
         function previewButtonClickHandler() {
-            let dialogBackdrop = new DialogBackdropContainerTemplate(document.body, -1);
-            dialogBackdrop.render(() => {});
+            let dialogBackdrop = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1);
+            dialogBackdrop.render();
 
-            let dialogContainer = new DialogContainerTemplate(document.body, -1);
+            let dialogContainer = new DialogContainerTemplate(document.body, document.body.children.length - 1);
             dialogContainer.render(() => {
                 document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()));
                 document.body.removeChild(document.getElementById(dialogContainer.getElementId()));
@@ -92,37 +92,25 @@ function viewShowEventHandler(): void {
             let contentDiv = document.getElementById('popupContentContainer');
             contentDiv.innerHTML = ""; // remove old content
 
-            document.getElementById('popupTitleContainer').querySelector('.actionSheetTitle').textContent = programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName;
+            let popupTitle = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1);
+            popupTitle.render((e: MouseEvent) => {
+                popupTitle.setVisible(false);
+                let contentDiv = document.getElementById('popupContentContainer');
+
+                // delete episode content for all existing episodes in the preview list;
+                contentDiv.innerHTML = "";
+
+                let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore, isJMPClient);
+                listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle);
+
+                e.stopPropagation();
+            });
+            popupTitle.setText(programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName);
 
             let episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
-            for (let i = 0; i < episodesForCurrentSeason.length; i++) {
-                let episode = new EpisodeElementTemplate(contentDiv, i, episodesForCurrentSeason[i], dataLoader, playbackHandler);
-                episode.render((e) => {
-                    // hide episode content for all existing episodes in the preview list
-                    document.querySelectorAll(".previewListItemContent").forEach((element) => {
-                        element.classList.add('hide');
-                        element.classList.remove('selectedListItem');
-                    });
-
-                    // show episode content for the selected episode
-                    let episodeContainer = document.querySelector(`[data-id="${episodesForCurrentSeason[i].IndexNumber}"]`).querySelector('.previewListItemContent');
-                    episodeContainer.classList.remove('hide');
-                    episodeContainer.classList.add('selectedListItem');
-
-                    e.stopPropagation();
-                });
-
-                if (episodesForCurrentSeason[i].Id === programDataStore.activeMediaSourceId) {
-                    let episodeNode = document.querySelector(`[data-id="${episodesForCurrentSeason[i].IndexNumber}"]`).querySelector('.previewListItemContent');
-                    episodeNode.classList.remove('hide');
-                    episodeNode.classList.add('selectedListItem');
-                }
-            }
-
-            let seasons = programDataStore.seasons;
-            seasons[programDataStore.activeSeasonIndex].episodes = episodesForCurrentSeason;
-            programDataStore.seasons = seasons;
-
+            let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore, isJMPClient);
+            listElementFactory.createEpisodeElements(episodesForCurrentSeason, contentDiv);
+            
             // scroll to the episode that is currently playing
             contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView();
         }

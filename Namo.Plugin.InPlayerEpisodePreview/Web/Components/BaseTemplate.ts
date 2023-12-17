@@ -21,8 +21,12 @@ export abstract class BaseTemplate {
     public getElementId(): string {
         return this.elementId;
     }
+    
+    public getElement(): HTMLElement {
+        return this.getContainer().querySelector(`#${this.getElementId()}`);
+    }
 
-    abstract getTemplate(): string;
+    abstract getTemplate(...clickHandlers: Function[]): string;
 
     abstract render(...clickHandlers: Function[]): void;
 
@@ -35,17 +39,17 @@ export abstract class BaseTemplate {
         
         // Add Element if container is empty
         if (!this.getContainer().hasChildNodes()) {
-            this.getContainer().innerHTML = this.getTemplate();
-            return this.getContainer().querySelector(`#${this.getElementId()}`);
+            this.getContainer().innerHTML = this.getTemplate(...clickHandlers);
+            return this.getElement();
         }
-        
+
         let childBefore = this.getContainer().lastElementChild
         if (this.getContainer().children.length > this.getPositionAfterIndex() && this.getPositionAfterIndex() >= 0)
             childBefore = this.getContainer().children[this.getPositionAfterIndex()];
+        
+        childBefore.after(this.stringToNode(this.getTemplate(...clickHandlers)));
 
-        childBefore.after(this.stringToNode(this.getTemplate()));
-
-        return this.getContainer().querySelector(`#${this.getElementId()}`);
+        return this.getElement();
     }
     
     private stringToNode(templateString: string): Node {

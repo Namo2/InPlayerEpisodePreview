@@ -51,4 +51,4 @@ const plugins = [
 * It is not possible to start another episode on the web client.
 
 ## Credits ##
-The plugin structure is based on the [Jellyscrub]() plugin by [NickNSY]().
+The plugin structure is based and inspired on the [Jellyscrub]() plugin by [NickNSY]().

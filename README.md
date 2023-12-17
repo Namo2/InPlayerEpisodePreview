@@ -16,7 +16,7 @@ This plugin currently 100% client sided and works with the following clients:
 
 ## Preview ##
 
-
+<img src="https://github.com/Namo2/InPlayerEpisodePreview/blob/master/Images/preview.gif" width="550" height="450">
 
 ## Installation ##
 

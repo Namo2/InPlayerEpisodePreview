@@ -4,7 +4,7 @@ In Player Episode Preview
 ## About ##
 This plugin adds an episode list to the video player, which allows you to preview every episode of the TV show without having to leave the player.
 
-This plugin currently 100% client sided and works with the following clients:
+This plugin currently is 100% client sided and works with the following clients:
 * Jellyfin Web Client
 * Jellyfin Media Player (JMP) Desktop Client
 

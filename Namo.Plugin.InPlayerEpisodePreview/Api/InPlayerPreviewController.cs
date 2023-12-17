@@ -12,7 +12,6 @@ using System.Reflection;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Persistence;
-using Namo.Plugin.InPlayerEpisodePreview.Api.DTOs;
 using Namo.Plugin.InPlayerEpisodePreview.Configuration;
 
 namespace Namo.Plugin.InPlayerEpisodePreview.Api;
@@ -90,96 +89,5 @@ public class InPlayerPreviewController : ControllerBase
             return NotFound();
 
         return File(scriptStream, "application/javascript");
-    }
-
-    /// <summary>
-    /// Get a Season element which contains a list of episodes with their names and indexes.
-    /// </summary>
-    /// <param name="itemId">Item id.</param>
-    /// <response code="200">Manifest successfully found and returned.</response>
-    /// <response code="404">Item not found.</response>
-    /// <returns>A JSON response as read from manfiest file, or a <see cref="NotFoundResult"/>.</returns>
-    [HttpGet("{itemId}/Season")]
-    // [Authorize(Policy = "DefaultAuthorization")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [Produces(MediaTypeNames.Application.Json)]
-    public ActionResult GetSeason([FromRoute, Required] Guid itemId)
-    {
-        var item = _libraryManager.GetItemById(itemId);
-        if (item == null)
-            return NotFound();
-
-        var season = _libraryManager.GetItemById(item.ParentId);
-        if (season == null)
-            return NotFound();
-
-        var episodeItems = _itemRepository.GetItemList(new InternalItemsQuery
-        {
-            Parent = season,
-            GroupByPresentationUniqueKey = false,
-            DtoOptions = new DtoOptions(true)
-        });
-
-        return Ok(new SeasonDto(season.Name, season.IndexNumber, createEpisodeDtos(episodeItems)));
-    }
-
-    /// <summary>
-    /// Get a Show element which contains a list of seasons with their names, indexes and <see cref="EpisodeDto">episodes</see>.
-    /// </summary>
-    /// <param name="itemId">Item id.</param>
-    /// <response code="200">Manifest successfully found and returned.</response>
-    /// <response code="404">Item not found.</response>
-    /// <returns>A JSON response as read from manfiest file, or a <see cref="NotFoundResult"/>.</returns>
-    [HttpGet("{itemId}/Show")]
-    // [Authorize(Policy = "DefaultAuthorization")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [Produces(MediaTypeNames.Application.Json)]
-    public ActionResult GetShow([FromRoute, Required] Guid itemId)
-    {
-        var item = _libraryManager.GetItemById(itemId);
-        if (item == null)
-            return NotFound();
-
-        var seasonBaseItem = _libraryManager.GetItemById(item.ParentId);
-        if (seasonBaseItem == null)
-            return NotFound();
-
-        var showBaseItem = _libraryManager.GetItemById(seasonBaseItem.ParentId);
-        if (showBaseItem == null)
-            return NotFound();
-
-        var seasonItems = _itemRepository.GetItemList(new InternalItemsQuery
-        {
-            Parent = showBaseItem,
-            GroupByPresentationUniqueKey = false,
-            DtoOptions = new DtoOptions(true)
-        });
-
-        List<SeasonDto> seasons = new();
-        foreach (var season in seasonItems)
-        {
-            var episodeItems = _itemRepository.GetItemList(new InternalItemsQuery
-            {
-                Parent = season,
-                GroupByPresentationUniqueKey = false,
-                DtoOptions = new DtoOptions(true)
-            });
-
-            seasons.Add(new SeasonDto(season.Name, season.IndexNumber, createEpisodeDtos(episodeItems)));
-        }
-
-        return Ok(new SeriesDto(showBaseItem.Name, showBaseItem.IndexNumber, seasons));
-    }
-
-    private List<EpisodeDto> createEpisodeDtos(List<BaseItem> baseItems)
-    {
-        List<EpisodeDto> episodes = new();
-        foreach (var ancestor in baseItems)
-            episodes.Add(new EpisodeDto(ancestor.Name, ancestor.IndexNumber));
-
-        episodes.Sort((a, b) => a.IndexNumber.CompareTo(b.IndexNumber));
-        return episodes;
     }
 }

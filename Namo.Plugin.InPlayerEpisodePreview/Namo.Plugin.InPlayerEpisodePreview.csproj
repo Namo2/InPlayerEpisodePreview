@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Configuration\configPage.html" />
     <None Remove="Web\inPlayerPreviewStyle.css" />
     <EmbeddedResource Include="Web\inPlayerPreviewStyle.css" />
     <None Remove="Web\inPlayerPreview.js" />

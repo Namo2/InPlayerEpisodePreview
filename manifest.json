@@ -1,0 +1,20 @@
+[
+    {
+        "guid": "73833d5f-0bcb-45dc-ab8b-7ce668f4345d",
+        "name": "InPlayerEpisodePreview",
+        "overview": "Adds an overview of episode data inside the video player.",
+        "description": "Adds an overview of episode data inside the video player.",
+        "owner": "Namo",
+        "category": "General",
+        "versions": [
+            {
+                "version": "1.0.0.0",
+                "changelog": "Initial release",
+                "targetAbi": "10.8.13.0",
+                "sourceUrl": "https://github.com/Namo2/InPlayerPreview/releases/download/v1.0.0.0/InPlayerEpisodePreview-v1.0.0.0-server.zip",
+                "checksum": "8679e9d1c3e4c3bd5039c81a1ad07c6e",
+                "timestamp": "2022-12-17T10:33:00Z"
+            }
+        ]
+    }
+]

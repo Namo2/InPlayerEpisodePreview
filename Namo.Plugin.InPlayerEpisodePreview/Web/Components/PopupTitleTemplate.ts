@@ -17,8 +17,21 @@ export class PopupTitleTemplate extends BaseTemplate {
 
     public render(clickHandler: Function) {
         let renderedElement = this.addElementToContainer();
-        renderedElement.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
+        renderedElement.addEventListener('click', (e) => clickHandler(e));
+    }
+    
+    public setText(text: string) {
+        let renderedElement = this.getElement();
+        renderedElement.querySelector('h1').innerText = text;
+    }
+    
+    public setVisible(isVisible: boolean) {
+        let renderedElement = this.getElement();
+        if (isVisible) {
+            renderedElement.classList.remove('hide');
+            return;
+        }
+        
+        renderedElement.classList.add('hide');
     }
 }

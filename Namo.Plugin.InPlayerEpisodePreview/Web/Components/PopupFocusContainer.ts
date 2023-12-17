@@ -12,9 +12,7 @@ export class PopupFocusContainer extends BaseTemplate {
         let tempContainerDiv = document.createElement('div');
         let popupTitle = new PopupTitleTemplate(tempContainerDiv, -1);
         let popupContentContainer = new PopupContentContainerTemplate(tempContainerDiv, -1);
-
-        popupTitle.render(() => {});
-        popupContentContainer.render(() => {});
+        popupContentContainer.render();
 
         return `
             <div id="${this.getElementId()}" class="focuscontainer dialog actionsheet-not-fullscreen actionSheet centeredDialog opened previewPopup actionSheetContent" data-history="true" data-removeonclose="true">
@@ -23,7 +21,7 @@ export class PopupFocusContainer extends BaseTemplate {
         `;
     }
 
-    public render(clickHandler: Function): void {
-        let renderedElement = this.addElementToContainer();
+    public render(): void {
+        this.addElementToContainer();
     }
 }

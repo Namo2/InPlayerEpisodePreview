@@ -12,8 +12,8 @@ export class PopupContentContainerTemplate extends BaseTemplate {
         `;
     }
 
-    public render(clickHandler: Function): void {
-        let renderedElement = this.addElementToContainer();
+    public render(): void {
+        this.addElementToContainer();
     }
 
 }

@@ -24,9 +24,16 @@ export abstract class BaseTemplate {
 
     abstract getTemplate(): string;
 
-    abstract render(clickHandler: Function): void;
+    abstract render(...clickHandlers: Function[]): void;
 
-    protected addElementToContainer(): HTMLElement {
+    protected addElementToContainer(...clickHandlers: Function[]): HTMLElement {
+        // Add Element as the first child if position is negative
+        if (this.getPositionAfterIndex() < 0 && this.getContainer().hasChildNodes()) {
+            this.getContainer().firstElementChild.before(this.stringToNode(this.getTemplate(...clickHandlers)));
+            return this.getElement();
+        }
+        
+        // Add Element if container is empty
         if (!this.getContainer().hasChildNodes()) {
             this.getContainer().innerHTML = this.getTemplate();
             return this.getContainer().querySelector(`#${this.getElementId()}`);

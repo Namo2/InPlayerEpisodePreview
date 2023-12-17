@@ -10,7 +10,7 @@ export class DialogContainerTemplate extends BaseTemplate {
     getTemplate(): string {
         let tempContainerDiv = document.createElement('div');
         let focusContainerDiv = new PopupFocusContainer(tempContainerDiv, -1);
-        focusContainerDiv.render(() => {});
+        focusContainerDiv.render();
 
         return `
             <div id="${this.getElementId()}" class="dialogContainer">
@@ -19,8 +19,8 @@ export class DialogContainerTemplate extends BaseTemplate {
         `;
     }
 
-    public render(clickHandler: Function): void {
+    public render(dialogContainerClickHandler: Function): void {
         let renderedElement = this.addElementToContainer();
-        renderedElement.addEventListener('click', (e) => clickHandler(e));
+        renderedElement.addEventListener('click', (e) => dialogContainerClickHandler(e));
     }
 }

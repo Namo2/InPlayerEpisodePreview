@@ -12,7 +12,7 @@ export class DialogBackdropContainerTemplate extends BaseTemplate {
         `;
     }
 
-    public render(clickHandler: Function): void {
-        let renderedElement = this.addElementToContainer();
+    public render(): void {
+        this.addElementToContainer();
     }
 }

@@ -1,6 +1,6 @@
 The MIT License
 
-Copyright (c) Namo https://github.com/Namo2
+Copyright (c) Media Browser http://mediabrowser.tv
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

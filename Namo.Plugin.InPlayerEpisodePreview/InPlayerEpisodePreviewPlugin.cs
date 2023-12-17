@@ -35,70 +35,70 @@ public class InPlayerEpisodePreviewPlugin : BasePlugin<PluginConfiguration>, IHa
     {
         Instance = this;
 
-        if (Configuration.InjectClientScript)
+        if (!Configuration.InjectClientScript) 
+            return;
+
+        if (string.IsNullOrWhiteSpace(applicationPaths.WebPath)) 
+            return;
+        
+        var indexFile = Path.Combine(applicationPaths.WebPath, "index.html");
+        if (!File.Exists(indexFile)) 
+            return;
+        
+        string indexContents = File.ReadAllText(indexFile);
+        string basePath = "";
+
+        // Get base path from network config
+        try
         {
-            if (!string.IsNullOrWhiteSpace(applicationPaths.WebPath))
+            var networkConfig = configurationManager.GetConfiguration("network");
+            var configType = networkConfig.GetType();
+            var basePathField = configType.GetProperty("BaseUrl");
+            var confBasePath = basePathField?.GetValue(networkConfig)?.ToString()?.Trim('/');
+
+            if (!string.IsNullOrEmpty(confBasePath))
+                basePath = $"/{confBasePath}";
+        }
+        catch (Exception e)
+        {
+            logger.LogError("Unable to get base path from config, using '/': {0}", e);
+        }
+
+        // Don't run if script already exists
+        string scriptReplace = "<script plugin=\"InPlayerEpisodePreview\".*?></script>";
+        string scriptElement = string.Format("<script plugin=\"InPlayerEpisodePreview\" version=\"1.0.0.0\" src=\"{0}/InPlayerPreview/ClientScript\"></script>", basePath);
+
+        if (!indexContents.Contains(scriptElement))
+        {
+            logger.LogInformation("Attempting to inject preview script code in {0}", indexFile);
+
+            // Replace old Jellyscrub scrips
+            indexContents = Regex.Replace(indexContents, scriptReplace, "");
+
+            // Insert script last in body
+            int bodyClosing = indexContents.LastIndexOf("</body>", StringComparison.Ordinal);
+            if (bodyClosing != -1)
             {
-                var indexFile = Path.Combine(applicationPaths.WebPath, "index.html");
-                if (File.Exists(indexFile))
+                indexContents = indexContents.Insert(bodyClosing, scriptElement);
+
+                try
                 {
-                    string indexContents = File.ReadAllText(indexFile);
-                    string basePath = "";
-
-                    // Get base path from network config
-                    try
-                    {
-                        var networkConfig = configurationManager.GetConfiguration("network");
-                        var configType = networkConfig.GetType();
-                        var basePathField = configType.GetProperty("BaseUrl");
-                        var confBasePath = basePathField?.GetValue(networkConfig)?.ToString()?.Trim('/');
-
-                        if (!string.IsNullOrEmpty(confBasePath))
-                            basePath = $"/{confBasePath}";
-                    }
-                    catch (Exception e)
-                    {
-                        logger.LogError("Unable to get base path from config, using '/': {0}", e);
-                    }
-
-                    // Don't run if script already exists
-                    string scriptReplace = "<script plugin=\"InPlayerEpisodePreview\".*?></script>";
-                    string scriptElement = string.Format("<script plugin=\"InPlayerEpisodePreview\" version=\"1.0.0.0\" src=\"{0}/InPlayerPreview/ClientScript\"></script>", basePath);
-
-                    if (!indexContents.Contains(scriptElement))
-                    {
-                        logger.LogInformation("Attempting to inject preview script code in {0}", indexFile);
-
-                        // Replace old Jellyscrub scrips
-                        indexContents = Regex.Replace(indexContents, scriptReplace, "");
-
-                        // Insert script last in body
-                        int bodyClosing = indexContents.LastIndexOf("</body>", StringComparison.Ordinal);
-                        if (bodyClosing != -1)
-                        {
-                            indexContents = indexContents.Insert(bodyClosing, scriptElement);
-
-                            try
-                            {
-                                File.WriteAllText(indexFile, indexContents);
-                                logger.LogInformation("Finished injecting preview script code in {0}", indexFile);
-                            }
-                            catch (Exception e)
-                            {
-                                logger.LogError("Encountered exception while writing to {0}: {1}", indexFile, e);
-                            }
-                        }
-                        else
-                        {
-                            logger.LogInformation("Could not find closing body tag in {0}", indexFile);
-                        }
-                    }
-                    else
-                    {
-                        logger.LogInformation("Found client script injected in {0}", indexFile);
-                    }
+                    File.WriteAllText(indexFile, indexContents);
+                    logger.LogInformation("Finished injecting preview script code in {0}", indexFile);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError("Encountered exception while writing to {0}: {1}", indexFile, e);
                 }
             }
+            else
+            {
+                logger.LogInformation("Could not find closing body tag in {0}", indexFile);
+            }
+        }
+        else
+        {
+            logger.LogInformation("Found client script injected in {0}", indexFile);
         }
     }
 

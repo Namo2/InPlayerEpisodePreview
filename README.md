@@ -22,6 +22,13 @@ This plugin currently 100% client sided and works with the following clients:
 
 #### Jellyfin Web Client (Server) ####
 
+NOTE: If you are using docker there could be permission issues while injection the script. 
+Jellyscrub works in a similar fashion, checkout their [readme](https://github.com/nicknsy/jellyscrub/blob/main/README.md) for more information.
+
+1. Add the manifest `https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/master/manifest.json` as a Jellyfin plugin repository to your server.
+2. Install the plugin `InPlayerEpisodePreview` from the repository.
+3. Restart the Jellyfin server.
+
 #### Jellyfin Media Player (JMP) Desktop Client ####
 
 This is the recommended way to install the script on the desktop client.

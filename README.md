@@ -13,10 +13,12 @@ This plugin currently is 100% client sided and works with the following clients:
 * Switch between seasons
 * Show episode title, description, thumbnail and playback progress
 * Start a new episode (only on the desktop client)
+* Should work with custom themes
 
 ## Preview ##
 
 <img src="https://github.com/Namo2/InPlayerEpisodePreview/blob/master/Images/preview.gif" width="550" height="450">
+Used Theme: (SkinManager) Kaleidochromic
 
 ## Installation ##
 

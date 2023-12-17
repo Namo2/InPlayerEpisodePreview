@@ -1,5 +1,4 @@
 import {BaseTemplate} from "./BaseTemplate";
-import {PopupTitleTemplate} from "./PopupTitleTemplate";
 import {PopupContentContainerTemplate} from "./PopupContentContainerTemplate";
 
 export class PopupFocusContainer extends BaseTemplate {
@@ -10,7 +9,6 @@ export class PopupFocusContainer extends BaseTemplate {
 
     getTemplate(): string {
         let tempContainerDiv = document.createElement('div');
-        let popupTitle = new PopupTitleTemplate(tempContainerDiv, -1);
         let popupContentContainer = new PopupContentContainerTemplate(tempContainerDiv, -1);
         popupContentContainer.render();
 

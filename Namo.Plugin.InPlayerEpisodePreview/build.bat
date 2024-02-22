@@ -27,16 +27,18 @@ echo F|xcopy /Y /I Web\inPlayerPreview.js .build\jmp.js
 echo "Creating JMP Plugin file"
 @(for /f "delims=" %%i in (BuildFiles\jmpClientTemplate.js) do (
     set "line=%%i"
-    setlocal enabledelayedexpansion
+    SETLOCAL EnableExtensions EnableDelayedExpansion
     if not "!line:JMP_CLIENT_CODE=!" == "!line!" (
+        SETLOCAL EnableExtensions DisableDelayedExpansion
         echo(
         @(for /f "delims=" %%j in (.build\jmp.js) do ( 
             set "line2=%%j"
-            setlocal enabledelayedexpansion
+            SETLOCAL EnableExtensions EnableDelayedExpansion
             echo(!line2!
             endlocal 
         ))
         set "line="
+        endlocal
     )
     echo(!line!
     endlocal

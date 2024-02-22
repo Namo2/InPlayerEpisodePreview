@@ -57,7 +57,7 @@ let playbackHandler: PlaybackHandler = isJMPClient ? new JMPPlaybackHandler(play
 const videoPaths = ['playback/video/index.html', '/video'];
 let previousRoutePath = null;
 document.addEventListener('viewshow', viewShowEventHandler);
-
+let previewContainerLoaded = false;
 function viewShowEventHandler(): void {
     // @ts-ignore
     let currentRoutePath = Emby.Page.currentRouteInfo.route.path;
@@ -66,24 +66,43 @@ function viewShowEventHandler(): void {
         // @ts-ignore
         currentRoutePath = Emby.Page.currentRouteInfo.path;
 
-    if (videoPaths.includes(currentRoutePath) && programDataStore.isSeries)
-        loadVideoView();
-    else if (videoPaths.includes(previousRoutePath))
-        unloadVideoView();
+    // This function attempts to load the video view, retrying up to 3 times if necessary.
+    function attemptLoadVideoView(retryCount = 0) {
+        if (videoPaths.includes(currentRoutePath)) {
+            if (programDataStore.isSeries) {
+                // Check if the preview container is already loaded before loading
+                if (!previewContainerLoaded) {
+                    loadVideoView();
+                    previewContainerLoaded = true; // Set flag to true after loading
+                }
+            } else if (retryCount < 3) { // Retry up to 3 times
+                setTimeout(() => {
+                    console.log(`Retry #${retryCount + 1}`);
+                    attemptLoadVideoView(retryCount + 1);
+                }, 10000); // Wait 10 seconds for each retry
+            }
+        } else if (videoPaths.includes(previousRoutePath)) {
+            unloadVideoView();
+        }
+    }
+
+    // Initial attempt to load the video view or schedule retries.
+    attemptLoadVideoView();
+
 
     previousRoutePath = currentRoutePath;
-
+    
     function loadVideoView(): void {
         // add preview button to the page
         let parent = document.querySelector('.buttons').lastElementChild.parentElement;
         let index = Array.prototype.indexOf.call(parent.children, document.querySelector('.osdTimeText'));
         let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
         previewButton.render(previewButtonClickHandler);
-        
+
         function previewButtonClickHandler() {
             let dialogBackdrop = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1);
             dialogBackdrop.render();
-
+            
             let dialogContainer = new DialogContainerTemplate(document.body, document.body.children.length - 1);
             dialogContainer.render(() => {
                 document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()));
@@ -92,7 +111,7 @@ function viewShowEventHandler(): void {
 
             let contentDiv = document.getElementById('popupContentContainer');
             contentDiv.innerHTML = ""; // remove old content
-
+            
             let popupTitle = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1);
             popupTitle.render((e: MouseEvent) => {
                 popupTitle.setVisible(false);
@@ -100,7 +119,7 @@ function viewShowEventHandler(): void {
 
                 // delete episode content for all existing episodes in the preview list;
                 contentDiv.innerHTML = "";
-
+                
                 let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore, isJMPClient);
                 listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle);
 
@@ -111,15 +130,15 @@ function viewShowEventHandler(): void {
             let episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
             let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore, isJMPClient);
             listElementFactory.createEpisodeElements(episodesForCurrentSeason, contentDiv);
-            
+
             // scroll to the episode that is currently playing
             contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView();
         }
     }
-
     function unloadVideoView(): void {
-        // clear old data
+        // Clear old data and reset previewContainerLoaded flag
         authService.setAuthHeaderValue("");
         programDataStore.clear();
+        previewContainerLoaded = false; // Reset flag when unloading
     }
 }

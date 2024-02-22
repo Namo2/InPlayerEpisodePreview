@@ -17,7 +17,8 @@ import {WebPlaybackHandler} from "./Services/PlaybackHandler/WebPlaybackHandler"
 import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 
-let isJMPClient = false;
+// @ts-ignore
+const isJMPClient = CLIENT === "JMP";
 
 // logger
 const logger: Logger = new Logger();

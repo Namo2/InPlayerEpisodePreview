@@ -35,16 +35,16 @@ public class InPlayerEpisodePreviewPlugin : BasePlugin<PluginConfiguration>, IHa
     {
         Instance = this;
 
-        if (!Configuration.InjectClientScript) 
+        if (!Configuration.InjectClientScript)
             return;
 
-        if (string.IsNullOrWhiteSpace(applicationPaths.WebPath)) 
+        if (string.IsNullOrWhiteSpace(applicationPaths.WebPath))
             return;
-        
+
         var indexFile = Path.Combine(applicationPaths.WebPath, "index.html");
-        if (!File.Exists(indexFile)) 
+        if (!File.Exists(indexFile))
             return;
-        
+
         string indexContents = File.ReadAllText(indexFile);
         string basePath = "";
 
@@ -66,7 +66,10 @@ public class InPlayerEpisodePreviewPlugin : BasePlugin<PluginConfiguration>, IHa
 
         // Don't run if script already exists
         string scriptReplace = "<script plugin=\"InPlayerEpisodePreview\".*?></script>";
-        string scriptElement = string.Format("<script plugin=\"InPlayerEpisodePreview\" version=\"1.0.0.0\" src=\"{0}/InPlayerPreview/ClientScript\"></script>", basePath);
+        string scriptElement =
+            string.Format(
+                "<script plugin=\"InPlayerEpisodePreview\" version=\"1.0.0.0\" src=\"{0}/InPlayerPreview/ClientScript\"></script>",
+                basePath);
 
         if (!indexContents.Contains(scriptElement))
         {
@@ -110,13 +113,10 @@ public class InPlayerEpisodePreviewPlugin : BasePlugin<PluginConfiguration>, IHa
     /// <inheritdoc />
     public IEnumerable<PluginPageInfo> GetPages()
     {
-        return new[]
+        yield return new PluginPageInfo
         {
-            new PluginPageInfo
-            {
-                Name = "InPlayerEpisodePreview",
-                EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.html"
-            }
+            Name = "InPlayerEpisodePreview",
+            EmbeddedResourcePath = GetType().Namespace + ".Configuration.config.html"
         };
     }
 }

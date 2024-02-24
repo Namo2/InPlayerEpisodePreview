@@ -18,5 +18,7 @@
     <EmbeddedResource Include="Web\inPlayerPreviewStyle.css" />
     <None Remove="Web\inPlayerPreview.js" />
     <EmbeddedResource Include="Web\inPlayerPreview.js" />
+    <None Remove="Configuration\config.html" />
+    <EmbeddedResource Include="Configuration\config.html" />
   </ItemGroup>
 </Project>

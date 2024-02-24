@@ -19,7 +19,7 @@
                 "version": "1.0.1.0",
                 "changelog": "Retries + Settings Page",
                 "targetAbi": "10.8.13.0",
-                "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.0.1.0/InPlayerEpisodePreview-v1.0.1.0-server.zip",
+                "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.0.1.0/inPlayerEpisodePreview-1.0.1.0-server.zip",
                 "checksum": "41a779e9a429007d7c3b6e95d472f3b7",
                 "timestamp": "2024-02-24T11:37:00Z"
             }

@@ -44,24 +44,28 @@ echo "Creating JMP Plugin file"
     endlocal
 ))>".build\jmpPlugin.js"
 
+cd .build
+
 REM Packaging -- tar command needs Windows 10 or later
 echo "Packaging Web Client Script"
-tar -cf .build\inPlayerEpisodePreview-%version%-web-client-script.zip -C .build web-client-script.js
+"..\BuildFiles\7za.exe" a -tzip "inPlayerEpisodePreview-%version%-web-client-script.zip" "web-client-script.js"
 
 REM TODO Rebuild the DLL here
 echo "Packaging Server dll"
-tar -cf .build\inPlayerEpisodePreview-%version%-server.zip -C bin\Release\net6.0 Namo.Plugin.InPlayerEpisodePreview.dll
+"..\BuildFiles\7za.exe" a -tzip "inPlayerEpisodePreview-%version%-server.zip" "..\bin\Release\net6.0\Namo.Plugin.InPlayerEpisodePreview.dll"
 
 echo "Packaging JMP Plugin"
-echo F|xcopy /Y /I .build\jmpPlugin.js .build\web-client\extension\inPlayerEpisodePreviewPlugin.js
-tar -cf .build\inPlayerEpisodePreview-%version%-jmp.zip -C .build web-client
+echo F|xcopy /Y /I jmpPlugin.js web-client\extension\inPlayerEpisodePreviewPlugin.js
+"..\BuildFiles\7za.exe" a -tzip "inPlayerEpisodePreview-%version%-jmp.zip" "web-client"
 
 echo "Packaging JMP-Full Plugin"
-echo F|xcopy /Y /I BuildFiles\nativeshell.js .build\web-client\extension\nativeshell.js
-tar -cf .build\inPlayerEpisodePreview-%version%-jmp-full.zip -C .build web-client
+echo F|xcopy /Y /I BuildFiles\nativeshell.js web-client\extension\nativeshell.js
+"..\BuildFiles\7za.exe" a -tzip "inPlayerEpisodePreview-%version%-jmp-full.zip" "web-client"
 
 REM Cleanup -- Keep release zip files
-del /q /s .build\jmp.js
-del /q /s .build\jmpPlugin.js
-del /q /s .build\web-client-script.js
-rmdir /q /s .build\web-client
+del /q /s jmp.js
+del /q /s jmpPlugin.js
+del /q /s web-client-script.js
+rmdir /q /s web-client
+
+cd ..

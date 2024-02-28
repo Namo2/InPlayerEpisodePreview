@@ -59,7 +59,7 @@ echo F|xcopy /Y /I jmpPlugin.js web-client\extension\inPlayerEpisodePreviewPlugi
 "..\BuildFiles\7za.exe" a -tzip "inPlayerEpisodePreview-%version%-jmp.zip" "web-client"
 
 echo "Packaging JMP-Full Plugin"
-echo F|xcopy /Y /I BuildFiles\nativeshell.js web-client\extension\nativeshell.js
+echo F|xcopy /Y /I ..\BuildFiles\nativeshell.js web-client\extension\nativeshell.js
 "..\BuildFiles\7za.exe" a -tzip "inPlayerEpisodePreview-%version%-jmp-full.zip" "web-client"
 
 REM Cleanup -- Keep release zip files

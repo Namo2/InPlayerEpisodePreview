@@ -35,6 +35,8 @@ inPlayerPreviewStyle.textContent += '.previewListItemContent {width: 100%; min-h
 inPlayerPreviewStyle.textContent += '.previewPopup {animation: 140ms ease-out 0s 1 normal both running scaleup; position: fixed; margin: 0px; bottom: 1.5vh; left: 50vw; width: 48vw;}';
 inPlayerPreviewStyle.textContent += '.previewPopupTitle {max-height: 4vh;}';
 inPlayerPreviewStyle.textContent += '.previewPopupScroller {max-height: 60vh;}';
+inPlayerPreviewStyle.textContent += '.previewQuickActionContainer {margin-left: auto; margin-right: 1em;}';
+inPlayerPreviewStyle.textContent += '.previewEpisodeContainer {width: 100%;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {width: 12vw; height: 15vh; left: 1em;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {position: absolute; right: 1em; left: 13.5vw; display: block; overflow: auto;}';
@@ -114,6 +116,8 @@ function viewShowEventHandler(): void {
             
             let popupTitle = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1);
             popupTitle.render((e: MouseEvent) => {
+                e.stopPropagation();
+                
                 popupTitle.setVisible(false);
                 let contentDiv = document.getElementById('popupContentContainer');
 
@@ -122,8 +126,6 @@ function viewShowEventHandler(): void {
                 
                 let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore, isJMPClient);
                 listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle);
-
-                e.stopPropagation();
             });
             popupTitle.setText(programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName);
 

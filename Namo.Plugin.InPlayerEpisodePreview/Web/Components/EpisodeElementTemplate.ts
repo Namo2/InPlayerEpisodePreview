@@ -2,6 +2,7 @@
 import {Episode} from "../Models/Episode";
 import {DataLoader} from "../Services/DataLoader/DataLoader";
 import {PlaybackHandler} from "../Services/PlaybackHandler/PlaybackHandler";
+import {FavoriteIconTemplate} from "./QuickActions/FavoriteIconTemplate";
 
 export class EpisodeElementTemplate extends BaseTemplate {
     constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private isJMPClient: boolean) {
@@ -10,18 +11,31 @@ export class EpisodeElementTemplate extends BaseTemplate {
     }
     
     getTemplate(): string {
+        // create temp quick action container
+        let quickActionContainer = document.createElement('div');
+        
+        // add quick actions
+        let favoriteIcon = new FavoriteIconTemplate(quickActionContainer, -1, this.episode);
+        favoriteIcon.render();
+        
         // language=HTML
         return `
             <div id="${this.getElementId()}"
                  class="listItem listItem-button actionSheetMenuItem emby-button previewListItem"
                  is="emby-button"
                  data-id="${this.episode.IndexNumber}">
-                <button class="listItem previewEpisodeTitle" type="button">
-                    <span>${this.episode.IndexNumber}</span>
-                    <div class="listItemBody actionsheetListItemBody">
-                        <span class="actionSheetItemText">${this.episode.Name}</span>
+                <div class="previewEpisodeContainer flex">
+                    <button class="listItem previewEpisodeTitle" type="button">
+                        <span>${this.episode.IndexNumber}</span>
+                        <div class="listItemBody actionsheetListItemBody">
+                            <span class="actionSheetItemText">${this.episode.Name}</span>
+                        </div>
+                    </button>
+                    <div class="previewQuickActionContainer flex">
+                        ${quickActionContainer.innerHTML}
                     </div>
-                </button>
+                </div>
+                
                 <div class="previewListItemContent hide">
                     <div class="card overflowBackdropCard card-hoverable card-withuserdata">
                         <div class="cardBox previewEpisodeImageCard">

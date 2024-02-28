@@ -3,6 +3,7 @@ import {Episode} from "../Models/Episode";
 import {DataLoader} from "../Services/DataLoader/DataLoader";
 import {PlaybackHandler} from "../Services/PlaybackHandler/PlaybackHandler";
 import {FavoriteIconTemplate} from "./QuickActions/FavoriteIconTemplate";
+import {PlayStateIconTemplate} from "./QuickActions/PlayStateIconTemplate";
 
 export class EpisodeElementTemplate extends BaseTemplate {
     constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private isJMPClient: boolean) {
@@ -15,7 +16,9 @@ export class EpisodeElementTemplate extends BaseTemplate {
         let quickActionContainer = document.createElement('div');
         
         // add quick actions
-        let favoriteIcon = new FavoriteIconTemplate(quickActionContainer, -1, this.episode);
+        let playStateIcon = new PlayStateIconTemplate(quickActionContainer, -1, this.episode);
+        playStateIcon.render();
+        let favoriteIcon = new FavoriteIconTemplate(quickActionContainer, 0, this.episode);
         favoriteIcon.render();
         
         // language=HTML

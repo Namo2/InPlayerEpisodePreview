@@ -14,6 +14,8 @@ export class ListElementFactory {
         for (let i = 0; i < episodes.length; i++) {
             let episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.dataLoader, this.playbackHandler, this.isJMPClient);
             episode.render((e: MouseEvent) => {
+                e.stopPropagation();
+                
                 // hide episode content for all existing episodes in the preview list
                 document.querySelectorAll(".previewListItemContent").forEach((element) => {
                     element.classList.add('hide');
@@ -24,8 +26,6 @@ export class ListElementFactory {
                 let episodeContainer = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
                 episodeContainer.classList.remove('hide');
                 episodeContainer.classList.add('selectedListItem');
-
-                e.stopPropagation();
             });
 
             if (episodes[i].Id === this.programDataStore.activeMediaSourceId) {
@@ -40,13 +40,13 @@ export class ListElementFactory {
         for (let i = 0; i < seasons.length; i++) {
             let season = new SeasonListElementTemplate(parentDiv, i, seasons[i], i === currentSeasonIndex);
             season.render((e: MouseEvent) => {
+                e.stopPropagation();
+                
                 titleContainer.setText(seasons[i].seasonName);
                 titleContainer.setVisible(true);
                 
                 parentDiv.innerHTML = ""; // remove old content
                 this.createEpisodeElements(seasons[i].episodes, parentDiv);
-                
-                e.stopPropagation();
             });
         }
     }

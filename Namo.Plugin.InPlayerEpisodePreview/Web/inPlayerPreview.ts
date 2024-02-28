@@ -29,7 +29,7 @@ const logger: Logger = new Logger();
  */
 let inPlayerPreviewStyle = document.createElement('style');
 inPlayerPreviewStyle.id = 'inPlayerPreviewStyle';
-inPlayerPreviewStyle.textContent += '.selectedListItem {max-height: 22vh;}';
+inPlayerPreviewStyle.textContent += '.selectedListItem {height: auto;}';
 inPlayerPreviewStyle.textContent += '.previewListItem {flex-direction: column; align-items: flex-start;}';
 inPlayerPreviewStyle.textContent += '.previewListItemContent {width: 100%; min-height: 15.5vh; position: relative; top: 0.5em; display: flex}';
 inPlayerPreviewStyle.textContent += '.previewPopup {animation: 140ms ease-out 0s 1 normal both running scaleup; position: fixed; margin: 0px; bottom: 1.5vh; left: 50vw; width: 48vw;}';

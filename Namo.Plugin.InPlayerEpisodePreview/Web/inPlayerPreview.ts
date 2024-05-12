@@ -106,10 +106,13 @@ function viewShowEventHandler(): void {
             setTimeout(() => {
                 logger.info(`Could not find player buttons. Retry #${retryCount + 1}`)
                 loadVideoView(retryCount + 1);
-            }, 1000); // Wait 10 seconds for each retry
+            }, 1000); // Wait 1 seconds for each retry
+            return;
         }
         
         let index = Array.prototype.indexOf.call(parent.children, buttonBefore);
+        if (index === -1)
+            index = Array.from(parent.children).findIndex(child => child.classList.contains("btnUserRating"))
 
         let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
         previewButton.render(previewButtonClickHandler);

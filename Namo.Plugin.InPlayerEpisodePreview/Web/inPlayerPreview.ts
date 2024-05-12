@@ -60,11 +60,12 @@ const videoPaths = ['playback/video/index.html', '/video'];
 let previousRoutePath = null;
 document.addEventListener('viewshow', viewShowEventHandler);
 let previewContainerLoaded = false;
+
 function viewShowEventHandler(): void {
     // @ts-ignore
     let currentRoutePath = Emby.Page.currentRouteInfo.route.path;
 
-    if (currentRoutePath)
+    if (!currentRoutePath)
         // @ts-ignore
         currentRoutePath = Emby.Page.currentRouteInfo.path;
 

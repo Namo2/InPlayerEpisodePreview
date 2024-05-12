@@ -12,7 +12,7 @@ export class ListElementFactory {
     
     public createEpisodeElements(episodes: Episode[], parentDiv: HTMLElement) {
         for (let i = 0; i < episodes.length; i++) {
-            let episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.dataLoader, this.playbackHandler, this.isJMPClient);
+            let episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.dataLoader, this.playbackHandler, this.programDataStore, this.isJMPClient);
             episode.render((e: MouseEvent) => {
                 e.stopPropagation();
                 

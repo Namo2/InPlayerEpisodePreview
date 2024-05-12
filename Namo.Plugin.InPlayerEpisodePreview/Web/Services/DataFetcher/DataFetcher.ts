@@ -54,7 +54,7 @@ export class DataFetcher {
             season.episodes.sort((a: Episode, b: Episode) => a.IndexNumber - b.IndexNumber);
             
             seasons.push(season);
-            if (!season.episodes.every((episode: Episode) => episode.Id !== this.programDataStore.activeMediaSourceId))
+            if (season.episodes.some((episode: Episode) => episode.Id === this.programDataStore.activeMediaSourceId))
                 this.programDataStore.activeSeasonIndex = seasons.length - 1;
             
             value = iterator.next();

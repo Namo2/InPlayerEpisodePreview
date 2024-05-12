@@ -92,7 +92,6 @@ function viewShowEventHandler(): void {
     // Initial attempt to load the video view or schedule retries.
     attemptLoadVideoView();
 
-
     previousRoutePath = currentRoutePath;
     
     function loadVideoView(retryCount = 0): void {
@@ -116,6 +115,10 @@ function viewShowEventHandler(): void {
         previewButton.render(previewButtonClickHandler);
 
         function previewButtonClickHandler() {
+            // refresh active season
+            programDataStore.activeSeasonIndex = programDataStore.seasons
+                .findIndex(season => season.episodes.some(episode => episode.Id === programDataStore.activeMediaSourceId));
+            
             let dialogBackdrop = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1);
             dialogBackdrop.render();
             
@@ -146,7 +149,7 @@ function viewShowEventHandler(): void {
             let episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
             let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore, isJMPClient);
             listElementFactory.createEpisodeElements(episodesForCurrentSeason, contentDiv);
-
+            
             // scroll to the episode that is currently playing
             contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView();
         }

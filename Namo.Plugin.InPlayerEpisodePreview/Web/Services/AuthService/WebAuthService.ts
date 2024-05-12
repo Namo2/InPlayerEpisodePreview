@@ -1,7 +1,7 @@
 ﻿import {AuthService} from "./AuthService";
 
 export class WebAuthService implements AuthService {
-    private readonly _authHeader: string = 'X-Emby-Authorization';
+    private readonly _authHeader: string = 'Authorization';
     private _authHeaderValue: string = '';
 
     constructor() {

@@ -12,6 +12,7 @@ This modification is not dependent on a server-side plugin, it can also only be 
 * List all episodes of a season
 * Switch between seasons
 * Show episode title, description, thumbnail and playback progress
+* Mark episodes as played or favourite
 * Start a new episode (only on the desktop client)
 * Should work with custom themes
 

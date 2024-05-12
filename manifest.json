@@ -22,6 +22,14 @@
                 "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.0.1.0/inPlayerEpisodePreview-1.0.1.0-server.zip",
                 "checksum": "2928263ae600f0a31626305a88514d8f",
                 "timestamp": "2024-02-24T11:37:00Z"
+            },
+            {
+                "version": "1.1.0.0",
+                "changelog": "Changes for Jellyfin 10.9.0",
+                "targetAbi": "10.9.0.0",
+                "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.1.0.0/inPlayerEpisodePreview-1.1.0.0-server.zip",
+                "checksum": "6e77b2b3bd6d5a3ea85daa75e7a230de",
+                "timestamp": "2024-05-12T20:23:00Z"
             }
         ]
     }

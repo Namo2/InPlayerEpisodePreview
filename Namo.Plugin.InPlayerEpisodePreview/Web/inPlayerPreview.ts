@@ -74,7 +74,7 @@ function viewShowEventHandler(): void {
         if (videoPaths.includes(currentRoutePath)) {
             if (programDataStore.isSeries) {
                 // Check if the preview container is already loaded before loading
-                if (!previewContainerLoaded) {
+                if (!previewContainerLoaded && !isPreviewButtonCreated()) {
                     loadVideoView();
                     previewContainerLoaded = true; // Set flag to true after loading
                 }
@@ -95,10 +95,23 @@ function viewShowEventHandler(): void {
 
     previousRoutePath = currentRoutePath;
     
-    function loadVideoView(): void {
+    function loadVideoView(retryCount = 0): void {
         // add preview button to the page
-        let parent = document.querySelector('.buttons').lastElementChild.parentElement;
-        let index = Array.prototype.indexOf.call(parent.children, document.querySelector('.osdTimeText'));
+        let parent = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
+        let buttonBefore = document.querySelector('.btnUserRating');
+        if (buttonBefore === null)
+            buttonBefore = document.querySelector('.osdTimeText');
+        
+        // check if position could be found and retry if not
+        if (buttonBefore === null && retryCount < 3) {
+            setTimeout(() => {
+                logger.info(`Could not find player buttons. Retry #${retryCount + 1}`)
+                loadVideoView(retryCount + 1);
+            }, 1000); // Wait 10 seconds for each retry
+        }
+        
+        let index = Array.prototype.indexOf.call(parent.children, buttonBefore);
+
         let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
         previewButton.render(previewButtonClickHandler);
 
@@ -143,5 +156,9 @@ function viewShowEventHandler(): void {
         authService.setAuthHeaderValue("");
         programDataStore.clear();
         previewContainerLoaded = false; // Reset flag when unloading
+    }
+    
+    function isPreviewButtonCreated(): boolean {
+        return document.querySelector('.buttons').querySelector('#popupPreviewButton') !== null;
     }
 }

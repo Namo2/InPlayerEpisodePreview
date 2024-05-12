@@ -60,11 +60,12 @@ const videoPaths = ['playback/video/index.html', '/video'];
 let previousRoutePath = null;
 document.addEventListener('viewshow', viewShowEventHandler);
 let previewContainerLoaded = false;
+
 function viewShowEventHandler(): void {
     // @ts-ignore
     let currentRoutePath = Emby.Page.currentRouteInfo.route.path;
 
-    if (currentRoutePath)
+    if (!currentRoutePath)
         // @ts-ignore
         currentRoutePath = Emby.Page.currentRouteInfo.path;
 
@@ -73,7 +74,7 @@ function viewShowEventHandler(): void {
         if (videoPaths.includes(currentRoutePath)) {
             if (programDataStore.isSeries) {
                 // Check if the preview container is already loaded before loading
-                if (!previewContainerLoaded) {
+                if (!previewContainerLoaded && !isPreviewButtonCreated()) {
                     loadVideoView();
                     previewContainerLoaded = true; // Set flag to true after loading
                 }
@@ -95,8 +96,13 @@ function viewShowEventHandler(): void {
     
     function loadVideoView(): void {
         // add preview button to the page
-        let parent = document.querySelector('.buttons').lastElementChild.parentElement;
-        let index = Array.prototype.indexOf.call(parent.children, document.querySelector('.osdTimeText'));
+        let parent = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
+        
+        let index = Array.from(parent.children).findIndex(child => child.classList.contains("btnUserRating"));
+        // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
+        if (index === -1)
+            index = Array.from(parent.children).findIndex(child => child.classList.contains("osdTimeText"))
+
         let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
         previewButton.render(previewButtonClickHandler);
 
@@ -145,5 +151,9 @@ function viewShowEventHandler(): void {
         authService.setAuthHeaderValue("");
         programDataStore.clear();
         previewContainerLoaded = false; // Reset flag when unloading
+    }
+    
+    function isPreviewButtonCreated(): boolean {
+        return document.querySelector('.buttons').querySelector('#popupPreviewButton') !== null;
     }
 }

@@ -1,7 +1,7 @@
 @echo off
 
 REM Flags
-set version="1.0.1.0"
+set version="1.1.0.0"
 
 REM Create build directory
 if not exist ".build" mkdir .build
@@ -52,7 +52,7 @@ echo "Packaging Web Client Script"
 
 REM TODO Rebuild the DLL here
 echo "Packaging Server dll"
-"..\BuildFiles\7za.exe" a -tzip "inPlayerEpisodePreview-%version%-server.zip" "..\bin\Release\net6.0\Namo.Plugin.InPlayerEpisodePreview.dll"
+"..\BuildFiles\7za.exe" a -tzip "inPlayerEpisodePreview-%version%-server.zip" "..\bin\Release\net8.0\Namo.Plugin.InPlayerEpisodePreview.dll"
 
 echo "Packaging JMP Plugin"
 echo F|xcopy /Y /I jmpPlugin.js web-client\extension\inPlayerEpisodePreviewPlugin.js

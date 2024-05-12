@@ -94,25 +94,14 @@ function viewShowEventHandler(): void {
 
     previousRoutePath = currentRoutePath;
     
-    function loadVideoView(retryCount = 0): void {
+    function loadVideoView(): void {
         // add preview button to the page
         let parent = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
-        let buttonBefore = document.querySelector('.btnUserRating');
-        if (buttonBefore === null)
-            buttonBefore = document.querySelector('.osdTimeText');
         
-        // check if position could be found and retry if not
-        if (buttonBefore === null && retryCount < 3) {
-            setTimeout(() => {
-                logger.info(`Could not find player buttons. Retry #${retryCount + 1}`)
-                loadVideoView(retryCount + 1);
-            }, 1000); // Wait 1 seconds for each retry
-            return;
-        }
-        
-        let index = Array.prototype.indexOf.call(parent.children, buttonBefore);
+        let index = Array.from(parent.children).findIndex(child => child.classList.contains("btnUserRating"));
+        // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
         if (index === -1)
-            index = Array.from(parent.children).findIndex(child => child.classList.contains("btnUserRating"))
+            index = Array.from(parent.children).findIndex(child => child.classList.contains("osdTimeText"))
 
         let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
         previewButton.render(previewButtonClickHandler);

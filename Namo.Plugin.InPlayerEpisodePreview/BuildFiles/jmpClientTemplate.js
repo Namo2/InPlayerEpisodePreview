@@ -13,7 +13,7 @@ class inPlayerEpisodePreviewPlugin {
 
             // InPlayerEpisodePreview Web-Client Code Start
 
-            JMP_CLIENT_CODE
+            // JMP_CLIENT_CODE
             // InPlayerEpisodePreview Web-Client Code End
         })();
     }

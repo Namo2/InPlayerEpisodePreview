@@ -1,5 +1,5 @@
 ﻿export abstract class PlaybackHandler {
-    abstract play(episodeId: string, startPositionTicks: number, serverId: string): Function;
+    abstract play(episodeId: string, startPositionTicks: number, serverId: string): Function | Promise<void | Response>;
     
     protected getPlaybackData(episodeId: string, startPositionTicks: number, serverId: string) {
         return {

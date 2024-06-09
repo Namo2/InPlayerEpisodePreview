@@ -60,7 +60,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
                                         </div>
                                     </div>
                                 </button>
-                                <div class="cardOverlayContainer itemAction ${!this.isJMPClient ? "hide" : ""}"
+                                <div class="cardOverlayContainer itemAction"
                                      data-action="link">
                                     <button id="start-episode-${this.episode.IndexNumber}" 
                                             is="paper-icon-button-light"

@@ -40,7 +40,7 @@ inPlayerPreviewStyle.textContent += '.previewEpisodeContainer {width: 100%;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {width: 12vw; height: 15vh; left: 1em;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {position: absolute; right: 1em; left: 13.5vw; display: block; overflow: auto;}';
-document.body.appendChild(inPlayerPreviewStyle);
+document?.head?.appendChild(inPlayerPreviewStyle);
 // const cssInjector: CssInjector = new CssInjector();
 // cssInjector.injectCss('/Web/inPlayerPreviewStyle.css', document.body);
 
@@ -54,7 +54,7 @@ const dataLoader: DataLoader = isJMPClient ? new JMPDataLoader(authService, prog
 isJMPClient ? new JMPDataFetcher(programDataStore, dataLoader, events, playbackManager) : new WebDataFetcher(programDataStore, dataLoader, authService, logger)
 
 // @ts-ignore
-let playbackHandler: PlaybackHandler = isJMPClient ? new JMPPlaybackHandler(playbackManager) : new WebPlaybackHandler();
+let playbackHandler: PlaybackHandler = isJMPClient ? new JMPPlaybackHandler(playbackManager) : new WebPlaybackHandler(dataLoader, programDataStore);
 
 const videoPaths = ['playback/video/index.html', '/video'];
 let previousRoutePath = null;

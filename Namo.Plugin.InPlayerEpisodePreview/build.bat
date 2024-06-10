@@ -1,7 +1,7 @@
 @echo off
 
 REM Flags
-set version="1.1.0.0"
+set version="2.0.0.0"
 
 REM Create build directory
 if not exist ".build" mkdir .build

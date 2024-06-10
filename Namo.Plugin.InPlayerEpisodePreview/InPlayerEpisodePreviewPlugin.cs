@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Controller.Configuration;
+using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Microsoft.Extensions.Logging;
@@ -34,7 +35,7 @@ public class InPlayerEpisodePreviewPlugin : BasePlugin<PluginConfiguration>, IHa
         : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
-
+        
         if (!Configuration.InjectClientScript)
             return;
 
@@ -68,7 +69,7 @@ public class InPlayerEpisodePreviewPlugin : BasePlugin<PluginConfiguration>, IHa
         string scriptReplace = "<script plugin=\"InPlayerEpisodePreview\".*?></script>";
         string scriptElement =
             string.Format(
-                "<script plugin=\"InPlayerEpisodePreview\" version=\"1.1.0.0\" src=\"{0}/InPlayerPreview/ClientScript\"></script>",
+                "<script plugin=\"InPlayerEpisodePreview\" version=\"2.0.0.0\" src=\"{0}/InPlayerPreview/ClientScript\"></script>",
                 basePath);
 
         if (!indexContents.Contains(scriptElement))

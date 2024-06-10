@@ -56,7 +56,7 @@ public class InPlayerPreviewController : ControllerBase
         EncodingHelper encodingHelper)
     {
         _assembly = Assembly.GetExecutingAssembly();
-        _playerPreviewScriptPath = $"{InPlayerEpisodePreviewPlugin.Instance?.GetType().Namespace}.Web.inPlayerPreview.js";
+        _playerPreviewScriptPath = $"{InPlayerEpisodePreviewPlugin.Instance?.GetType().Namespace}.Web.InPlayerPreview.js";
 
         _libraryManager = libraryManager;
         _itemRepository = itemRepository;

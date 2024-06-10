@@ -1,38 +1,43 @@
 In Player Episode Preview
 ====================
-
+---
 ## About ##
 This plugin adds an episode list to the video player, which allows you to preview every episode of the TV show without having to leave the player.
 
-This modification is not dependent on a server-side plugin, it can also only be installed on the client. Works with the following clients:
-* Jellyfin Web Client
-* Jellyfin Media Player (JMP) Desktop Client
+This modification has support for the following clients:
+* [Jellyfin Web Client](https://github.com/jellyfin/jellyfin-web)
+* [Jellyfin Media Player](https://github.com/jellyfin/jellyfin-media-player) (JMP) Desktop Client
 
+---
 ### Features ###
 * List all episodes of a season
 * Switch between seasons
 * Show episode title, description, thumbnail and playback progress
 * Mark episodes as played or favourite
-* Start a new episode (only on the desktop client)
+* Start a new episode
 * Should work with custom themes
 
+---
 ## Preview ##
-
 <img src="https://github.com/Namo2/InPlayerEpisodePreview/blob/master/Images/preview.gif" width="550" height="450">
-Used Theme: (SkinManager) Kaleidochromic
 
+Used Theme: (SkinManager) Kaleidochromic
+<br>
+This preview is missing the new buttons for marking an episode as completed or favourite.
+
+---
 ## Installation ##
 
-#### Jellyfin Web Client (Server) ####
-
-NOTE: If you are using docker there could be permission issues while injection the script. 
-Jellyscrub works in a similar fashion, checkout their [readme](https://github.com/nicknsy/jellyscrub/blob/main/README.md) for more information.
-
+### Jellyfin Web Client (Server) ###
 1. Add the manifest `https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/master/manifest.json` as a Jellyfin plugin repository to your server.
 2. Install the plugin `InPlayerEpisodePreview` from the repository.
 3. Restart the Jellyfin server.
 
-#### Jellyfin Media Player (JMP) Desktop Client ####
+<br/>
+
+### Jellyfin Media Player (JMP) Desktop Client ###
+### **Deprecated with JMP Version [1.11.0](https://github.com/jellyfin/jellyfin-media-player/releases/tag/v1.11.0)** ###
+Because the new JMP client is using the current web player from the server itself, it is no longer needed to make any changes to the client code directly.
 
 This is the recommended way to install the script on the desktop client.
 If you don't feel comfortable editing the nativeshell.js file yourself (step 3 to 6), you can download the full release instead, which includes the script already added to the nativeshell.js file.
@@ -56,9 +61,21 @@ const plugins = [
 ```
 6. Save the file and restart the JMP client.
 
-## Drawbacks ##
-* The plugin will download some extra data like the episode description.
-* It is not possible to start another episode on the web client.
+---
+## Troubleshooting ##
 
+### 1. The preview button isn't visible ###
+For now please follow the discussion in [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/10) issue.
+
+<br/>
+If you encounter any error which you can't solve yourself, feel free to open up an issue.
+<br/>Please keep in mind that any system is different which can lead to unexpected behaviour, so add as much information about it as possible.
+<br/>Jellyfin logs and console logs from the browser (prefixed as [InPlayerEpisodePreview]) are always useful.
+
+---
+## Drawbacks ##
+* The plugin will download some extra data like the episode description from the server.
+
+---
 ## Credits ##
 The plugin structure is based and inspired on the [Jellyscrub](https://github.com/nicknsy/jellyscrub) plugin by [NickNSY](https://github.com/nicknsy).

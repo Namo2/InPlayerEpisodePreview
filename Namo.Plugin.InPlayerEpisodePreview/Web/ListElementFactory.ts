@@ -1,18 +1,19 @@
 ﻿import {EpisodeElementTemplate} from "./Components/EpisodeElementTemplate";
 import {Episode} from "./Models/Episode";
-import {DataLoader} from "./Services/DataLoader/DataLoader";
-import {PlaybackHandler} from "./Services/PlaybackHandler/PlaybackHandler";
 import {ProgramDataStore} from "./Services/ProgramDataStore";
 import {Season} from "./Models/Season";
 import {SeasonListElementTemplate} from "./Components/SeasonListElementTemplate";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
+import {DataLoader} from "./Services/DataLoader";
+import {PlaybackHandler} from "./Services/PlaybackHandler";
+
 export class ListElementFactory {
-    constructor(private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore, private isJMPClient: boolean) {
+    constructor(private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
     }
     
     public createEpisodeElements(episodes: Episode[], parentDiv: HTMLElement) {
         for (let i = 0; i < episodes.length; i++) {
-            let episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.dataLoader, this.playbackHandler, this.programDataStore, this.isJMPClient);
+            let episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.dataLoader, this.playbackHandler, this.programDataStore);
             episode.render((e: MouseEvent) => {
                 e.stopPropagation();
                 

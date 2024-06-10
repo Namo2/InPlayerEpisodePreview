@@ -1,15 +1,13 @@
-﻿import {AuthService} from "../AuthService/AuthService";
-import {ProgramDataStore} from "../ProgramDataStore";
-import {Endpoints} from "./Endpoints";
+﻿import {AuthService} from "./AuthService";
+import {ProgramDataStore} from "./ProgramDataStore";
+import {Endpoints} from "../Endpoints";
 
-export abstract class DataLoader {
-    protected _baseUrl: string = '';
-    
+export class DataLoader {
     constructor(protected authService: AuthService, protected programDataStore: ProgramDataStore) {
     }
 
     public loadEpisodeDescription(episodeId: string, onloadend: Function): XMLHttpRequest {
-        let requestUrl = (this.getBaseUrl() +  Endpoints.EPISODE_INFO)
+        let requestUrl = Endpoints.EPISODE_INFO
             .replace('{userId}', this.programDataStore.userId)
             .replace('{episodeId}', episodeId);
 
@@ -23,6 +21,4 @@ export abstract class DataLoader {
 
         return episodeDescriptionRequest;
     }
-    
-    abstract getBaseUrl(): string;
 }

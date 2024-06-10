@@ -1,13 +1,60 @@
-﻿import {ProgramDataStore} from "../ProgramDataStore";
-import {Episode, EpisodeDto} from "../../Models/Episode";
-import {Season} from "../../Models/Season";
-import {DataLoader} from "../DataLoader/DataLoader";
+﻿import {ProgramDataStore} from "./ProgramDataStore";
+import {DataLoader} from "./DataLoader";
+import {AuthService} from "./AuthService";
+import {Logger} from "./Logger";
+import {Episode, EpisodeDto} from "../Models/Episode";
+import {Season} from "../Models/Season";
 
 /**
  * The classes which derives from this interface, will provide the functionality to handle the data input from the server if the PlaybackState is changed.
  */
 export class DataFetcher {
-    constructor(private programDataStore: ProgramDataStore, private dataLoader: DataLoader) {}
+    constructor(private programDataStore: ProgramDataStore, private dataLoader: DataLoader, private authService: AuthService, private logger: Logger) {
+        const {fetch: originalFetch} = window;
+        window.fetch = async (...args) => {
+            let resource: URL = args[0] as URL;
+            let config: RequestInit = args[1];
+
+            if (config) {
+                let auth = config.headers[this.authService.getAuthHeader()];
+                this.authService.setAuthHeaderValue(auth ? auth : '');
+            }
+
+            this.logger.debug(`Fetching data`);
+            const response = await originalFetch(resource, config);
+
+            let url = new URL(resource);
+            let urlPathname = url.pathname;
+
+            if (urlPathname.includes('PlaybackInfo')) {
+                this.logger.debug('Received PlaybackInfo');
+
+                // save the media id of the currently played video
+                this.getProgramDataStore().activeMediaSourceId = extractKeyFromString(urlPathname, 'Items/', '/');
+
+            } else if (urlPathname.includes('Episodes')) {
+                this.logger.debug('Received Episodes');
+
+                this.getProgramDataStore().userId = extractKeyFromString(url.search, 'UserId=', '&');
+                response.clone().json().then((data) => this.saveEpisodeData(data));
+
+            } else if (urlPathname.includes('Items') && url.search.includes('ParentId')) {
+                this.logger.debug('Received Episode Items');
+
+                this.getProgramDataStore().userId = extractKeyFromString(urlPathname, 'Users/', '/');
+                response.clone().json().then((data) => this.saveEpisodeData(data));
+            }
+
+            return response;
+
+            function extractKeyFromString(searchString: string, startString: string, endString: string): string {
+                let startIndex = searchString.indexOf(startString) + startString.length;
+                let endIndex = searchString.indexOf(endString, startIndex);
+
+                return searchString.substring(startIndex, endIndex);
+            }
+        };
+    }
     
     protected getProgramDataStore(): ProgramDataStore {
         return this.programDataStore;

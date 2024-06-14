@@ -1,13 +1,13 @@
 ﻿import {BaseTemplate} from "./BaseTemplate";
 import {Episode} from "../Models/Episode";
-import {DataLoader} from "../Services/DataLoader/DataLoader";
-import {PlaybackHandler} from "../Services/PlaybackHandler/PlaybackHandler";
 import {FavoriteIconTemplate} from "./QuickActions/FavoriteIconTemplate";
 import {PlayStateIconTemplate} from "./QuickActions/PlayStateIconTemplate";
 import {ProgramDataStore} from "../Services/ProgramDataStore";
+import {DataLoader} from "../Services/DataLoader";
+import {PlaybackHandler} from "../Services/PlaybackHandler";
 
 export class EpisodeElementTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore, private isJMPClient: boolean) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex);
         this.setElementId(`episode-${episode.IndexNumber}`);
     }
@@ -52,7 +52,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
                                 <button id="previewEpisodeImageCard-${this.episode.IndexNumber}"
                                         class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
                                         data-action="link"
-                                        style="background-image: url('${this.dataLoader.getBaseUrl()}/Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}');">
+                                        style="background-image: url('/Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}');">
                                     <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${!this.episode.UserData.PlayedPercentage ? "hide" : ""}">
                                         <div class="itemProgressBar">
                                             <div class="itemProgressBarForeground"
@@ -85,6 +85,6 @@ export class EpisodeElementTemplate extends BaseTemplate {
         
         // add event handler to start the playback of this episode
         let episodeImageCard = document.getElementById(`start-episode-${this.episode.IndexNumber}`);
-        episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.episode.Id, this.episode.UserData.PlaybackPositionTicks, this.episode.ServerId));
+        episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.episode.Id, this.episode.UserData.PlaybackPositionTicks));
     }
 }

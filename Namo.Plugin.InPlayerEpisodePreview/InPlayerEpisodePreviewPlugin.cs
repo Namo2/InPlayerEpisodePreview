@@ -69,7 +69,7 @@ public class InPlayerEpisodePreviewPlugin : BasePlugin<PluginConfiguration>, IHa
         string scriptReplace = "<script plugin=\"InPlayerEpisodePreview\".*?></script>";
         string scriptElement =
             string.Format(
-                "<script plugin=\"InPlayerEpisodePreview\" version=\"1.2.0.0\" src=\"{0}/InPlayerPreview/ClientScript\"></script>",
+                "<script plugin=\"InPlayerEpisodePreview\" version=\"1.2.0.1\" src=\"{0}/InPlayerPreview/ClientScript\"></script>",
                 basePath);
 
         if (!indexContents.Contains(scriptElement))

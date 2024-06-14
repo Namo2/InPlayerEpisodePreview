@@ -6,12 +6,11 @@ using MediaBrowser.Model.IO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System.ComponentModel.DataAnnotations;
-using System.Net.Mime;
 using System.Reflection;
-using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Persistence;
+using MediaBrowser.Controller.Session;
+using MediaBrowser.Model.Session;
 using Namo.Plugin.InPlayerEpisodePreview.Configuration;
 
 namespace Namo.Plugin.InPlayerEpisodePreview.Api;
@@ -35,6 +34,7 @@ public class InPlayerPreviewController : ControllerBase
     private readonly ILibraryMonitor _libraryMonitor;
     private readonly IMediaEncoder _mediaEncoder;
     private readonly IServerConfigurationManager _configurationManager;
+    private readonly ISessionManager _sessionManager;
     private readonly EncodingHelper _encodingHelper;
 
     private readonly PluginConfiguration _config;
@@ -52,10 +52,11 @@ public class InPlayerPreviewController : ControllerBase
         ILibraryMonitor libraryMonitor,
         IMediaEncoder mediaEncoder,
         IServerConfigurationManager configurationManager,
+        ISessionManager sessionManager,
         EncodingHelper encodingHelper)
     {
         _assembly = Assembly.GetExecutingAssembly();
-        _playerPreviewScriptPath = $"{InPlayerEpisodePreviewPlugin.Instance?.GetType().Namespace}.Web.inPlayerPreview.js";
+        _playerPreviewScriptPath = $"{InPlayerEpisodePreviewPlugin.Instance?.GetType().Namespace}.Web.InPlayerPreview.js";
 
         _libraryManager = libraryManager;
         _itemRepository = itemRepository;
@@ -66,6 +67,7 @@ public class InPlayerPreviewController : ControllerBase
         _libraryMonitor = libraryMonitor;
         _mediaEncoder = mediaEncoder;
         _configurationManager = configurationManager;
+        _sessionManager = sessionManager;
         _encodingHelper = encodingHelper;
 
         _config = InPlayerEpisodePreviewPlugin.Instance!.Configuration;
@@ -89,5 +91,35 @@ public class InPlayerPreviewController : ControllerBase
             return NotFound();
 
         return File(scriptStream, "application/javascript");
+    }
+
+    [HttpGet("Users/{userId}/Items/{id}/Play/{ticks}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult StartMedia([FromRoute] Guid userId, [FromRoute] Guid id, [FromRoute] long ticks = 0)
+    {
+        SessionInfo? session = _sessionManager.Sessions.FirstOrDefault(session => session.UserId.Equals(userId));
+        if (session is null)
+        {
+            _logger.LogInformation("Couldn't find a valid session for this user");
+            return NotFound("Couldn't find a valid session for this user");
+        }
+
+        BaseItem? item = _libraryManager.GetItemById(id);
+        if (item is null)
+        {
+            _logger.LogInformation("Couldn't find item to play");
+            return NotFound("Couldn't find item to play");
+        }
+        
+        _sessionManager.SendPlayCommand(session.Id, session.Id, 
+            new PlayRequest
+            {
+                ItemIds = [item.Id],
+                StartPositionTicks = ticks,
+                PlayCommand = PlayCommand.PlayNow,
+            }, CancellationToken.None);
+        
+        return Ok();
     }
 }

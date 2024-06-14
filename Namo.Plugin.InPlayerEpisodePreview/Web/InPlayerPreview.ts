@@ -1,27 +1,14 @@
 ﻿import {Logger} from "./Services/Logger";
-import {AuthService} from "./Services/AuthService/AuthService";
-import {JMPAuthService} from "./Services/AuthService/JMPAuthService";
-import {WebAuthService} from "./Services/AuthService/WebAuthService";
+import {AuthService} from "./Services/AuthService";
 import {PreviewButtonTemplate} from "./Components/PreviewButtonTemplate";
-import {JMPDataFetcher} from "./Services/DataFetcher/JMPDataFetcher";
-import {WebDataFetcher} from "./Services/DataFetcher/WebDataFetcher";
 import {ProgramDataStore} from "./Services/ProgramDataStore";
-import {DataLoader} from "./Services/DataLoader/DataLoader";
-import {JMPDataLoader} from "./Services/DataLoader/JMPDataLoader";
-import {WebDataLoader} from "./Services/DataLoader/WebDataLoader";
+import {DataLoader} from "./Services/DataLoader";
 import {DialogBackdropContainerTemplate} from "./Components/DialogBackdropContainerTemplate";
 import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
-import {JMPPlaybackHandler} from "./Services/PlaybackHandler/JMPPlaybackHandler";
-import {PlaybackHandler} from "./Services/PlaybackHandler/PlaybackHandler";
-import {WebPlaybackHandler} from "./Services/PlaybackHandler/WebPlaybackHandler";
+import {PlaybackHandler} from "./Services/PlaybackHandler";
 import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
-
-// @ts-ignore
-const isJMPClient = CLIENT === "JMP";
-
-// logger
-const logger: Logger = new Logger();
+import {DataFetcher} from "./Services/DataFetcher";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -40,21 +27,15 @@ inPlayerPreviewStyle.textContent += '.previewEpisodeContainer {width: 100%;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {width: 12vw; height: 15vh; left: 1em;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {position: absolute; right: 1em; left: 13.5vw; display: block; overflow: auto;}';
-document.body.appendChild(inPlayerPreviewStyle);
-// const cssInjector: CssInjector = new CssInjector();
-// cssInjector.injectCss('/Web/inPlayerPreviewStyle.css', document.body);
+document?.head?.appendChild(inPlayerPreviewStyle);
 
-// @ts-ignore
-const authService: AuthService = isJMPClient ? new JMPAuthService(ServerConnections, window) : new WebAuthService();
+// init services and helpers
+const logger: Logger = new Logger();
+const authService: AuthService = new AuthService();
 const programDataStore: ProgramDataStore = new ProgramDataStore();
-// @ts-ignore
-const dataLoader: DataLoader = isJMPClient ? new JMPDataLoader(authService, programDataStore, ServerConnections, window) : new WebDataLoader(authService, programDataStore);
-
-// @ts-ignore
-isJMPClient ? new JMPDataFetcher(programDataStore, dataLoader, events, playbackManager) : new WebDataFetcher(programDataStore, dataLoader, authService, logger)
-
-// @ts-ignore
-let playbackHandler: PlaybackHandler = isJMPClient ? new JMPPlaybackHandler(playbackManager) : new WebPlaybackHandler();
+const dataLoader: DataLoader = new DataLoader(authService, programDataStore);
+new DataFetcher(programDataStore, dataLoader, authService, logger)
+let playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger);
 
 const videoPaths = ['playback/video/index.html', '/video'];
 let previousRoutePath = null;
@@ -133,13 +114,13 @@ function viewShowEventHandler(): void {
                 // delete episode content for all existing episodes in the preview list;
                 contentDiv.innerHTML = "";
                 
-                let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore, isJMPClient);
+                let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
                 listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle);
             });
             popupTitle.setText(programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName);
 
             let episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
-            let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore, isJMPClient);
+            let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
             listElementFactory.createEpisodeElements(episodesForCurrentSeason, contentDiv);
             
             // scroll to the episode that is currently playing

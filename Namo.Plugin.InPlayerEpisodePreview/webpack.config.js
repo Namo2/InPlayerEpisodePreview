@@ -1,20 +1,13 @@
 ﻿const webpack = require('webpack');
 
-module.exports = (env) => {
-    console.log("CLIENT: " + env.CLIENT)
-    
+module.exports = () => {
     return {
         mode: "development",
         devtool: "inline-source-map",
-        entry: "./Web/inPlayerPreview.ts",
-        plugins: [
-            new webpack.DefinePlugin({
-                CLIENT: JSON.stringify(env.CLIENT ??= false),
-            })
-        ],
+        entry: "./Web/InPlayerPreview.ts",
         output: {
             path: __dirname + "/Web",
-            filename: "inPlayerPreview.js"
+            filename: "InPlayerPreview.js"
         },
         resolve: {
             extensions: [".ts", ".tsx", ".js"],

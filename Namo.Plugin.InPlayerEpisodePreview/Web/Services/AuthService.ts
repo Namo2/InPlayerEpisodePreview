@@ -1,6 +1,4 @@
-﻿import {AuthService} from "./AuthService";
-
-export class WebAuthService implements AuthService {
+﻿export class AuthService {
     private readonly _authHeader: string = 'Authorization';
     private _authHeaderValue: string = '';
 

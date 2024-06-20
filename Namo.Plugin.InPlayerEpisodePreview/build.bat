@@ -1,7 +1,9 @@
 @echo off
 
+REM Hash tool: https://emn178.github.io/online-tools/md5_checksum.html
+
 REM Flags
-set version="1.2.0.1"
+set version="1.2.1.0"
 
 REM Create build directory
 if not exist ".build" mkdir .build

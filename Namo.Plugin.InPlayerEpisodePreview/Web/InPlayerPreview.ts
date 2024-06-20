@@ -18,7 +18,7 @@ let inPlayerPreviewStyle = document.createElement('style');
 inPlayerPreviewStyle.id = 'inPlayerPreviewStyle';
 inPlayerPreviewStyle.textContent += '.selectedListItem {height: auto;}';
 inPlayerPreviewStyle.textContent += '.previewListItem {flex-direction: column; align-items: flex-start;}';
-inPlayerPreviewStyle.textContent += '.previewListItemContent {width: 100%; min-height: 15.5vh; position: relative; top: 0.5em; display: flex}';
+inPlayerPreviewStyle.textContent += '.previewListItemContent {width: 100%; min-height: 15.5vh; position: relative; top: 0.5em; display: flex; flex-direction: column;}';
 inPlayerPreviewStyle.textContent += '.previewPopup {animation: 140ms ease-out 0s 1 normal both running scaleup; position: fixed; margin: 0px; bottom: 1.5vh; left: 50vw; width: 48vw;}';
 inPlayerPreviewStyle.textContent += '.previewPopupTitle {max-height: 4vh;}';
 inPlayerPreviewStyle.textContent += '.previewPopupScroller {max-height: 60vh;}';
@@ -26,7 +26,8 @@ inPlayerPreviewStyle.textContent += '.previewQuickActionContainer {margin-left: 
 inPlayerPreviewStyle.textContent += '.previewEpisodeContainer {width: 100%;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {width: 12vw; height: 15vh; left: 1em;}';
-inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {position: absolute; right: 1em; left: 13.5vw; display: block; overflow: auto;}';
+inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {position: absolute; right: 1em; left: 13.5vw; display: block; overflow: auto; margin-top: 0.5em;}';
+inPlayerPreviewStyle.textContent += '.previewEpisodeDetails {margin-left: 0.5em;}';
 document?.head?.appendChild(inPlayerPreviewStyle);
 
 // init services and helpers

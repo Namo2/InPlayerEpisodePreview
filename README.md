@@ -1,6 +1,5 @@
 In Player Episode Preview
 ====================
----
 ## About ##
 This plugin adds an episode list to the video player, which allows you to preview every episode of the TV show without having to leave the player.
 
@@ -8,16 +7,15 @@ This modification has support for the following clients:
 * [Jellyfin Web Client](https://github.com/jellyfin/jellyfin-web)
 * [Jellyfin Media Player](https://github.com/jellyfin/jellyfin-media-player) (JMP) Desktop Client
 
----
 ### Features ###
 * List all episodes of a season
 * Switch between seasons
-* Show episode title, description, thumbnail and playback progress
+* Shows episode title, description, thumbnail and playback progress
+* Shows episode details like community ranking
 * Mark episodes as played or favourite
 * Start a new episode
 * Should work with custom themes
 
----
 ## Preview ##
 <img src="https://github.com/Namo2/InPlayerEpisodePreview/blob/master/Images/preview.gif" width="550" height="450">
 
@@ -25,7 +23,6 @@ Used Theme: (SkinManager) Kaleidochromic
 <br>
 This preview is missing the new buttons for marking an episode as completed or favourite.
 
----
 ## Installation ##
 
 ### Jellyfin Web Client (Server) ###
@@ -61,7 +58,6 @@ const plugins = [
 ```
 6. Save the file and restart the JMP client.
 
----
 ## Troubleshooting ##
 
 ### 1. The preview button isn't visible ###
@@ -72,10 +68,8 @@ If you encounter any error which you can't solve yourself, feel free to open up 
 <br/>Please keep in mind that any system is different which can lead to unexpected behaviour, so add as much information about it as possible.
 <br/>Jellyfin logs and console logs from the browser (prefixed as [InPlayerEpisodePreview]) are always useful.
 
----
 ## Drawbacks ##
 * The plugin will download some extra data like the episode description from the server.
 
----
 ## Credits ##
 The plugin structure is based and inspired on the [Jellyscrub](https://github.com/nicknsy/jellyscrub) plugin by [NickNSY](https://github.com/nicknsy).

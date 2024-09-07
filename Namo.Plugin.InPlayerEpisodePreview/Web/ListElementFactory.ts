@@ -27,6 +27,9 @@ export class ListElementFactory {
                 let episodeContainer = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
                 episodeContainer.classList.remove('hide');
                 episodeContainer.classList.add('selectedListItem');
+                
+                // scroll to the selected episode
+                episodeContainer.scrollIntoView({ block: "end" });
             });
 
             if (episodes[i].Id === this.programDataStore.activeMediaSourceId) {

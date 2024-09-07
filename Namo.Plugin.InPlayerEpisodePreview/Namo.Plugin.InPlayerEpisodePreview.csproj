@@ -4,15 +4,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>1.2.1.0</AssemblyVersion>
-    <FileVersion>1.2.1.0</FileVersion>
-    <Version>1.2.1.0</Version>
+    <AssemblyVersion>1.2.2.0</AssemblyVersion>
+    <FileVersion>1.2.2.0</FileVersion>
+    <Version>1.2.2.0</Version>
     <LangVersion>12</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Controller" Version="10.9.6" />
-    <PackageReference Include="Jellyfin.Model" Version="10.9.6" />
+    <PackageReference Include="Jellyfin.Controller" Version="10.9.10" />
+    <PackageReference Include="Jellyfin.Model" Version="10.9.10" />
   </ItemGroup>
 
   <ItemGroup>

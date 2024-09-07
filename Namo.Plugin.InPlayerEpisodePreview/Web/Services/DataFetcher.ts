@@ -15,7 +15,7 @@ export class DataFetcher {
             let resource: URL = args[0] as URL;
             let config: RequestInit = args[1];
 
-            if (config) {
+            if (config && config.headers) {
                 let auth = config.headers[this.authService.getAuthHeader()];
                 this.authService.setAuthHeaderValue(auth ? auth : '');
             }

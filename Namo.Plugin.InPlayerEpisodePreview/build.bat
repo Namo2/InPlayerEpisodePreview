@@ -3,7 +3,7 @@
 REM Hash tool: https://emn178.github.io/online-tools/md5_checksum.html
 
 REM Flags
-set version="1.2.1.0"
+set version="1.2.2.0"
 
 REM Create build directory
 if not exist ".build" mkdir .build

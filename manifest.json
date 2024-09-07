@@ -54,6 +54,14 @@
                 "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.1.0/InPlayerEpisodePreview-1.2.1.0-server.zip",
                 "checksum": "31A0659C681749C01184E7188289F080",
                 "timestamp": "2024-06-20T10:10:00Z"
+            },
+            {
+                "version": "1.2.2.0",
+                "changelog": "Security Updates, Fix for server discovery, fix for icon color on hover",
+                "targetAbi": "10.9.10.0",
+                "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.2.0/InPlayerEpisodePreview-1.2.2.0-server.zip",
+                "checksum": "d13482cdc15ab6a48a8daef66f4cfe62",
+                "timestamp": "2024-09-07T20:00:00Z"
             }
         ]
     }

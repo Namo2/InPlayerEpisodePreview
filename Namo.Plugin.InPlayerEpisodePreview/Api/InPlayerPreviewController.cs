@@ -11,6 +11,7 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Session;
+using Namo.Plugin.InPlayerEpisodePreview.Api.DTOs;
 using Namo.Plugin.InPlayerEpisodePreview.Configuration;
 
 namespace Namo.Plugin.InPlayerEpisodePreview.Api;
@@ -108,8 +109,9 @@ public class InPlayerPreviewController : ControllerBase
         BaseItem? item = _libraryManager.GetItemById(id);
         if (item is null)
         {
-            _logger.LogInformation("Couldn't find item to play");
-            return NotFound("Couldn't find item to play");
+            const string message = "Couldn't find item to play";
+            _logger.LogInformation(message);
+            return NotFound(message);
         }
         
         _sessionManager.SendPlayCommand(session.Id, session.Id, 
@@ -121,5 +123,21 @@ public class InPlayerPreviewController : ControllerBase
             }, CancellationToken.None);
         
         return Ok();
+    }
+    
+    [HttpGet("Items/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult GetMediaDescription([FromRoute] Guid id)
+    {
+        BaseItem? item = _libraryManager.GetItemById(id);
+        if (item is not null) 
+            return new OkObjectResult(new EpisodeDescriptionDto(item.Overview));
+        
+        // Error case
+        const string message = "Couldn't find item to play";
+        _logger.LogInformation(message);
+        return NotFound(message);
+
     }
 }

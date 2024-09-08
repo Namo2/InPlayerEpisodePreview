@@ -81,7 +81,7 @@ export class DataFetcher {
 
         let seasons: Season[] = [];
         let iterator = seasonIds.values();
-        let value: IteratorResult<string, any> = iterator.next();
+        let value: IteratorResult<string> = iterator.next();
         while (!value.done) {
             let seasonId = value.value;
             let season: Season = {
@@ -93,7 +93,7 @@ export class DataFetcher {
             season.episodes.map((episode: Episode) => {
                 let request = this.dataLoader.loadEpisodeDescription(episode.Id, () => {});
                 request.onloadend = () => {
-                    episode.Description = request.response.Overview;
+                    episode.Description = request.response?.Description;
                 };
                 
                 return episode;

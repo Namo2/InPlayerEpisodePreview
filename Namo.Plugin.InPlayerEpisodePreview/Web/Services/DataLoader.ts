@@ -7,8 +7,7 @@ export class DataLoader {
     }
 
     public loadEpisodeDescription(episodeId: string, onloadend: Function): XMLHttpRequest {
-        let requestUrl = Endpoints.EPISODE_INFO
-            .replace('{userId}', this.programDataStore.userId)
+        let requestUrl = `../${Endpoints.BASE}${Endpoints.EPISODE_DESCRIPTION}`
             .replace('{episodeId}', episodeId);
 
         let episodeDescriptionRequest = new XMLHttpRequest();

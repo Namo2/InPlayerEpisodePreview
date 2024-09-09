@@ -13,7 +13,7 @@ export class ListElementFactory {
     
     public createEpisodeElements(episodes: Episode[], parentDiv: HTMLElement) {
         for (let i = 0; i < episodes.length; i++) {
-            let episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.dataLoader, this.playbackHandler, this.programDataStore);
+            const episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.dataLoader, this.playbackHandler, this.programDataStore);
             episode.render((e: MouseEvent) => {
                 e.stopPropagation();
                 
@@ -22,9 +22,18 @@ export class ListElementFactory {
                     element.classList.add('hide');
                     element.classList.remove('selectedListItem');
                 });
-
+                
+                const episodeContainer = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
+                
+                // load episode description
+                if (!episodes[i].Description) {
+                    const request = this.dataLoader.loadEpisodeDescription(episodes[i].Id, () => {
+                        episodes[i].Description = request.response?.Description;
+                        episodeContainer.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
+                    });
+                }
+                
                 // show episode content for the selected episode
-                let episodeContainer = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
                 episodeContainer.classList.remove('hide');
                 episodeContainer.classList.add('selectedListItem');
                 
@@ -33,7 +42,13 @@ export class ListElementFactory {
             });
 
             if (episodes[i].Id === this.programDataStore.activeMediaSourceId) {
-                let episodeNode = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
+                const episodeNode = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
+                // preload episode description for the currently playing episode
+                const request = this.dataLoader.loadEpisodeDescription(episodes[i].Id, () => {
+                    episodes[i].Description = request.response?.Description;
+                    episodeNode.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
+                });
+                
                 episodeNode.classList.remove('hide');
                 episodeNode.classList.add('selectedListItem');
             }
@@ -42,7 +57,7 @@ export class ListElementFactory {
     
     public createSeasonElements(seasons: Season[], parentDiv: HTMLElement, currentSeasonIndex: number, titleContainer: PopupTitleTemplate) {
         for (let i = 0; i < seasons.length; i++) {
-            let season = new SeasonListElementTemplate(parentDiv, i, seasons[i], i === currentSeasonIndex);
+            const season = new SeasonListElementTemplate(parentDiv, i, seasons[i], i === currentSeasonIndex);
             season.render((e: MouseEvent) => {
                 e.stopPropagation();
                 

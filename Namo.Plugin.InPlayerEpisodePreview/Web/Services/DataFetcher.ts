@@ -81,7 +81,7 @@ export class DataFetcher {
 
         let seasons: Season[] = [];
         let iterator = seasonIds.values();
-        let value: IteratorResult<string, any> = iterator.next();
+        let value: IteratorResult<string> = iterator.next();
         while (!value.done) {
             let seasonId = value.value;
             let season: Season = {
@@ -90,14 +90,6 @@ export class DataFetcher {
                 episodes: group[seasonId]
             };
             
-            season.episodes.map((episode: Episode) => {
-                let request = this.dataLoader.loadEpisodeDescription(episode.Id, () => {});
-                request.onloadend = () => {
-                    episode.Description = request.response.Overview;
-                };
-                
-                return episode;
-            });
             season.episodes.sort((a: Episode, b: Episode) => a.IndexNumber - b.IndexNumber);
             
             seasons.push(season);
@@ -106,6 +98,7 @@ export class DataFetcher {
             
             value = iterator.next();
         }
+
         this.programDataStore.seasons = seasons;
         
         function groupBy<T>(arr: T[], fn: (item: T) => any) {

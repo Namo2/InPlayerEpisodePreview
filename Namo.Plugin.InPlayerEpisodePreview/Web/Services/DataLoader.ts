@@ -1,14 +1,12 @@
 ﻿import {AuthService} from "./AuthService";
-import {ProgramDataStore} from "./ProgramDataStore";
 import {Endpoints} from "../Endpoints";
 
 export class DataLoader {
-    constructor(protected authService: AuthService, protected programDataStore: ProgramDataStore) {
+    constructor(protected authService: AuthService) {
     }
 
-    public loadEpisodeDescription(episodeId: string, onloadend: Function): XMLHttpRequest {
-        let requestUrl = Endpoints.EPISODE_INFO
-            .replace('{userId}', this.programDataStore.userId)
+    public loadEpisodeDescription(episodeId: string, onloadend: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => void): XMLHttpRequest {
+        let requestUrl = `../${Endpoints.BASE}${Endpoints.EPISODE_DESCRIPTION}`
             .replace('{episodeId}', episodeId);
 
         let episodeDescriptionRequest = new XMLHttpRequest();
@@ -17,7 +15,7 @@ export class DataLoader {
         episodeDescriptionRequest.open('GET', requestUrl);
         this.authService.addAuthHeaderIntoHttpRequest(episodeDescriptionRequest);
         episodeDescriptionRequest.send();
-        episodeDescriptionRequest.onloadend = () => onloadend();
+        episodeDescriptionRequest.onloadend = onloadend;
 
         return episodeDescriptionRequest;
     }

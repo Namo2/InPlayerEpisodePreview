@@ -34,7 +34,7 @@ document?.head?.appendChild(inPlayerPreviewStyle);
 const logger: Logger = new Logger();
 const authService: AuthService = new AuthService();
 const programDataStore: ProgramDataStore = new ProgramDataStore();
-const dataLoader: DataLoader = new DataLoader(authService, programDataStore);
+const dataLoader: DataLoader = new DataLoader(authService);
 new DataFetcher(programDataStore, dataLoader, authService, logger)
 let playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger);
 

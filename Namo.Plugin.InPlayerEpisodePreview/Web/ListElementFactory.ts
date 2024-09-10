@@ -29,6 +29,7 @@ export class ListElementFactory {
                 if (!episodes[i].Description) {
                     const request = this.dataLoader.loadEpisodeDescription(episodes[i].Id, () => {
                         episodes[i].Description = request.response?.Description;
+                        this.programDataStore.updateEpisode(episodes[i]);
                         episodeContainer.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
                     });
                 }
@@ -43,11 +44,15 @@ export class ListElementFactory {
 
             if (episodes[i].Id === this.programDataStore.activeMediaSourceId) {
                 const episodeNode = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
+                
                 // preload episode description for the currently playing episode
-                const request = this.dataLoader.loadEpisodeDescription(episodes[i].Id, () => {
-                    episodes[i].Description = request.response?.Description;
-                    episodeNode.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
-                });
+                if (!episodes[i].Description) {
+                    const request = this.dataLoader.loadEpisodeDescription(episodes[i].Id, () => {
+                        episodes[i].Description = request.response?.Description;
+                        this.programDataStore.updateEpisode(episodes[i]);
+                        episodeNode.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
+                    });
+                }
                 
                 episodeNode.classList.remove('hide');
                 episodeNode.classList.add('selectedListItem');

@@ -62,6 +62,14 @@
                 "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.2.0/InPlayerEpisodePreview-1.2.2.0-server.zip",
                 "checksum": "d13482cdc15ab6a48a8daef66f4cfe62",
                 "timestamp": "2024-09-07T20:00:00Z"
+            },
+			{
+                "version": "1.2.3.0",
+                "changelog": "Reduced data usage",
+                "targetAbi": "10.9.11.0",
+                "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.3.0/InPlayerEpisodePreview-1.2.3.0-server.zip",
+                "checksum": "d10583f352e58178b01ca7ca07b98bc6",
+                "timestamp": "2024-09-10T17:38:00Z"
             }
         ]
     }

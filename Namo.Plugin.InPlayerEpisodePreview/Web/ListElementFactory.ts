@@ -39,7 +39,7 @@ export class ListElementFactory {
                 episodeContainer.classList.add('selectedListItem');
                 
                 // scroll to the selected episode
-                episodeContainer.scrollIntoView({ block: "end" });
+                episodeContainer.parentElement.scrollIntoView({ block: "start" });
             });
 
             if (episodes[i].Id === this.programDataStore.activeMediaSourceId) {

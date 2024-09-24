@@ -71,13 +71,21 @@
                 "checksum": "d10583f352e58178b01ca7ca07b98bc6",
                 "timestamp": "2024-09-10T17:38:00Z"
             },
-						{
+			{
                 "version": "1.2.3.1",
                 "changelog": "Fixed version tag in settings",
                 "targetAbi": "10.9.11.0",
                 "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.3.1/InPlayerEpisodePreview-1.2.3.1-server.zip",
                 "checksum": "5052e834df8196e0e4d3fe20a77496aa",
                 "timestamp": "2024-09-10T17:55:00Z"
+            },
+            {
+                "version": "1.2.4.0",
+                "changelog": "Fixed image loading with subpaths",
+                "targetAbi": "10.9.11.0",
+                "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.2.4.0/InPlayerEpisodePreview-1.2.4.0-server.zip",
+                "checksum": "93daf6047501fb461984f6a50862e0ca",
+                "timestamp": "2024-09-24T17:31:00Z"
             }
         ]
     }

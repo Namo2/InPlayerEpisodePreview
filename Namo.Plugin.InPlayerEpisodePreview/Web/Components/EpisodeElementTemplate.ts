@@ -60,7 +60,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
                                     <button id="previewEpisodeImageCard-${this.episode.IndexNumber}"
                                             class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
                                             data-action="link"
-                                            style="background-image: url('/Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}');">
+                                            style="background-image: url('../Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}');">
                                         <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${!this.episode.UserData.PlayedPercentage ? "hide" : ""}">
                                             <div class="itemProgressBar">
                                                 <div class="itemProgressBarForeground"

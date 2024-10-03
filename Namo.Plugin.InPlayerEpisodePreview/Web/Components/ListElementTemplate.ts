@@ -28,6 +28,8 @@ export class EpisodeElementTemplate extends BaseTemplate {
         let details = new EpisodeDetailsTemplate(detailsContainer, -1, this.episode);
         details.render();
         
+        const backgroundImageStyle = `background-image: url('../Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}')`
+        
         // language=HTML
         return `
             <div id="${this.getElementId()}"
@@ -49,8 +51,8 @@ export class EpisodeElementTemplate extends BaseTemplate {
                 <div class="previewListItemContent hide">
                     ${detailsContainer.innerHTML}
                     <div class="flex">
-                        <div class="card overflowBackdropCard card-hoverable card-withuserdata">
-                            <div class="cardBox previewEpisodeImageCard">
+                        <div class="card overflowBackdropCard card-hoverable card-withuserdata previewEpisodeImageCard">
+                            <div class="cardBox">
                                 <div class="cardScalable">
                                     <div class="cardPadder cardPadder-overflowBackdrop lazy-hidden-children">
                                         <span class="cardImageIcon material-icons tv" aria-hidden="true"/>
@@ -60,7 +62,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
                                     <button id="previewEpisodeImageCard-${this.episode.IndexNumber}"
                                             class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
                                             data-action="link"
-                                            style="background-image: url('../Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}');">
+                                            style="${backgroundImageStyle}">
                                         <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${!this.episode.UserData.PlayedPercentage ? "hide" : ""}">
                                             <div class="itemProgressBar">
                                                 <div class="itemProgressBarForeground"

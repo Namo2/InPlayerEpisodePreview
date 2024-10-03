@@ -9,6 +9,8 @@ import {PlaybackHandler} from "./Services/PlaybackHandler";
 import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 import {DataFetcher} from "./Services/DataFetcher";
+import {BaseItem} from "./Models/Episode";
+import {Season} from "./Models/Season";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -35,20 +37,21 @@ const logger: Logger = new Logger();
 const authService: AuthService = new AuthService();
 const programDataStore: ProgramDataStore = new ProgramDataStore();
 const dataLoader: DataLoader = new DataLoader(authService);
-new DataFetcher(programDataStore, dataLoader, authService, logger)
-let playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger);
+new DataFetcher(programDataStore, authService, logger);
+const playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger);
+const listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
 
-const videoPaths = ['/video'];
-let previousRoutePath = null;
+const videoPaths: string[] = ['/video'];
+let previousRoutePath: string = null;
 document.addEventListener('viewshow', viewShowEventHandler);
-let previewContainerLoaded = false;
+let previewContainerLoaded: boolean = false;
 
 function viewShowEventHandler(): void {
     let currentRoutePath: string = getLocationPath();
 
-    function getLocationPath() {
+    function getLocationPath(): string {
         const location: string = window.location.toString();
-        const currentRouteIndex = location.lastIndexOf('/');
+        const currentRouteIndex: number = location.lastIndexOf('/');
 
         return location.substring(currentRouteIndex);
     }
@@ -59,16 +62,16 @@ function viewShowEventHandler(): void {
     previousRoutePath = currentRoutePath;
 
     // This function attempts to load the video view, retrying up to 3 times if necessary.
-    function attemptLoadVideoView(retryCount = 0) {
+    function attemptLoadVideoView(retryCount = 0): void {
         if (videoPaths.includes(currentRoutePath)) {
-            if (programDataStore.isSeries) {
+            if ((programDataStore.movies.length > 0 && programDataStore.boxSetName !== '') || (programDataStore.seasons.length > 0 && programDataStore.seasons[programDataStore.activeSeasonIndex].episodes.length > 1)) {
                 // Check if the preview container is already loaded before loading
                 if (!previewContainerLoaded && !isPreviewButtonCreated()) {
                     loadVideoView();
                     previewContainerLoaded = true; // Set flag to true after loading
                 }
             } else if (retryCount < 3) { // Retry up to 3 times
-                setTimeout(() => {
+                setTimeout((): void => {
                     logger.debug(`Retry #${retryCount + 1}`);
                     attemptLoadVideoView(retryCount + 1);
                 }, 10000); // Wait 10 seconds for each retry
@@ -80,51 +83,54 @@ function viewShowEventHandler(): void {
     
     function loadVideoView(): void {
         // add preview button to the page
-        let parent = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
+        let parent: HTMLElement = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
         
-        let index = Array.from(parent.children).findIndex(child => child.classList.contains("btnUserRating"));
+        let index: number = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("btnUserRating"));
         // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
         if (index === -1)
-            index = Array.from(parent.children).findIndex(child => child.classList.contains("osdTimeText"))
+            index = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("osdTimeText"))
 
         let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
         previewButton.render(previewButtonClickHandler);
 
-        function previewButtonClickHandler() {
-            // refresh active season
-            programDataStore.activeSeasonIndex = programDataStore.seasons
-                .findIndex(season => season.episodes.some(episode => episode.Id === programDataStore.activeMediaSourceId));
+        function previewButtonClickHandler(): void {
+            const isSeries: boolean = programDataStore.isSeries;
             
-            let dialogBackdrop = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1);
+            if (isSeries) {
+                // refresh active season
+                programDataStore.activeSeasonIndex = programDataStore.seasons
+                    .findIndex((season: Season): boolean => season.episodes.some((episode: BaseItem): boolean => episode.Id === programDataStore.activeMediaSourceId));
+            }
+            
+            let dialogBackdrop: DialogBackdropContainerTemplate = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1);
             dialogBackdrop.render();
             
-            let dialogContainer = new DialogContainerTemplate(document.body, document.body.children.length - 1);
-            dialogContainer.render(() => {
+            let dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1);
+            dialogContainer.render((): void => {
                 document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()));
                 document.body.removeChild(document.getElementById(dialogContainer.getElementId()));
             });
 
-            let contentDiv = document.getElementById('popupContentContainer');
+            let contentDiv: HTMLElement = document.getElementById('popupContentContainer');
             contentDiv.innerHTML = ""; // remove old content
             
-            let popupTitle = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1);
+            let popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore);
             popupTitle.render((e: MouseEvent) => {
                 e.stopPropagation();
                 
                 popupTitle.setVisible(false);
-                let contentDiv = document.getElementById('popupContentContainer');
+                let contentDiv: HTMLElement = document.getElementById('popupContentContainer');
 
                 // delete episode content for all existing episodes in the preview list;
                 contentDiv.innerHTML = "";
                 
-                let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
                 listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle);
             });
-            popupTitle.setText(programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName);
+            
+            popupTitle.setText(isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName : programDataStore.boxSetName);
 
-            let episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
-            let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
-            listElementFactory.createEpisodeElements(episodesForCurrentSeason, contentDiv);
+            let itemsForCurrentList: BaseItem[] = isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].episodes : programDataStore.movies;
+            listElementFactory.createEpisodeElements(itemsForCurrentList, contentDiv);
             
             // scroll to the episode that is currently playing
             contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView();

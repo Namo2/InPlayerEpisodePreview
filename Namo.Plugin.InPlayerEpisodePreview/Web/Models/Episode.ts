@@ -1,10 +1,12 @@
-﻿export interface EpisodeDto {
-    Items: Episode[];
+﻿import {ItemType} from "./ItemType";
+
+export type ItemDto = {
+    Items: BaseItem[];
     TotalRecordCount: number;
     StartIndex: number;
 }
 
-export interface Episode {
+export type BaseItem = {
     Name: string
     ServerId: string
     Id: string
@@ -22,11 +24,6 @@ export interface Episode {
     ParentBackdropItemId: string
     ParentBackdropImageTags: string[]
     UserData: UserData
-    SeriesName: string
-    SeriesId: string
-    SeasonId: string
-    SeriesPrimaryImageTag: string
-    SeasonName: string
     VideoType: string
     ImageTags: ImageTags
     BackdropImageTags: any[]
@@ -37,9 +34,15 @@ export interface Episode {
     MediaType: string
     OfficialRating?: string
     Description?: string
+    CriticRating?: number
+    SeriesName?: string
+    SeriesId?: string
+    SeasonId?: string
+    SeriesPrimaryImageTag?: string
+    SeasonName?: string
 }
 
-export interface UserData {
+export type UserData = {
     PlayedPercentage?: number
     PlaybackPositionTicks: number
     PlayCount: number
@@ -49,17 +52,17 @@ export interface UserData {
     Key: string
 }
 
-export interface ImageTags {
+export type ImageTags = {
     Primary: string
 }
 
-export interface ImageBlurHashes {
+export type ImageBlurHashes = {
     Primary: Primary
     Logo: Logo
     Backdrop: Backdrop
 }
 
-export interface Primary {
+export type Primary = {
     "97dcc421e6d5277bd204d6a0c2e1d7e9"?: string
     e84f38054f15760a5baab510e39d419f: string
     d3fb4a8e790b3f88641c30a427512026?: string
@@ -83,15 +86,15 @@ export interface Primary {
     c4d9bf936687fa5ec9c006e10b59dc16?: string
 }
 
-export interface Logo {
+export type Logo = {
     feddf6f18ae97abc608fdc453b02012e: string
 }
 
-export interface Backdrop {
+export type Backdrop = {
     ed95d46d15bb158fa9bb6e126111fbd4: string
 }
 
-export interface Chapter {
+export type Chapter = {
     StartPositionTicks: number
     Name: string
     ImageDateModified: string

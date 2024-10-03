@@ -1,9 +1,8 @@
 import {BaseTemplate} from "../BaseTemplate";
-import {Episode} from "../../Models/Episode";
-import {ProgramDataStore} from "../../Services/ProgramDataStore";
+import {BaseItem} from "../../Models/Episode";
 
 export class FavoriteIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private programDataStore: ProgramDataStore) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
         super(container, positionAfterIndex);
         this.setElementId('favoriteButton-' + episode.IndexNumber);
     }
@@ -31,22 +30,5 @@ export class FavoriteIconTemplate extends BaseTemplate {
 
     public render(): void {
         this.addElementToContainer();
-        // let element = this.addElementToContainer();
-        //
-        // element.addEventListener('click', (e) => {
-        //     e.stopPropagation();
-        //
-        //     console.log("Update Episode Fav")
-        //    
-        //     this.getElement().nextElementSibling.dispatchEvent(new MouseEvent('click'))
-        //
-        //     // update the favorite state
-        //     this.episode.UserData.IsFavorite = !this.episode.UserData.IsFavorite;
-        //     this.getElement().dataset.isfavorite = this.episode.UserData.IsFavorite.toString();
-        //
-        //     this.programDataStore
-        //         .seasons.find(s => s.seasonId === this.episode.SeasonId)
-        //         .episodes.find(e => e.Id === this.episode.Id).UserData.IsFavorite = this.episode.UserData.IsFavorite;
-        // });
     }
 }

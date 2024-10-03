@@ -1,31 +1,29 @@
 ﻿import {BaseTemplate} from "./BaseTemplate";
-import {Episode} from "../Models/Episode";
+import {BaseItem} from "../Models/Episode";
 import {FavoriteIconTemplate} from "./QuickActions/FavoriteIconTemplate";
 import {PlayStateIconTemplate} from "./QuickActions/PlayStateIconTemplate";
-import {ProgramDataStore} from "../Services/ProgramDataStore";
-import {DataLoader} from "../Services/DataLoader";
 import {PlaybackHandler} from "../Services/PlaybackHandler";
 import {EpisodeDetailsTemplate} from "./EpisodeDetails";
 
-export class EpisodeElementTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
+export class ListElementTemplate extends BaseTemplate {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem, private playbackHandler: PlaybackHandler) {
         super(container, positionAfterIndex);
         this.setElementId(`episode-${episode.IndexNumber}`);
     }
     
     getTemplate(): string {
         // create temp quick action container
-        let quickActionContainer = document.createElement('div');
+        const quickActionContainer: HTMLDivElement = document.createElement('div');
         
         // add quick actions
-        let playStateIcon = new PlayStateIconTemplate(quickActionContainer, -1, this.episode, this.programDataStore);
+        const playStateIcon: PlayStateIconTemplate = new PlayStateIconTemplate(quickActionContainer, -1, this.episode);
         playStateIcon.render();
-        let favoriteIcon = new FavoriteIconTemplate(quickActionContainer, 0, this.episode, this.programDataStore);
+        const favoriteIcon: FavoriteIconTemplate = new FavoriteIconTemplate(quickActionContainer, 0, this.episode);
         favoriteIcon.render();
         
         // add episode details/info
-        let detailsContainer = document.createElement('div');
-        let details = new EpisodeDetailsTemplate(detailsContainer, -1, this.episode);
+        const detailsContainer: HTMLDivElement = document.createElement('div');
+        const details: EpisodeDetailsTemplate = new EpisodeDetailsTemplate(detailsContainer, -1, this.episode);
         details.render();
         
         const backgroundImageStyle = `background-image: url('../Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}')`

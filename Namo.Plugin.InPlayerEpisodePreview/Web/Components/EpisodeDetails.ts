@@ -1,8 +1,8 @@
 ﻿import {BaseTemplate} from "./BaseTemplate";
-import {Episode} from "../Models/Episode";
+import {BaseItem} from "../Models/Episode";
 
 export class EpisodeDetailsTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
         super(container, positionAfterIndex);
         this.setElementId(`episode-${episode.IndexNumber}`);
     }

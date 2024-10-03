@@ -1,9 +1,8 @@
 ﻿import {BaseTemplate} from "../BaseTemplate";
-import {Episode} from "../../Models/Episode";
-import {ProgramDataStore} from "../../Services/ProgramDataStore";
+import {BaseItem} from "../../Models/Episode";
 
 export class PlayStateIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private programDataStore: ProgramDataStore) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
         super(container, positionAfterIndex);
         this.setElementId('playStateButton-' + this.episode.IndexNumber);
     }
@@ -29,17 +28,5 @@ export class PlayStateIconTemplate extends BaseTemplate {
 
     public render(): void {
         this.addElementToContainer();
-
-        // this.getElement().addEventListener('mouseleave', (e: MouseEvent) => {
-        //     e.stopPropagation();
-        //
-        //     // update the favorite state
-        //     this.episode.UserData.Played = !this.episode.UserData.Played;
-        //     this.getElement().dataset.played = this.episode.UserData.Played.toString();
-        //
-        //     this.programDataStore
-        //         .seasons.find(s => s.seasonId === this.episode.SeasonId)
-        //         .episodes.find(e => e.Id === this.episode.Id).UserData.Played = this.episode.UserData.Played;
-        // });
     }
 }

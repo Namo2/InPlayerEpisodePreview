@@ -38,18 +38,25 @@ const dataLoader: DataLoader = new DataLoader(authService);
 new DataFetcher(programDataStore, dataLoader, authService, logger)
 let playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger);
 
-const videoPaths = ['playback/video/index.html', '/video'];
+const videoPaths = ['/video'];
 let previousRoutePath = null;
 document.addEventListener('viewshow', viewShowEventHandler);
 let previewContainerLoaded = false;
 
 function viewShowEventHandler(): void {
-    // @ts-ignore
-    let currentRoutePath = Emby.Page.currentRouteInfo.route.path;
+    let currentRoutePath: string = getLocationPath();
 
-    if (!currentRoutePath)
-        // @ts-ignore
-        currentRoutePath = Emby.Page.currentRouteInfo.path;
+    function getLocationPath() {
+        const location: string = window.location.toString();
+        const currentRouteIndex = location.lastIndexOf('/');
+
+        return location.substring(currentRouteIndex);
+    }
+
+    // Initial attempt to load the video view or schedule retries.
+    attemptLoadVideoView();
+
+    previousRoutePath = currentRoutePath;
 
     // This function attempts to load the video view, retrying up to 3 times if necessary.
     function attemptLoadVideoView(retryCount = 0) {
@@ -62,7 +69,7 @@ function viewShowEventHandler(): void {
                 }
             } else if (retryCount < 3) { // Retry up to 3 times
                 setTimeout(() => {
-                    console.log(`Retry #${retryCount + 1}`);
+                    logger.debug(`Retry #${retryCount + 1}`);
                     attemptLoadVideoView(retryCount + 1);
                 }, 10000); // Wait 10 seconds for each retry
             }
@@ -70,11 +77,6 @@ function viewShowEventHandler(): void {
             unloadVideoView();
         }
     }
-
-    // Initial attempt to load the video view or schedule retries.
-    attemptLoadVideoView();
-
-    previousRoutePath = currentRoutePath;
     
     function loadVideoView(): void {
         // add preview button to the page

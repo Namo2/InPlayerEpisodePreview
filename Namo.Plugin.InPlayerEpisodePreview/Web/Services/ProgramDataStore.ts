@@ -49,11 +49,16 @@ export class ProgramDataStore {
     public set isSeries(isSeries: boolean) {
         this._programData.isSeries = isSeries;
     }
+    
+    public getEpisodeById(episodeId: string): Episode {
+        const season: Season = this.seasons.find((season: Season) => season.episodes.some((episode: Episode) => episode.Id === episodeId))
+        return season.episodes.find((episode: Episode) => episode.Id === episodeId);
+    }
 
     public updateEpisode(episode: Episode): void {
-        let season = this.seasons.find(s => s.seasonId === episode.SeasonId);
+        const season: Season = this.seasons.find(s => s.seasonId === episode.SeasonId);
         if (season) {
-            let episodeIndex = season.episodes.findIndex(e => e.Id === episode.Id);
+            const episodeIndex = season.episodes.findIndex(e => e.Id === episode.Id);
             if (episodeIndex > -1) {
                 season.episodes[episodeIndex] = episode;
                 this.updateSeason(season);

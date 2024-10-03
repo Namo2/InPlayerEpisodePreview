@@ -1,5 +1,4 @@
 ﻿import {ProgramDataStore} from "./ProgramDataStore";
-import {DataLoader} from "./DataLoader";
 import {AuthService} from "./AuthService";
 import {Logger} from "./Logger";
 import {Episode, EpisodeDto} from "../Models/Episode";
@@ -9,7 +8,7 @@ import {Season} from "../Models/Season";
  * The classes which derives from this interface, will provide the functionality to handle the data input from the server if the PlaybackState is changed.
  */
 export class DataFetcher {
-    constructor(private programDataStore: ProgramDataStore, private dataLoader: DataLoader, private authService: AuthService, private logger: Logger) {
+    constructor(private programDataStore: ProgramDataStore, private authService: AuthService, private logger: Logger) {
         const {fetch: originalFetch} = window;
         window.fetch = async (...args) => {
             let resource: URL = args[0] as URL;
@@ -20,7 +19,6 @@ export class DataFetcher {
                 this.authService.setAuthHeaderValue(auth ? auth : '');
             }
 
-            this.logger.debug(`Fetching data`);
             const response = await originalFetch(resource, config);
 
             let url = new URL(resource);
@@ -30,40 +28,70 @@ export class DataFetcher {
                 this.logger.debug('Received PlaybackInfo');
 
                 // save the media id of the currently played video
-                this.getProgramDataStore().activeMediaSourceId = extractKeyFromString(urlPathname, 'Items/', '/');
+                this.programDataStore.activeMediaSourceId = extractKeyFromString(urlPathname, 'Items/', '/');
 
             } else if (urlPathname.includes('Episodes')) {
                 this.logger.debug('Received Episodes');
 
-                this.getProgramDataStore().userId = extractKeyFromString(url.search, 'UserId=', '&');
+                this.programDataStore.userId = extractKeyFromString(url.search, 'UserId=', '&');
                 response.clone().json().then((data) => this.saveEpisodeData(data));
 
             } else if (urlPathname.includes('Items') && url.search.includes('ParentId')) {
                 this.logger.debug('Received Episode Items');
 
-                this.getProgramDataStore().userId = extractKeyFromString(urlPathname, 'Users/', '/');
+                this.programDataStore.userId = extractKeyFromString(urlPathname, 'Users/', '/');
                 response.clone().json().then((data) => this.saveEpisodeData(data));
+
+            } else if (urlPathname.includes('Progress')) {
+                // update the playback state of the currently played video
+                const sliderCollection = document.getElementsByClassName('osdPositionSlider')
+                const slider = sliderCollection[sliderCollection.length - 1];
+                const currentPlaybackPercentage: number = parseFloat((slider as HTMLInputElement).value);
+                const episode: Episode = this.programDataStore.getEpisodeById(this.programDataStore.activeMediaSourceId);
+
+                episode.UserData.PlaybackPositionTicks = episode.RunTimeTicks * currentPlaybackPercentage / 100;
+                episode.UserData.PlayedPercentage = currentPlaybackPercentage;
+                this.programDataStore.updateEpisode(episode);
+
+            } else if (urlPathname.includes('PlayedItems')) {
+                // update the played state of the episode
+                this.logger.debug('Received PlayedItems');
+
+                let episodeId: string = extractKeyFromString(urlPathname, 'PlayedItems/');
+                let changedEpisode: Episode = this.programDataStore.getEpisodeById(episodeId);
+
+                response.clone().json().then((data) => changedEpisode.UserData.Played = data["Played"]);
+                this.programDataStore.updateEpisode(changedEpisode);
+
+            } else if (urlPathname.includes('FavoriteItems')) {
+                // update the favourite state of the episode
+                this.logger.debug('Received FavoriteItems');
+
+                let episodeId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
+                let changedEpisode: Episode = this.programDataStore.getEpisodeById(episodeId);
+
+                response.clone().json().then((data) => changedEpisode.UserData.IsFavorite = data["IsFavorite"]);
+                this.programDataStore.updateEpisode(changedEpisode);
             }
 
             return response;
 
-            function extractKeyFromString(searchString: string, startString: string, endString: string): string {
-                let startIndex = searchString.indexOf(startString) + startString.length;
-                let endIndex = searchString.indexOf(endString, startIndex);
+            function extractKeyFromString(searchString: string, startString: string, endString: string = ''): string {
+                const startIndex = searchString.indexOf(startString) + startString.length;
+                if (endString !== '') {
+                    const endIndex = searchString.indexOf(endString, startIndex);
+                    return searchString.substring(startIndex, endIndex);
+                }
 
-                return searchString.substring(startIndex, endIndex);
+                return searchString.substring(startIndex);
             }
         };
     }
-    
-    protected getProgramDataStore(): ProgramDataStore {
-        return this.programDataStore;
-    }
 
     public checkIfDataIsEpisodeData(episodeData: EpisodeDto): boolean {
-        return episodeData 
-            && episodeData.Items 
-            && episodeData.Items.length > 0 
+        return episodeData
+            && episodeData.Items
+            && episodeData.Items.length > 0
             && episodeData.Items[0].Type !== 'Movie';
     }
     
@@ -74,7 +102,7 @@ export class DataFetcher {
         this.programDataStore.isSeries = true;
         
         // get all different seasonIds
-        let seasonIds: Set<string> = new Set<string> (episodeData.Items.map((episode: Episode) => episode.SeasonId))
+        let seasonIds: Set<string> = new Set<string>(episodeData.Items.map((episode: Episode) => episode.SeasonId))
 
         // group the episodes by seasonId
         let group: Record<string, Episode[]> = groupBy(episodeData.Items, (episode: Episode) => episode.SeasonId);

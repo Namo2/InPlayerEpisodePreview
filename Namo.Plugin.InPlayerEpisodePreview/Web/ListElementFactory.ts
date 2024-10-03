@@ -13,7 +13,7 @@ export class ListElementFactory {
     
     public createEpisodeElements(episodes: Episode[], parentDiv: HTMLElement) {
         for (let i = 0; i < episodes.length; i++) {
-            const episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.dataLoader, this.playbackHandler, this.programDataStore);
+            const episode = new EpisodeElementTemplate(parentDiv, i, episodes[i], this.playbackHandler, this.programDataStore);
             episode.render((e: MouseEvent) => {
                 e.stopPropagation();
                 

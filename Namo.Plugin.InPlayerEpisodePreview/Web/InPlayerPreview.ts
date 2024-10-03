@@ -35,8 +35,8 @@ const logger: Logger = new Logger();
 const authService: AuthService = new AuthService();
 const programDataStore: ProgramDataStore = new ProgramDataStore();
 const dataLoader: DataLoader = new DataLoader(authService);
-new DataFetcher(programDataStore, dataLoader, authService, logger)
-let playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger);
+new DataFetcher(programDataStore, authService, logger)
+const playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger);
 
 const videoPaths = ['playback/video/index.html', '/video'];
 let previousRoutePath = null;
@@ -85,27 +85,27 @@ function viewShowEventHandler(): void {
         if (index === -1)
             index = Array.from(parent.children).findIndex(child => child.classList.contains("osdTimeText"))
 
-        let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
+        const previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
         previewButton.render(previewButtonClickHandler);
 
         function previewButtonClickHandler() {
             // refresh active season
             programDataStore.activeSeasonIndex = programDataStore.seasons
                 .findIndex(season => season.episodes.some(episode => episode.Id === programDataStore.activeMediaSourceId));
-            
-            let dialogBackdrop = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1);
+
+            const dialogBackdrop = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1);
             dialogBackdrop.render();
-            
-            let dialogContainer = new DialogContainerTemplate(document.body, document.body.children.length - 1);
+
+            const dialogContainer = new DialogContainerTemplate(document.body, document.body.children.length - 1);
             dialogContainer.render(() => {
                 document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()));
                 document.body.removeChild(document.getElementById(dialogContainer.getElementId()));
             });
 
-            let contentDiv = document.getElementById('popupContentContainer');
+            const contentDiv = document.getElementById('popupContentContainer');
             contentDiv.innerHTML = ""; // remove old content
-            
-            let popupTitle = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1);
+
+            const popupTitle = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1);
             popupTitle.render((e: MouseEvent) => {
                 e.stopPropagation();
                 
@@ -114,14 +114,14 @@ function viewShowEventHandler(): void {
 
                 // delete episode content for all existing episodes in the preview list;
                 contentDiv.innerHTML = "";
-                
-                let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
+
+                const listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
                 listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle);
             });
             popupTitle.setText(programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName);
 
-            let episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
-            let listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
+            const episodesForCurrentSeason = programDataStore.seasons[programDataStore.activeSeasonIndex].episodes;
+            const listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
             listElementFactory.createEpisodeElements(episodesForCurrentSeason, contentDiv);
             
             // scroll to the episode that is currently playing

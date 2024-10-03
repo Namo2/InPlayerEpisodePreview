@@ -3,25 +3,30 @@ import {Episode} from "../Models/Episode";
 import {FavoriteIconTemplate} from "./QuickActions/FavoriteIconTemplate";
 import {PlayStateIconTemplate} from "./QuickActions/PlayStateIconTemplate";
 import {ProgramDataStore} from "../Services/ProgramDataStore";
-import {DataLoader} from "../Services/DataLoader";
 import {PlaybackHandler} from "../Services/PlaybackHandler";
 import {EpisodeDetailsTemplate} from "./EpisodeDetails";
 
 export class EpisodeElementTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
+    private quickActionContainer: HTMLElement;
+    private playStateIcon: PlayStateIconTemplate;
+    private favoriteIcon: FavoriteIconTemplate;
+    
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex);
         this.setElementId(`episode-${episode.IndexNumber}`);
+
+        // create temp quick action container
+        this.quickActionContainer = document.createElement('div');
+        
+        // create quick actions
+        this.playStateIcon = new PlayStateIconTemplate(this.quickActionContainer, -1, this.episode, this.programDataStore);
+        this.favoriteIcon = new FavoriteIconTemplate(this.quickActionContainer, 0, this.episode, this.programDataStore);
     }
     
     getTemplate(): string {
-        // create temp quick action container
-        let quickActionContainer = document.createElement('div');
-        
         // add quick actions
-        let playStateIcon = new PlayStateIconTemplate(quickActionContainer, -1, this.episode, this.programDataStore);
-        playStateIcon.render();
-        let favoriteIcon = new FavoriteIconTemplate(quickActionContainer, 0, this.episode, this.programDataStore);
-        favoriteIcon.render();
+        this.playStateIcon.render();
+        this.favoriteIcon.render();
         
         // add episode details/info
         let detailsContainer = document.createElement('div');
@@ -42,7 +47,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
                         </div>
                     </button>
                     <div class="previewQuickActionContainer flex">
-                        ${quickActionContainer.innerHTML}
+                        ${this.quickActionContainer.innerHTML}
                     </div>
                 </div>
 
@@ -90,10 +95,29 @@ export class EpisodeElementTemplate extends BaseTemplate {
 
     public render(clickHandler: Function): void {
         let renderedElement = this.addElementToContainer();
-        renderedElement.addEventListener('click', (e) => clickHandler(e));
+        renderedElement.addEventListener('click', (e) => {
+            clickHandler(e)
+        });
         
         // add event handler to start the playback of this episode
         let episodeImageCard = document.getElementById(`start-episode-${this.episode.IndexNumber}`);
         episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.episode.Id, this.episode.UserData.PlaybackPositionTicks));
+    }
+
+    /**
+     * Unused - Will maybe be used in further updates on this
+     */
+    public update(): void {
+        // get current episode data
+        const season = this.programDataStore.seasons.find(s => s.episodes.some(e => e.Id === this.episode.Id));
+        const newData = season.episodes.find(e => e.Id === this.episode.Id);
+        
+        // update playtime percentage
+        const playtime = this.getElement().querySelector('.itemProgressBarForeground');
+        playtime.setAttribute("style", `width:${newData.UserData.PlayedPercentage}%`);
+        
+        // update quick actions state
+        this.playStateIcon.update();
+        this.favoriteIcon.update();
     }
 }

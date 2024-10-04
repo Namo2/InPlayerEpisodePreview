@@ -1,12 +1,11 @@
 ﻿import {BaseTemplate} from "./BaseTemplate";
-import {Episode} from "../Models/Episode";
 import {FavoriteIconTemplate} from "./QuickActions/FavoriteIconTemplate";
 import {PlayStateIconTemplate} from "./QuickActions/PlayStateIconTemplate";
-import {ProgramDataStore} from "../Services/ProgramDataStore";
 import {PlaybackHandler} from "../Services/PlaybackHandler";
 import {EpisodeDetailsTemplate} from "./EpisodeDetails";
+import {ProgramDataStore} from "../Services/ProgramDataStore";
 
-export class EpisodeElementTemplate extends BaseTemplate {
+export class ListElementTemplate extends BaseTemplate {
     private quickActionContainer: HTMLElement;
     private playStateIcon: PlayStateIconTemplate;
     private favoriteIcon: FavoriteIconTemplate;
@@ -29,9 +28,11 @@ export class EpisodeElementTemplate extends BaseTemplate {
         this.favoriteIcon.render();
         
         // add episode details/info
-        let detailsContainer = document.createElement('div');
-        let details = new EpisodeDetailsTemplate(detailsContainer, -1, this.episode);
+        const detailsContainer: HTMLDivElement = document.createElement('div');
+        const details: EpisodeDetailsTemplate = new EpisodeDetailsTemplate(detailsContainer, -1, this.episode);
         details.render();
+        
+        const backgroundImageStyle: string = `background-image: url('../Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}')`
         
         // language=HTML
         return `
@@ -54,8 +55,8 @@ export class EpisodeElementTemplate extends BaseTemplate {
                 <div class="previewListItemContent hide">
                     ${detailsContainer.innerHTML}
                     <div class="flex">
-                        <div class="card overflowBackdropCard card-hoverable card-withuserdata">
-                            <div class="cardBox previewEpisodeImageCard">
+                        <div class="card overflowBackdropCard card-hoverable card-withuserdata previewEpisodeImageCard">
+                            <div class="cardBox">
                                 <div class="cardScalable">
                                     <div class="cardPadder cardPadder-overflowBackdrop lazy-hidden-children">
                                         <span class="cardImageIcon material-icons tv" aria-hidden="true"/>
@@ -65,7 +66,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
                                     <button id="previewEpisodeImageCard-${this.episode.IndexNumber}"
                                             class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
                                             data-action="link"
-                                            style="background-image: url('../Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}');">
+                                            style="${backgroundImageStyle}">
                                         <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${!this.episode.UserData.PlayedPercentage ? "hide" : ""}">
                                             <div class="itemProgressBar">
                                                 <div class="itemProgressBarForeground"
@@ -95,9 +96,7 @@ export class EpisodeElementTemplate extends BaseTemplate {
 
     public render(clickHandler: Function): void {
         let renderedElement = this.addElementToContainer();
-        renderedElement.addEventListener('click', (e) => {
-            clickHandler(e)
-        });
+        renderedElement.addEventListener('click', (e) => clickHandler(e));
         
         // add event handler to start the playback of this episode
         let episodeImageCard = document.getElementById(`start-episode-${this.episode.IndexNumber}`);

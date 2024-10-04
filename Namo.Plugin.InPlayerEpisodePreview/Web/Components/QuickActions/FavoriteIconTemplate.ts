@@ -1,9 +1,9 @@
 import {BaseTemplate} from "../BaseTemplate";
-import {Episode} from "../../Models/Episode";
+import {BaseItem} from "../../Models/Episode";
 import {ProgramDataStore} from "../../Services/ProgramDataStore";
 
 export class FavoriteIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private programDataStore: ProgramDataStore) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex);
         this.setElementId('favoriteButton-' + episode.IndexNumber);
     }

@@ -8,8 +8,8 @@ export class PopupFocusContainer extends BaseTemplate {
     }
 
     getTemplate(): string {
-        let tempContainerDiv = document.createElement('div');
-        let popupContentContainer = new PopupContentContainerTemplate(tempContainerDiv, -1);
+        let tempContainerDiv: HTMLDivElement = document.createElement('div');
+        let popupContentContainer: PopupContentContainerTemplate = new PopupContentContainerTemplate(tempContainerDiv, -1);
         popupContentContainer.render();
 
         return `

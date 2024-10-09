@@ -74,9 +74,16 @@ export class ProgramDataStore {
         return this.type === ItemType.Series;
     }
 
-    public getEpisodeById(episodeId: string): BaseItem {
-        const season: Season = this.seasons.find((season: Season) => season.episodes.some((episode: BaseItem) => episode.Id === episodeId))
-        return season.episodes.find((episode: BaseItem) => episode.Id === episodeId);
+    public getItemById(itemId: string): BaseItem {
+        let searchedItem: BaseItem;
+        if (this.isSeries) {
+            const season: Season = this.seasons.find((season: Season): boolean => season.episodes.some((item: BaseItem): boolean => item.Id === itemId))
+            searchedItem = season.episodes.find((item: BaseItem): boolean => item.Id === itemId);
+        } else if (this.isMovie) {
+            searchedItem = this.movies.find((item: BaseItem): boolean => item.Id === itemId);
+        }
+        
+        return searchedItem;
     }
 
     public updateItem(item: BaseItem): void {

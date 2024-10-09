@@ -4,22 +4,25 @@ import {PlayStateIconTemplate} from "./QuickActions/PlayStateIconTemplate";
 import {PlaybackHandler} from "../Services/PlaybackHandler";
 import {EpisodeDetailsTemplate} from "./EpisodeDetails";
 import {ProgramDataStore} from "../Services/ProgramDataStore";
+import {BaseItem} from "../Models/Episode";
+import {ItemType} from "../Models/ItemType";
+import {Season} from "../Models/Season";
 
 export class ListElementTemplate extends BaseTemplate {
-    private quickActionContainer: HTMLElement;
+    private readonly quickActionContainer: HTMLElement;
     private playStateIcon: PlayStateIconTemplate;
     private favoriteIcon: FavoriteIconTemplate;
     
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private item: BaseItem, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex);
-        this.setElementId(`episode-${episode.IndexNumber}`);
+        this.setElementId(`episode-${item.IndexNumber}`);
 
         // create temp quick action container
         this.quickActionContainer = document.createElement('div');
         
         // create quick actions
-        this.playStateIcon = new PlayStateIconTemplate(this.quickActionContainer, -1, this.episode, this.programDataStore);
-        this.favoriteIcon = new FavoriteIconTemplate(this.quickActionContainer, 0, this.episode, this.programDataStore);
+        this.playStateIcon = new PlayStateIconTemplate(this.quickActionContainer, -1, this.item, this.programDataStore);
+        this.favoriteIcon = new FavoriteIconTemplate(this.quickActionContainer, 0, this.item, this.programDataStore);
     }
     
     getTemplate(): string {
@@ -29,22 +32,22 @@ export class ListElementTemplate extends BaseTemplate {
         
         // add episode details/info
         const detailsContainer: HTMLDivElement = document.createElement('div');
-        const details: EpisodeDetailsTemplate = new EpisodeDetailsTemplate(detailsContainer, -1, this.episode);
+        const details: EpisodeDetailsTemplate = new EpisodeDetailsTemplate(detailsContainer, -1, this.item);
         details.render();
         
-        const backgroundImageStyle: string = `background-image: url('../Items/${this.episode.Id}/Images/Primary?tag=${this.episode.ImageTags.Primary}')`
+        const backgroundImageStyle: string = `background-image: url('../Items/${this.item.Id}/Images/Primary?tag=${this.item.ImageTags.Primary}')`
         
         // language=HTML
         return `
             <div id="${this.getElementId()}"
                  class="listItem listItem-button actionSheetMenuItem emby-button previewListItem"
                  is="emby-button"
-                 data-id="${this.episode.IndexNumber}">
+                 data-id="${this.item.IndexNumber}">
                 <div class="previewEpisodeContainer flex">
                     <button class="listItem previewEpisodeTitle" type="button">
-                        <span>${this.episode.IndexNumber}</span>
+                        <span>${this.item.IndexNumber}</span>
                         <div class="listItemBody actionsheetListItemBody">
-                            <span class="actionSheetItemText">${this.episode.Name}</span>
+                            <span class="actionSheetItemText">${this.item.Name}</span>
                         </div>
                     </button>
                     <div class="previewQuickActionContainer flex">
@@ -63,20 +66,20 @@ export class ListElementTemplate extends BaseTemplate {
                                     </div>
                                     <canvas aria-hidden="true" width="20" height="20"
                                             class="blurhash-canvas lazy-hidden"></canvas>
-                                    <button id="previewEpisodeImageCard-${this.episode.IndexNumber}"
+                                    <button id="previewEpisodeImageCard-${this.item.IndexNumber}"
                                             class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
                                             data-action="link"
                                             style="${backgroundImageStyle}">
-                                        <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${!this.episode.UserData.PlayedPercentage ? "hide" : ""}">
+                                        <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${!this.item.UserData.PlayedPercentage ? "hide" : ""}">
                                             <div class="itemProgressBar">
                                                 <div class="itemProgressBarForeground"
-                                                     style="width:${this.episode.UserData.PlayedPercentage}%;"></div>
+                                                     style="width:${this.item.UserData.PlayedPercentage}%;"></div>
                                             </div>
                                         </div>
                                     </button>
                                     <div class="cardOverlayContainer itemAction"
                                          data-action="link">
-                                        <button id="start-episode-${this.episode.IndexNumber}"
+                                        <button id="start-episode-${this.item.IndexNumber}"
                                                 is="paper-icon-button-light"
                                                 class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary"
                                                 data-action="resume">
@@ -87,7 +90,7 @@ export class ListElementTemplate extends BaseTemplate {
                                 </div>
                             </div>
                         </div>
-                        <span class="previewEpisodeDescription">${this.episode.Description}</span>
+                        <span class="previewEpisodeDescription">${this.item.Description}</span>
                     </div>
                 </div>
             </div>
@@ -95,24 +98,29 @@ export class ListElementTemplate extends BaseTemplate {
     }
 
     public render(clickHandler: Function): void {
-        let renderedElement = this.addElementToContainer();
+        let renderedElement: HTMLElement = this.addElementToContainer();
         renderedElement.addEventListener('click', (e) => clickHandler(e));
         
         // add event handler to start the playback of this episode
-        let episodeImageCard = document.getElementById(`start-episode-${this.episode.IndexNumber}`);
-        episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.episode.Id, this.episode.UserData.PlaybackPositionTicks));
+        let episodeImageCard: HTMLElement = document.getElementById(`start-episode-${this.item.IndexNumber}`);
+        episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks));
     }
 
     /**
      * Unused - Will maybe be used in further updates on this
      */
     public update(): void {
+        let newData: BaseItem;
         // get current episode data
-        const season = this.programDataStore.seasons.find(s => s.episodes.some(e => e.Id === this.episode.Id));
-        const newData = season.episodes.find(e => e.Id === this.episode.Id);
+        if (ItemType[this.item.Type] === ItemType.Series) {
+            const season: Season = this.programDataStore.seasons.find((s: Season): boolean => s.episodes.some((e: BaseItem): boolean => e.Id === this.item.Id));
+            newData = season.episodes.find((e: BaseItem): boolean => e.Id === this.item.Id);
+        } else if (ItemType[this.item.Type] === ItemType.Movie) {
+            newData = this.programDataStore.movies.find((m: BaseItem): boolean => m.Id === this.item.Id);
+        }
         
         // update playtime percentage
-        const playtime = this.getElement().querySelector('.itemProgressBarForeground');
+        const playtime: Element = this.getElement().querySelector('.itemProgressBarForeground');
         playtime.setAttribute("style", `width:${newData.UserData.PlayedPercentage}%`);
         
         // update quick actions state

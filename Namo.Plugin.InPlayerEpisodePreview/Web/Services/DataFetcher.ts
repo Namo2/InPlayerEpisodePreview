@@ -37,6 +37,37 @@ export class DataFetcher {
                 this.programDataStore.userId = extractKeyFromString(url.search, 'UserId=', '&');
                 response.clone().json().then((data: ItemDto): void => this.saveEpisodeData(data));
                 
+            } else if (urlPathname.includes('Progress')) {
+                // update the playback state of the currently played video
+                const sliderCollection: HTMLCollectionOf<Element> = document.getElementsByClassName('osdPositionSlider')
+                const slider: Element = sliderCollection[sliderCollection.length - 1];
+                const currentPlaybackPercentage: number = parseFloat((slider as HTMLInputElement).value);
+                const episode: BaseItem = this.programDataStore.getItemById(this.programDataStore.activeMediaSourceId);
+
+                episode.UserData.PlaybackPositionTicks = episode.RunTimeTicks * currentPlaybackPercentage / 100;
+                episode.UserData.PlayedPercentage = currentPlaybackPercentage;
+                this.programDataStore.updateItem(episode);
+
+            } else if (urlPathname.includes('PlayedItems')) {
+                // update the played state of the episode
+                this.logger.debug('Received PlayedItems');
+
+                let itemId: string = extractKeyFromString(urlPathname, 'PlayedItems/');
+                let changedItem: BaseItem = this.programDataStore.getItemById(itemId);
+
+                response.clone().json().then((data) => changedItem.UserData.Played = data["Played"]);
+                this.programDataStore.updateItem(changedItem);
+
+            } else if (urlPathname.includes('FavoriteItems')) {
+                // update the favourite state of the episode
+                this.logger.debug('Received FavoriteItems');
+
+                let itemId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
+                let changedItem: BaseItem = this.programDataStore.getItemById(itemId);
+
+                response.clone().json().then((data) => changedItem.UserData.IsFavorite = data["IsFavorite"]);
+                this.programDataStore.updateItem(changedItem);
+                
             } else if (urlPathname.includes('Items') && url.search.includes('ParentId')) {
                 this.logger.debug('Received Items with ParentId');
 
@@ -50,36 +81,6 @@ export class DataFetcher {
                     if (ItemType[data.Type] === ItemType.BoxSet)
                         this.programDataStore.boxSetName = data.Name;
                 });
-            } else if (urlPathname.includes('Progress')) {
-                // update the playback state of the currently played video
-                const sliderCollection = document.getElementsByClassName('osdPositionSlider')
-                const slider = sliderCollection[sliderCollection.length - 1];
-                const currentPlaybackPercentage: number = parseFloat((slider as HTMLInputElement).value);
-                const episode: Episode = this.programDataStore.getEpisodeById(this.programDataStore.activeMediaSourceId);
-
-                episode.UserData.PlaybackPositionTicks = episode.RunTimeTicks * currentPlaybackPercentage / 100;
-                episode.UserData.PlayedPercentage = currentPlaybackPercentage;
-                this.programDataStore.updateEpisode(episode);
-
-            } else if (urlPathname.includes('PlayedItems')) {
-                // update the played state of the episode
-                this.logger.debug('Received PlayedItems');
-
-                let episodeId: string = extractKeyFromString(urlPathname, 'PlayedItems/');
-                let changedEpisode: Episode = this.programDataStore.getEpisodeById(episodeId);
-
-                response.clone().json().then((data) => changedEpisode.UserData.Played = data["Played"]);
-                this.programDataStore.updateEpisode(changedEpisode);
-
-            } else if (urlPathname.includes('FavoriteItems')) {
-                // update the favourite state of the episode
-                this.logger.debug('Received FavoriteItems');
-
-                let episodeId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
-                let changedEpisode: Episode = this.programDataStore.getEpisodeById(episodeId);
-
-                response.clone().json().then((data) => changedEpisode.UserData.IsFavorite = data["IsFavorite"]);
-                this.programDataStore.updateEpisode(changedEpisode);
             }
 
             return response;

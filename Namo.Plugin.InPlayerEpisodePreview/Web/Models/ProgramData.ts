@@ -1,9 +1,13 @@
 ﻿import {Season} from "./Season";
+import {BaseItem} from "./Episode";
+import {ItemType} from "./ItemType";
 
-export interface ProgramData {
+export type ProgramData = {
     userId: string;
     activeMediaSourceId: string;
     activeSeasonIndex: number;
-    seasons: Season[];
-    isSeries: boolean;
+    type: ItemType;
+    boxSetName: string;
+    movies?: BaseItem[];
+    seasons?: Season[];
 }

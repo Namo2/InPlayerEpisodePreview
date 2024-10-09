@@ -94,12 +94,20 @@ public class InPlayerPreviewController : ControllerBase
         return File(scriptStream, "application/javascript");
     }
 
+    /// <summary>
+    /// This controller starts a new episode.
+    /// Could be replaced by /Sessions/{sessionId}/Playing, if frontend loads session itself
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="id"></param>
+    /// <param name="ticks"></param>
+    /// <returns></returns>
     [HttpGet("Users/{userId}/Items/{id}/Play/{ticks}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult StartMedia([FromRoute] Guid userId, [FromRoute] Guid id, [FromRoute] long ticks = 0)
     {
-        SessionInfo? session = _sessionManager.Sessions.FirstOrDefault(session => session.UserId.Equals(userId));
+        SessionInfo? session = _sessionManager.Sessions.LastOrDefault(session => session.UserId.Equals(userId));
         if (session is null)
         {
             _logger.LogInformation("Couldn't find a valid session for this user");
@@ -122,9 +130,15 @@ public class InPlayerPreviewController : ControllerBase
                 PlayCommand = PlayCommand.PlayNow,
             }, CancellationToken.None);
         
-        return Ok();
+        return NoContent();
     }
     
+    /// <summary>
+    /// This controller returns the description of the given episode.
+    /// Could be replaced by /Users/{userId}/Items/{episodeId}, if frontend loads whole data
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet("Items/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -138,6 +152,5 @@ public class InPlayerPreviewController : ControllerBase
         const string message = "Couldn't find item to play";
         _logger.LogInformation(message);
         return NotFound(message);
-
     }
 }

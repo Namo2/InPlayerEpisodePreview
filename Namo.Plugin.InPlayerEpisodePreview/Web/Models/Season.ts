@@ -1,7 +1,7 @@
-﻿import {Episode} from "./Episode";
+﻿import {BaseItem} from "./Episode";
 
 export interface Season {
     seasonId: string;
     seasonName: string;
-    episodes: Episode[];
+    episodes: BaseItem[];
 }

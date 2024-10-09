@@ -1,8 +1,9 @@
 ﻿import {BaseTemplate} from "../BaseTemplate";
 import {BaseItem} from "../../Models/Episode";
+import {ProgramDataStore} from "../../Services/ProgramDataStore";
 
 export class PlayStateIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex);
         this.setElementId('playStateButton-' + this.episode.IndexNumber);
     }
@@ -28,5 +29,17 @@ export class PlayStateIconTemplate extends BaseTemplate {
 
     public render(): void {
         this.addElementToContainer();
+    }
+
+    /**
+     * Unused - Will maybe be used in further updates on this
+     */
+    public update(): void {
+        // get current episode data
+        const season = this.programDataStore.seasons.find(s => s.episodes.some(e => e.Id === this.episode.Id));
+        const newData = season.episodes.find(e => e.Id === this.episode.Id);
+        
+        const playStateIcon = this.getElement();
+        playStateIcon.setAttribute("data-played", newData.UserData.Played.toString());
     }
 }

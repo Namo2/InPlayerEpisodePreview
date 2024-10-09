@@ -6,7 +6,7 @@ export class PreviewButtonTemplate extends BaseTemplate {
         this.setElementId('popupPreviewButton');
     }
 
-    getTemplate() {
+    getTemplate(): string {
         // language=HTML
         return `
             <button id="${this.getElementId()}" class="autoSize paper-icon-button-light" is="paper-icon-button-light"
@@ -36,8 +36,8 @@ export class PreviewButtonTemplate extends BaseTemplate {
         `;
     }
 
-    public render(clickHandler: Function) {
-        let renderedElement = this.addElementToContainer();
-        renderedElement.addEventListener('click', () => clickHandler());
+    public render(clickHandler: Function): void {
+        let renderedElement: HTMLElement = this.addElementToContainer();
+        renderedElement.addEventListener('click', (): any => clickHandler());
     }
 }

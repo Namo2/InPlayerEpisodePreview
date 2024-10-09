@@ -18,7 +18,7 @@ export class ListElementFactory {
                 this.programDataStore.updateItem(episodes[i])
             }
             
-            const episode = new ListElementTemplate(parentDiv, i, episodes[i], this.playbackHandler);
+            const episode = new ListElementTemplate(parentDiv, i, episodes[i], this.playbackHandler, this.programDataStore);
             episode.render((e: MouseEvent): void => {
                 e.stopPropagation();
                 

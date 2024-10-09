@@ -1,6 +1,4 @@
-﻿import {ItemType} from "./ItemType";
-
-export type ItemDto = {
+﻿export type ItemDto = {
     Items: BaseItem[];
     TotalRecordCount: number;
     StartIndex: number;

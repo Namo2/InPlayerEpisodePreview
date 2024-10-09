@@ -1,8 +1,9 @@
 import {BaseTemplate} from "../BaseTemplate";
 import {BaseItem} from "../../Models/Episode";
+import {ProgramDataStore} from "../../Services/ProgramDataStore";
 
 export class FavoriteIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex);
         this.setElementId('favoriteButton-' + episode.IndexNumber);
     }
@@ -30,5 +31,17 @@ export class FavoriteIconTemplate extends BaseTemplate {
 
     public render(): void {
         this.addElementToContainer();
+    }
+
+    /**
+     * Unused - Will maybe be used in further updates on this
+     */
+    public update(): void {
+        // get current episode data
+        const season = this.programDataStore.seasons.find(s => s.episodes.some(e => e.Id === this.episode.Id));
+        const newData = season.episodes.find(e => e.Id === this.episode.Id);
+        
+        const favoriteIcon = this.getElement();
+        favoriteIcon.setAttribute("data-isfavorite", newData.UserData.IsFavorite.toString());
     }
 }

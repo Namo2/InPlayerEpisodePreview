@@ -90,7 +90,7 @@ function viewShowEventHandler(): void {
         if (index === -1)
             index = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("osdTimeText"))
 
-        let previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
+        const previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
         previewButton.render(previewButtonClickHandler);
 
         function previewButtonClickHandler(): void {

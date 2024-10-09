@@ -74,22 +74,34 @@ export class ProgramDataStore {
         return this.type === ItemType.Series;
     }
 
+    public getItemById(itemId: string): BaseItem {
+        let searchedItem: BaseItem;
+        if (this.isSeries) {
+            const season: Season = this.seasons.find((season: Season): boolean => season.episodes.some((item: BaseItem): boolean => item.Id === itemId))
+            searchedItem = season.episodes.find((item: BaseItem): boolean => item.Id === itemId);
+        } else if (this.isMovie) {
+            searchedItem = this.movies.find((item: BaseItem): boolean => item.Id === itemId);
+        }
+        
+        return searchedItem;
+    }
+
     public updateItem(item: BaseItem): void {
         if (this.isSeries) {
             this.updateEpisode(item)
             return
         }
 
-        let movieIndex: number = this.movies.findIndex((s: BaseItem): boolean => s.Id === item.Id);
+        const movieIndex: number = this.movies.findIndex((s: BaseItem): boolean => s.Id === item.Id);
         if (movieIndex > -1) {
             this.movies[movieIndex] = item;
         }
     }
 
     public updateEpisode(episode: BaseItem): void {
-        let season: Season = this.seasons.find((s: Season): boolean => s.seasonId === episode.SeasonId);
+        const season: Season = this.seasons.find((s: Season): boolean => s.seasonId === episode.SeasonId);
         if (season) {
-            let episodeIndex: number = season.episodes.findIndex((e: BaseItem): boolean => e.Id === episode.Id);
+            const episodeIndex: number = season.episodes.findIndex((e: BaseItem): boolean => e.Id === episode.Id);
             if (episodeIndex > -1) {
                 season.episodes[episodeIndex] = episode;
                 this.updateSeason(season);
@@ -98,7 +110,7 @@ export class ProgramDataStore {
     }
     
     public updateSeason(season: Season): void {
-        let seasonIndex: number = this.seasons.findIndex((s: Season): boolean => s.seasonId === season.seasonId);
+        const seasonIndex: number = this.seasons.findIndex((s: Season): boolean => s.seasonId === season.seasonId);
         if (seasonIndex > -1) {
             this.seasons[seasonIndex] = season;
         }

@@ -29,18 +29,49 @@ export class DataFetcher {
                 this.logger.debug('Received PlaybackInfo');
 
                 // save the media id of the currently played video
-                this.getProgramDataStore().activeMediaSourceId = extractKeyFromString(urlPathname, 'Items/', '/');
+                this.programDataStore.activeMediaSourceId = extractKeyFromString(urlPathname, 'Items/', '/');
 
             } else if (urlPathname.includes('Episodes')) {
                 this.logger.debug('Received Episodes');
 
-                this.getProgramDataStore().userId = extractKeyFromString(url.search, 'UserId=', '&');
+                this.programDataStore.userId = extractKeyFromString(url.search, 'UserId=', '&');
                 response.clone().json().then((data: ItemDto): void => this.saveEpisodeData(data));
+                
+            } else if (urlPathname.includes('Progress')) {
+                // update the playback state of the currently played video
+                const sliderCollection: HTMLCollectionOf<Element> = document.getElementsByClassName('osdPositionSlider')
+                const slider: Element = sliderCollection[sliderCollection.length - 1];
+                const currentPlaybackPercentage: number = parseFloat((slider as HTMLInputElement).value);
+                const episode: BaseItem = this.programDataStore.getItemById(this.programDataStore.activeMediaSourceId);
 
+                episode.UserData.PlaybackPositionTicks = episode.RunTimeTicks * currentPlaybackPercentage / 100;
+                episode.UserData.PlayedPercentage = currentPlaybackPercentage;
+                this.programDataStore.updateItem(episode);
+
+            } else if (urlPathname.includes('PlayedItems')) {
+                // update the played state of the episode
+                this.logger.debug('Received PlayedItems');
+
+                let itemId: string = extractKeyFromString(urlPathname, 'PlayedItems/');
+                let changedItem: BaseItem = this.programDataStore.getItemById(itemId);
+
+                response.clone().json().then((data) => changedItem.UserData.Played = data["Played"]);
+                this.programDataStore.updateItem(changedItem);
+
+            } else if (urlPathname.includes('FavoriteItems')) {
+                // update the favourite state of the episode
+                this.logger.debug('Received FavoriteItems');
+
+                let itemId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
+                let changedItem: BaseItem = this.programDataStore.getItemById(itemId);
+
+                response.clone().json().then((data) => changedItem.UserData.IsFavorite = data["IsFavorite"]);
+                this.programDataStore.updateItem(changedItem);
+                
             } else if (urlPathname.includes('Items') && url.search.includes('ParentId')) {
                 this.logger.debug('Received Items with ParentId');
 
-                this.getProgramDataStore().userId = extractKeyFromString(urlPathname, 'Users/', '/');
+                this.programDataStore.userId = extractKeyFromString(urlPathname, 'Users/', '/');
                 response.clone().json().then((data: ItemDto): void => this.saveItemData(data));
                 
             } else if (urlPathname.includes('Items')) {
@@ -54,17 +85,16 @@ export class DataFetcher {
 
             return response;
 
-            function extractKeyFromString(searchString: string, startString: string, endString: string): string {
-                let startIndex: number = searchString.indexOf(startString) + startString.length;
-                let endIndex: number = searchString.indexOf(endString, startIndex);
+            function extractKeyFromString(searchString: string, startString: string, endString: string = ''): string {
+                const startIndex: number = searchString.indexOf(startString) + startString.length;
+                if (endString !== '') {
+                    const endIndex: number = searchString.indexOf(endString, startIndex);
+                    return searchString.substring(startIndex, endIndex);
+                }
 
-                return searchString.substring(startIndex, endIndex);
+                return searchString.substring(startIndex);
             }
         };
-    }
-    
-    protected getProgramDataStore(): ProgramDataStore {
-        return this.programDataStore;
     }
     
     public saveItemData(itemDto: ItemDto): void {
@@ -105,7 +135,7 @@ export class DataFetcher {
         const episodeData: BaseItem[] = itemDto.Items;
         
         // get all different seasonIds
-        let seasonIds: Set<string> = new Set<string> (episodeData.map((episode: BaseItem): string => episode.SeasonId))
+        let seasonIds: Set<string> = new Set<string>(episodeData.map((episode: BaseItem): string => episode.SeasonId))
 
         // group the episodes by seasonId
         let group: Record<string, BaseItem[]> = groupBy(episodeData, (episode: BaseItem): string => episode.SeasonId);

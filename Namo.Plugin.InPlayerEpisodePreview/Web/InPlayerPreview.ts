@@ -140,6 +140,12 @@ function viewShowEventHandler(): void {
         // Clear old data and reset previewContainerLoaded flag
         authService.setAuthHeaderValue("");
         programDataStore.clear();
+
+        if (document.getElementById("dialogBackdropContainer"))
+            document.body.removeChild(document.getElementById("dialogBackdropContainer"));
+        if (document.getElementById("dialogContainer"))
+            document.body.removeChild(document.getElementById("dialogContainer"));
+        
         previewContainerLoaded = false; // Reset flag when unloading
     }
     

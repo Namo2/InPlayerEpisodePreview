@@ -107,7 +107,7 @@ public class InPlayerPreviewController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult StartMedia([FromRoute] Guid userId, [FromRoute] Guid id, [FromRoute] long ticks = 0)
     {
-        SessionInfo? session = _sessionManager.Sessions.LastOrDefault(session => session.UserId.Equals(userId));
+        SessionInfo? session = _sessionManager.Sessions.FirstOrDefault(session => session.UserId.Equals(userId));
         if (session is null)
         {
             _logger.LogInformation("Couldn't find a valid session for this user");

@@ -15,11 +15,11 @@ export class PlaybackHandler {
             );
         } catch (err) {
             // We Skip error messages, if it is a URL constructor argument. Because relative path can throw errors even if url is valid
-            if (err instanceof Error && !err.message.includes("URL constructor")) {
-                return this.logger.error(err.message);
+            if (err instanceof TypeError) {
+                return;
             }
             
-            return this.logger.error(`Couldn't start the playback of new episode. Error: ${err}`);
+            return this.logger.error(`Couldn't start the playback of an episode. Error: ${err}`);
         }
     }
 }

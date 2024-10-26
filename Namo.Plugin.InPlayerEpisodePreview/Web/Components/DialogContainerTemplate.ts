@@ -8,8 +8,8 @@ export class DialogContainerTemplate extends BaseTemplate {
     }
 
     getTemplate(): string {
-        let tempContainerDiv = document.createElement('div');
-        let focusContainerDiv = new PopupFocusContainer(tempContainerDiv, -1);
+        let tempContainerDiv: HTMLDivElement = document.createElement('div');
+        let focusContainerDiv: PopupFocusContainer = new PopupFocusContainer(tempContainerDiv, -1);
         focusContainerDiv.render();
 
         return `
@@ -20,7 +20,7 @@ export class DialogContainerTemplate extends BaseTemplate {
     }
 
     public render(dialogContainerClickHandler: Function): void {
-        let renderedElement = this.addElementToContainer();
-        renderedElement.addEventListener('click', (e) => dialogContainerClickHandler(e));
+        let renderedElement: HTMLElement = this.addElementToContainer();
+        renderedElement.addEventListener('click', (e: MouseEvent): any => dialogContainerClickHandler(e));
     }
 }

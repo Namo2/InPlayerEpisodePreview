@@ -1,9 +1,9 @@
 ﻿import {BaseTemplate} from "../BaseTemplate";
-import {Episode} from "../../Models/Episode";
+import {BaseItem} from "../../Models/Episode";
 import {ProgramDataStore} from "../../Services/ProgramDataStore";
 
 export class PlayStateIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode, private programDataStore: ProgramDataStore) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex);
         this.setElementId('playStateButton-' + this.episode.IndexNumber);
     }
@@ -29,17 +29,17 @@ export class PlayStateIconTemplate extends BaseTemplate {
 
     public render(): void {
         this.addElementToContainer();
+    }
 
-        // this.getElement().addEventListener('mouseleave', (e: MouseEvent) => {
-        //     e.stopPropagation();
-        //
-        //     // update the favorite state
-        //     this.episode.UserData.Played = !this.episode.UserData.Played;
-        //     this.getElement().dataset.played = this.episode.UserData.Played.toString();
-        //
-        //     this.programDataStore
-        //         .seasons.find(s => s.seasonId === this.episode.SeasonId)
-        //         .episodes.find(e => e.Id === this.episode.Id).UserData.Played = this.episode.UserData.Played;
-        // });
+    /**
+     * Unused - Will maybe be used in further updates on this
+     */
+    public update(): void {
+        // get current episode data
+        const season = this.programDataStore.seasons.find(s => s.episodes.some(e => e.Id === this.episode.Id));
+        const newData = season.episodes.find(e => e.Id === this.episode.Id);
+        
+        const playStateIcon = this.getElement();
+        playStateIcon.setAttribute("data-played", newData.UserData.Played.toString());
     }
 }

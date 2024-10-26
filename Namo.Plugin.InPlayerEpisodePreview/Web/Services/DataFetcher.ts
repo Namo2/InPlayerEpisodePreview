@@ -1,99 +1,160 @@
 ﻿import {ProgramDataStore} from "./ProgramDataStore";
-import {DataLoader} from "./DataLoader";
 import {AuthService} from "./AuthService";
 import {Logger} from "./Logger";
-import {Episode, EpisodeDto} from "../Models/Episode";
+import {BaseItem, ItemDto} from "../Models/Episode";
 import {Season} from "../Models/Season";
+import {ItemType} from "../Models/ItemType";
 
 /**
  * The classes which derives from this interface, will provide the functionality to handle the data input from the server if the PlaybackState is changed.
  */
 export class DataFetcher {
-    constructor(private programDataStore: ProgramDataStore, private dataLoader: DataLoader, private authService: AuthService, private logger: Logger) {
+    constructor(private programDataStore: ProgramDataStore, private authService: AuthService, private logger: Logger) {
         const {fetch: originalFetch} = window;
-        window.fetch = async (...args) => {
+        window.fetch = async (...args): Promise<Response> => {
             let resource: URL = args[0] as URL;
             let config: RequestInit = args[1];
 
             if (config && config.headers) {
-                let auth = config.headers[this.authService.getAuthHeader()];
+                let auth: string = config.headers[this.authService.getAuthHeader()];
                 this.authService.setAuthHeaderValue(auth ? auth : '');
             }
+            
+            const response: Response = await originalFetch(resource, config);
 
-            this.logger.debug(`Fetching data`);
-            const response = await originalFetch(resource, config);
-
-            let url = new URL(resource);
-            let urlPathname = url.pathname;
+            let url: URL = new URL(resource);
+            let urlPathname: string = url.pathname;
 
             if (urlPathname.includes('PlaybackInfo')) {
                 this.logger.debug('Received PlaybackInfo');
 
                 // save the media id of the currently played video
-                this.getProgramDataStore().activeMediaSourceId = extractKeyFromString(urlPathname, 'Items/', '/');
+                this.programDataStore.activeMediaSourceId = extractKeyFromString(urlPathname, 'Items/', '/');
 
             } else if (urlPathname.includes('Episodes')) {
                 this.logger.debug('Received Episodes');
 
-                this.getProgramDataStore().userId = extractKeyFromString(url.search, 'UserId=', '&');
-                response.clone().json().then((data) => this.saveEpisodeData(data));
+                this.programDataStore.userId = extractKeyFromString(url.search, 'UserId=', '&');
+                response.clone().json().then((data: ItemDto): void => this.saveEpisodeData(data));
+                
+            } else if (urlPathname.includes('Progress')) {
+                // update the playback state of the currently played video
+                const sliderCollection: HTMLCollectionOf<Element> = document.getElementsByClassName('osdPositionSlider')
+                const slider: Element = sliderCollection[sliderCollection.length - 1];
+                const currentPlaybackPercentage: number = parseFloat((slider as HTMLInputElement).value);
+                const episode: BaseItem = this.programDataStore.getItemById(this.programDataStore.activeMediaSourceId);
 
+                episode.UserData.PlaybackPositionTicks = episode.RunTimeTicks * currentPlaybackPercentage / 100;
+                episode.UserData.PlayedPercentage = currentPlaybackPercentage;
+                this.programDataStore.updateItem(episode);
+
+            } else if (urlPathname.includes('PlayedItems')) {
+                // update the played state of the episode
+                this.logger.debug('Received PlayedItems');
+
+                let itemId: string = extractKeyFromString(urlPathname, 'PlayedItems/');
+                let changedItem: BaseItem = this.programDataStore.getItemById(itemId);
+
+                response.clone().json().then((data) => changedItem.UserData.Played = data["Played"]);
+                this.programDataStore.updateItem(changedItem);
+
+            } else if (urlPathname.includes('FavoriteItems')) {
+                // update the favourite state of the episode
+                this.logger.debug('Received FavoriteItems');
+
+                let itemId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
+                let changedItem: BaseItem = this.programDataStore.getItemById(itemId);
+
+                response.clone().json().then((data) => changedItem.UserData.IsFavorite = data["IsFavorite"]);
+                this.programDataStore.updateItem(changedItem);
+                
             } else if (urlPathname.includes('Items') && url.search.includes('ParentId')) {
-                this.logger.debug('Received Episode Items');
+                this.logger.debug('Received Items with ParentId');
 
-                this.getProgramDataStore().userId = extractKeyFromString(urlPathname, 'Users/', '/');
-                response.clone().json().then((data) => this.saveEpisodeData(data));
+                this.programDataStore.userId = extractKeyFromString(urlPathname, 'Users/', '/');
+                response.clone().json().then((data: ItemDto): void => this.saveItemData(data));
+                
+            } else if (urlPathname.includes('Items')) {
+                this.logger.debug('Received Items without ParentId');
+                
+                response.clone().json().then((data: BaseItem): void => {
+                    if (ItemType[data.Type] === ItemType.BoxSet)
+                        this.programDataStore.boxSetName = data.Name;
+                });
             }
 
             return response;
 
-            function extractKeyFromString(searchString: string, startString: string, endString: string): string {
-                let startIndex = searchString.indexOf(startString) + startString.length;
-                let endIndex = searchString.indexOf(endString, startIndex);
+            function extractKeyFromString(searchString: string, startString: string, endString: string = ''): string {
+                const startIndex: number = searchString.indexOf(startString) + startString.length;
+                if (endString !== '') {
+                    const endIndex: number = searchString.indexOf(endString, startIndex);
+                    return searchString.substring(startIndex, endIndex);
+                }
 
-                return searchString.substring(startIndex, endIndex);
+                return searchString.substring(startIndex);
             }
         };
     }
     
-    protected getProgramDataStore(): ProgramDataStore {
-        return this.programDataStore;
+    public saveItemData(itemDto: ItemDto): void {
+        if (this.checkIfDataIsMovieData(itemDto) && itemDto.Items.length > 0) {
+            this.saveMovieData(itemDto);
+            return;
+        }
+
+        if (this.checkIfDataIsEpisodeData(itemDto)) {
+            this.saveEpisodeData(itemDto)
+            return
+        }
+
+        this.logger.error("Couldn't save items from response");
     }
 
-    public checkIfDataIsEpisodeData(episodeData: EpisodeDto): boolean {
-        return episodeData 
-            && episodeData.Items 
-            && episodeData.Items.length > 0 
-            && episodeData.Items[0].Type !== 'Movie';
+    public checkIfDataIsMovieData(itemDto: ItemDto): boolean {
+        return itemDto
+            && itemDto.Items
+            && itemDto.Items.length > 0
+            && ItemType[itemDto.Items[0].Type] === ItemType.Movie;
+    }
+
+    public checkIfDataIsEpisodeData(itemDto: ItemDto): boolean {
+        return itemDto
+            && itemDto.Items
+            && itemDto.Items.length > 0
+            && ItemType[itemDto.Items[0].Type] === ItemType.Episode;
+    }
+
+    public saveMovieData(itemDto: ItemDto): void {
+        this.programDataStore.type = ItemType.Movie;
+        this.programDataStore.movies = itemDto.Items;
     }
     
-    public saveEpisodeData(episodeData: EpisodeDto): void {
-        if (!this.checkIfDataIsEpisodeData(episodeData))
-            return;
-        
-        this.programDataStore.isSeries = true;
+    public saveEpisodeData(itemDto: ItemDto): void {
+        this.programDataStore.type = ItemType.Series;
+        const episodeData: BaseItem[] = itemDto.Items;
         
         // get all different seasonIds
-        let seasonIds: Set<string> = new Set<string> (episodeData.Items.map((episode: Episode) => episode.SeasonId))
+        let seasonIds: Set<string> = new Set<string>(episodeData.map((episode: BaseItem): string => episode.SeasonId))
 
         // group the episodes by seasonId
-        let group: Record<string, Episode[]> = groupBy(episodeData.Items, (episode: Episode) => episode.SeasonId);
+        let group: Record<string, BaseItem[]> = groupBy(episodeData, (episode: BaseItem): string => episode.SeasonId);
 
         let seasons: Season[] = [];
-        let iterator = seasonIds.values();
+        let iterator: IterableIterator<string> = seasonIds.values();
         let value: IteratorResult<string> = iterator.next();
         while (!value.done) {
-            let seasonId = value.value;
+            let seasonId: string = value.value;
             let season: Season = {
                 seasonId: seasonId,
                 seasonName: group[seasonId][0].SeasonName,
                 episodes: group[seasonId]
             };
             
-            season.episodes.sort((a: Episode, b: Episode) => a.IndexNumber - b.IndexNumber);
+            season.episodes.sort((a: BaseItem, b: BaseItem): number => a.IndexNumber - b.IndexNumber);
             
             seasons.push(season);
-            if (season.episodes.some((episode: Episode) => episode.Id === this.programDataStore.activeMediaSourceId))
+            if (season.episodes.some((episode: BaseItem): boolean => episode.Id === this.programDataStore.activeMediaSourceId))
                 this.programDataStore.activeSeasonIndex = seasons.length - 1;
             
             value = iterator.next();
@@ -101,10 +162,10 @@ export class DataFetcher {
 
         this.programDataStore.seasons = seasons;
         
-        function groupBy<T>(arr: T[], fn: (item: T) => any) {
-            return arr.reduce<Record<string, T[]>>((prev, curr) => {
+        function groupBy<T>(arr: T[], fn: (item: T) => any): Record<string, T[]> {
+            return arr.reduce<Record<string, T[]>>((prev: Record<string, T[]>, curr: T): {} => {
                 const groupKey = fn(curr);
-                const group = prev[groupKey] || [];
+                const group: T[] = prev[groupKey] || [];
                 group.push(curr);
                 return { ...prev, [groupKey]: group };
             }, {});

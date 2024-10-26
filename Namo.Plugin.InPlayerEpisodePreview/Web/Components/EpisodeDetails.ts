@@ -1,8 +1,8 @@
 ﻿import {BaseTemplate} from "./BaseTemplate";
-import {Episode} from "../Models/Episode";
+import {BaseItem} from "../Models/Episode";
 
 export class EpisodeDetailsTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
         super(container, positionAfterIndex);
         this.setElementId(`episode-${episode.IndexNumber}`);
     }
@@ -13,9 +13,12 @@ export class EpisodeDetailsTemplate extends BaseTemplate {
             <div id="${this.getElementId()}-details" class="itemMiscInfo itemMiscInfo-primary previewEpisodeDetails">
                 <div class="mediaInfoItem">${(new Date(this.episode.PremiereDate)).toLocaleDateString(this.getLocale())}</div>
                 <div class="mediaInfoItem">${this.formatRunTime(this.episode.RunTimeTicks)}</div>
-                ${this.episode.CommunityRating !== undefined ? `<div class="starRatingContainer mediaInfoItem">
+                ${this.episode.CommunityRating ? `<div class="starRatingContainer mediaInfoItem">
                     <span class="material-icons starIcon star" aria-hidden="true"></span>
                     ${this.episode.CommunityRating.toFixed(1)}
+                </div>` : ''}
+                ${this.episode.CriticRating ? `<div class="mediaInfoItem mediaInfoCriticRating ${this.episode.CriticRating >= 60 ? 'mediaInfoCriticRatingFresh' : 'mediaInfoCriticRatingRotten'}">
+                    ${this.episode.CriticRating}
                 </div>` : ''}
                 <div class="endsAt mediaInfoItem">${this.formatEndTime(this.episode.RunTimeTicks, this.episode.UserData.PlaybackPositionTicks)}</div>
             </div>
@@ -35,9 +38,9 @@ export class EpisodeDetailsTemplate extends BaseTemplate {
     private formatRunTime(ticks: number): string {
         // format the ticks to a string with minutes and hours
         ticks /= 10000; // convert from microseconds to milliseconds
-        let hours = Math.floor((ticks / 1000 / 3600) % 24);
-        let minutes = Math.floor((ticks / 1000 / 60) % 60);
-        let hoursString = hours > 0 ? `${hours}h ` : '';
+        let hours: number = Math.floor((ticks / 1000 / 3600) % 24);
+        let minutes: number = Math.floor((ticks / 1000 / 60) % 60);
+        let hoursString: string = hours > 0 ? `${hours}h ` : '';
         return `${hoursString}${minutes}m`;
     }
 
@@ -46,12 +49,12 @@ export class EpisodeDetailsTemplate extends BaseTemplate {
         runtimeTicks /= 10000;
         playbackPositionTicks /= 10000;
         
-        let ticks = Date.now() + (runtimeTicks);
+        let ticks: number = Date.now() + (runtimeTicks);
         ticks -= (new Date()).getTimezoneOffset() * 60 * 1000; // adjust for timezone
         ticks -= playbackPositionTicks; // subtract the playback position
         
-        let hours = this.zeroPad(Math.floor((ticks / 1000 / 3600) % 24));
-        let minutes = this.zeroPad(Math.floor((ticks / 1000 / 60) % 60));
+        let hours: string = this.zeroPad(Math.floor((ticks / 1000 / 3600) % 24));
+        let minutes: string = this.zeroPad(Math.floor((ticks / 1000 / 60) % 60));
         
         return `Ends at ${hours}:${minutes}`;
     }

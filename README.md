@@ -61,7 +61,14 @@ const plugins = [
 ## Troubleshooting ##
 
 ### 1. The preview button isn't visible ###
-For now please follow the discussion in [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/10) issue.
+This is most likely related to wrong permissions on the `index.html` file. To fix this, you need to `chmod 666` this file, and restart jellyfin after that.
+If you're running jellyfin in a docker container, use this command (assuming the container is called `jellyfin`):
+```
+docker exec -it jellyfin chmod 666 /usr/share/jellyfin/web/index.html && docker restart jellyfin
+```
+You can run this as a cron job on system startup.
+
+If this does not work, please follow the discussion in [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/10) issue.
 
 <br/>
 If you encounter any error which you can't solve yourself, feel free to open up an issue.

@@ -61,14 +61,27 @@ const plugins = [
 ## Troubleshooting ##
 
 ### 1. The preview button isn't visible ###
-This is most likely related to wrong permissions on the `index.html` file. To fix this, you need to `chmod 666` this file, and restart jellyfin after that.
-If you're running jellyfin in a docker container, use this command (assuming the container is called `jellyfin`):
+This is most likely related to wrong permissions for the `index.html` file.
+
+#### 1.1 Change Ownership inside a docker container ####
+If you're running jellyfin in a docker container, you can change the ownership with thie following command
+(replace jellyfin with your containername, user and group with the user and group of your container):
 ```
-docker exec -it jellyfin chmod 666 /usr/share/jellyfin/web/index.html && docker restart jellyfin
+docker exec -it --user root jellyfin chown user:group /jellyfin/jellyfin-web/index.html && docker restart jellyfin
 ```
 You can run this as a cron job on system startup.
 
-If this does not work, please follow the discussion in [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/10) issue.
+(Thanks to [muisje](https://github.com/muisje) for helping with [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/49#issue-2825745530) solution)
+
+#### 1.2 Change Ownership running on a Windows installation ####
+1. Navigate to: `C:\Program Files\Jellyfin\Server\jellyfin-web\`
+2. Right-click on `index.html` → `Properties` → `Security tab` → Click on `Edit`
+3. Select your user from the list and check the Write `permission` box.
+4. Restart both the server and client.
+
+(Thanks to [xeuc](https://github.com/xeuc) for [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/49#issuecomment-2746136069) solution)
+
+If this does not work, please follow the discussion in [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/10) (or [this](https://github.com/Namo2/InPlayerEpisodePreview/issues/49)) issue.
 
 <br/>
 If you encounter any error which you can't solve yourself, feel free to open up an issue.

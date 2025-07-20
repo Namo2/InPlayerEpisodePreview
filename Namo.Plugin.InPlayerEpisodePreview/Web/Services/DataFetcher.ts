@@ -4,6 +4,7 @@ import {Logger} from "./Logger";
 import {BaseItem, ItemDto} from "../Models/Episode";
 import {Season} from "../Models/Season";
 import {ItemType} from "../Models/ItemType";
+import {PlaybackProgressInfo} from "../Models/PlaybackProgressInfo";
 
 /**
  * The classes which derives from this interface, will provide the functionality to handle the data input from the server if the PlaybackState is changed.
@@ -13,54 +14,74 @@ export class DataFetcher {
         const {fetch: originalFetch} = window
         window.fetch = async (...args): Promise<Response> => {
             let resource: URL = args[0] as URL
-            let config: RequestInit = args[1]
+            const config: RequestInit = args[1] ?? {}
 
             if (config && config.headers) {
-                let auth: string = config.headers[this.authService.getAuthHeader()]
-                this.authService.setAuthHeaderValue(auth ? auth : '')
+                this.authService.setAuthHeaderValue(config.headers[this.authService.getAuthHeaderKey()] ?? '')
             }
-            
-            const response: Response = await originalFetch(resource, config)
 
-            let url: URL = new URL(resource);
-            let urlPathname: string = url.pathname;
+            const url: URL = new URL(resource);
+            const urlPathname: string = url.pathname;
+
+            // Process data from POST requests
+            if (config.body && typeof config.body === 'string') {
+                // Endpoint: /Sessions/Playing
+                if (urlPathname.includes('Sessions/Playing')) {
+                    const playingInfo: PlaybackProgressInfo = JSON.parse(config.body)
+
+                    // save the media id of the currently played video
+                    this.programDataStore.activeMediaSourceId = playingInfo.MediaSourceId
+
+                    // Endpoint: /Sessions/Playing/Progress
+                    if (urlPathname.includes('Progress')) {
+                        // update the playback progress of the currently played video
+                        const episode: BaseItem = this.programDataStore.getItemById(playingInfo.MediaSourceId)
+                        if (episode) {
+                            episode.UserData.PlaybackPositionTicks = playingInfo.PositionTicks
+                            episode.UserData.PlayedPercentage = 100 / episode.RunTimeTicks * playingInfo.PositionTicks
+                            episode.UserData.Played = episode.UserData.PlayedPercentage > 90 // 90 is the default percentage for watched episodes
+                            this.programDataStore.updateItem(episode)
+                        }
+                    }
+                }
+            }
+
+            if (urlPathname.includes('Episodes')) {
+                // remove new 'startItemId' query parameter, to still get the full list of episodes
+                const cleanedURL = url.href.replace(/startItemId=[^&]+&?/, '')
+                resource = new URL(cleanedURL)
+            }
+
+            const response: Response = await originalFetch(resource, config)
 
             if (urlPathname.includes('Episodes')) {
                 this.logger.debug('Received Episodes')
 
                 this.programDataStore.userId = extractKeyFromString(url.search, 'UserId=', '&')
                 response.clone().json().then((data: ItemDto): void => this.saveEpisodeData(data))
-                
-            } else if (urlPathname.includes('Progress')) {
-                // update the playback state of the currently played video
-                const sliderCollection: HTMLCollectionOf<Element> = document.getElementsByClassName('osdPositionSlider')
-                const slider: Element = sliderCollection[sliderCollection.length - 1]
-                const currentPlaybackPercentage: number = parseFloat((slider as HTMLInputElement).value)
-                const episode: BaseItem = this.programDataStore.getItemById(this.programDataStore.activeMediaSourceId)
-
-                episode.UserData.PlaybackPositionTicks = episode.RunTimeTicks * currentPlaybackPercentage / 100
-                episode.UserData.PlayedPercentage = currentPlaybackPercentage
-                this.programDataStore.updateItem(episode)
 
             } else if (urlPathname.includes('PlayedItems')) {
                 // update the played state of the episode
                 this.logger.debug('Received PlayedItems')
 
-                let itemId: string = extractKeyFromString(urlPathname, 'PlayedItems/')
-                let changedItem: BaseItem = this.programDataStore.getItemById(itemId)
+                const itemId: string = extractKeyFromString(urlPathname, 'PlayedItems/')
+                const changedItem: BaseItem = this.programDataStore.getItemById(itemId)
+                if (changedItem) {
+                    response.clone().json().then((data) => changedItem.UserData.Played = data["Played"])
+                    this.programDataStore.updateItem(changedItem)
+                }
 
-                response.clone().json().then((data) => changedItem.UserData.Played = data["Played"])
-                this.programDataStore.updateItem(changedItem)
 
             } else if (urlPathname.includes('FavoriteItems')) {
                 // update the favourite state of the episode
                 this.logger.debug('Received FavoriteItems')
 
-                let itemId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
-                let changedItem: BaseItem = this.programDataStore.getItemById(itemId);
-
-                response.clone().json().then((data) => changedItem.UserData.IsFavorite = data["IsFavorite"]);
-                this.programDataStore.updateItem(changedItem)
+                const itemId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
+                const changedItem: BaseItem = this.programDataStore.getItemById(itemId);
+                if (changedItem) {
+                    response.clone().json().then((data) => changedItem.UserData.IsFavorite = data["IsFavorite"]);
+                    this.programDataStore.updateItem(changedItem)
+                }
                 
             } else if (urlPathname.includes('Items') && url.search.includes('ParentId')) {
                 this.logger.debug('Received Items with ParentId')
@@ -72,11 +93,8 @@ export class DataFetcher {
                 this.logger.debug('Received Items without ParentId')
                 
                 response.clone().json().then((data: BaseItem): void => {
-                    this.logger.debug('Received single item data -> Setting PlaybackInfo and BoxSet name');
+                    this.logger.debug('Received single item data -> Setting BoxSet name');
 
-                    // save the media id of the currently played video
-                    this.programDataStore.activeMediaSourceId = data.Id
-                    
                     // set boxSetName for list title
                     if (ItemType[data.Type] === ItemType.BoxSet)
                         this.programDataStore.boxSetName = data.Name
@@ -108,7 +126,7 @@ export class DataFetcher {
             return
         }
 
-        this.logger.error("Couldn't save items from response");
+        // this.logger.error("Couldn't save items from response", itemDto);
     }
 
     public checkIfDataIsMovieData(itemDto: ItemDto): boolean {
@@ -135,17 +153,17 @@ export class DataFetcher {
         const episodeData: BaseItem[] = itemDto.Items
         
         // get all different seasonIds
-        let seasonIds: Set<string> = new Set<string>(episodeData.map((episode: BaseItem): string => episode.SeasonId))
+        const seasonIds: Set<string> = new Set<string>(episodeData.map((episode: BaseItem): string => episode.SeasonId))
 
         // group the episodes by seasonId
-        let group: Record<string, BaseItem[]> = groupBy(episodeData, (episode: BaseItem): string => episode.SeasonId)
+        const group: Record<string, BaseItem[]> = groupBy(episodeData, (episode: BaseItem): string => episode.SeasonId)
 
-        let seasons: Season[] = []
-        let iterator: IterableIterator<string> = seasonIds.values()
+        const seasons: Season[] = []
+        const iterator: IterableIterator<string> = seasonIds.values()
         let value: IteratorResult<string> = iterator.next()
         while (!value.done) {
-            let seasonId: string = value.value
-            let season: Season = {
+            const seasonId: string = value.value
+            const season: Season = {
                 seasonId: seasonId,
                 seasonName: group[seasonId][0].SeasonName,
                 episodes: group[seasonId]

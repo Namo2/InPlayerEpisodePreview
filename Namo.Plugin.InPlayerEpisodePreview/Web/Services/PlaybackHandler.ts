@@ -13,13 +13,13 @@ export class PlaybackHandler {
                 .replace('{episodeId}', episodeId)
                 .replace('{ticks}', startPositionTicks.toString())
             );
-        } catch (err) {
+        } catch (ex) {
             // We Skip error messages, if it is a URL constructor argument. Because relative path can throw errors even if url is valid
-            if (err instanceof TypeError) {
+            if (ex instanceof TypeError) {
                 return;
             }
             
-            return this.logger.error(`Couldn't start the playback of an episode. Error: ${err}`);
+            return this.logger.error(`Couldn't start the playback of an episode`, ex);
         }
     }
 }

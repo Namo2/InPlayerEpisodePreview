@@ -1,6 +1,6 @@
-export class Endpoints {
-    public static readonly BASE: string = "InPlayerPreview";
-    public static readonly EPISODE_INFO: string = "/Users/{userId}/Items/{episodeId}";
-    public static readonly EPISODE_DESCRIPTION: string = "/Items/{episodeId}";
-    public static readonly PLAY_MEDIA: string = "/Users/{userId}/Items/{episodeId}/Play/{ticks}";
+export enum Endpoints {
+    BASE = "InPlayerPreview",
+    EPISODE_INFO = "/Users/{userId}/Items/{episodeId}",
+    EPISODE_DESCRIPTION = "/Items/{episodeId}",
+    PLAY_MEDIA = "/Users/{userId}/Items/{episodeId}/Play/{ticks}"
 }

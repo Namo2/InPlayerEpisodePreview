@@ -1,6 +1,6 @@
 ﻿import {BaseItem} from "./Episode";
 
-export interface Season {
+export type Season = {
     seasonId: string;
     seasonName: string;
     episodes: BaseItem[];

@@ -28,8 +28,8 @@ inPlayerPreviewStyle.textContent += '.previewQuickActionContainer {margin-left: 
 inPlayerPreviewStyle.textContent += '.previewEpisodeContainer {width: 100%;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;}';
 inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {max-width: 30%;}';
-inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {margin-left: 0.5em; margin-top: 0.5em; margin-right: 1.5em; display: block;}';
-inPlayerPreviewStyle.textContent += '.previewEpisodeDetails {margin-left: 0.5em;}';
+inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {margin-left: 0.5em; margin-top: 1em; margin-right: 1.5em; display: block;}';
+inPlayerPreviewStyle.textContent += '.previewEpisodeDetails {margin-left: 1em; justify-content: start !important;}';
 document?.head?.appendChild(inPlayerPreviewStyle);
 
 // init services and helpers

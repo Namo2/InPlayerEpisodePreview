@@ -47,19 +47,17 @@ document.addEventListener('viewshow', viewShowEventHandler);
 let previewContainerLoaded: boolean = false;
 
 function viewShowEventHandler(): void {
-    let currentRoutePath: string = getLocationPath();
+    const currentRoutePath: string = getLocationPath();
 
     function getLocationPath(): string {
-        const location: string = window.location.toString();
-        const currentRouteIndex: number = location.lastIndexOf('/');
-
-        return location.substring(currentRouteIndex);
+        const location: string = window.location.toString()
+        const currentRouteIndex: number = location.lastIndexOf('/')
+        return location.substring(currentRouteIndex)
     }
 
     // Initial attempt to load the video view or schedule retries.
-    attemptLoadVideoView();
-
-    previousRoutePath = currentRoutePath;
+    attemptLoadVideoView()
+    previousRoutePath = currentRoutePath
 
     // This function attempts to load the video view, retrying up to 3 times if necessary.
     function attemptLoadVideoView(retryCount = 0): void {
@@ -67,17 +65,17 @@ function viewShowEventHandler(): void {
             if ((programDataStore.movies.length > 0 && programDataStore.boxSetName !== '') || (programDataStore.seasons.length > 0 && programDataStore.seasons[programDataStore.activeSeasonIndex].episodes.length > 1)) {
                 // Check if the preview container is already loaded before loading
                 if (!previewContainerLoaded && !isPreviewButtonCreated()) {
-                    loadVideoView();
-                    previewContainerLoaded = true; // Set flag to true after loading
+                    loadVideoView()
+                    previewContainerLoaded = true // Set flag to true after loading
                 }
             } else if (retryCount < 3) { // Retry up to 3 times
                 setTimeout((): void => {
-                    logger.debug(`Retry #${retryCount + 1}`);
-                    attemptLoadVideoView(retryCount + 1);
-                }, 10000); // Wait 10 seconds for each retry
+                    logger.debug(`Retry #${retryCount + 1}`)
+                    attemptLoadVideoView(retryCount + 1)
+                }, 10000) // Wait 10 seconds for each retry
             }
         } else if (videoPaths.includes(previousRoutePath)) {
-            unloadVideoView();
+            unloadVideoView()
         }
     }
     
@@ -90,66 +88,66 @@ function viewShowEventHandler(): void {
         if (index === -1)
             index = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("osdTimeText"))
 
-        const previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index);
-        previewButton.render(previewButtonClickHandler);
+        const previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index)
+        previewButton.render(previewButtonClickHandler)
 
         function previewButtonClickHandler(): void {
-            const isSeries: boolean = programDataStore.isSeries;
+            const isSeries: boolean = programDataStore.isSeries
             
             if (isSeries) {
                 // refresh active season
                 programDataStore.activeSeasonIndex = programDataStore.seasons
-                    .findIndex((season: Season): boolean => season.episodes.some((episode: BaseItem): boolean => episode.Id === programDataStore.activeMediaSourceId));
+                    .findIndex((season: Season): boolean => season.episodes.some((episode: BaseItem): boolean => episode.Id === programDataStore.activeMediaSourceId)) ?? 0
             }
             
-            let dialogBackdrop: DialogBackdropContainerTemplate = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1);
-            dialogBackdrop.render();
+            let dialogBackdrop: DialogBackdropContainerTemplate = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1)
+            dialogBackdrop.render()
             
-            let dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1);
+            let dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1)
             dialogContainer.render((): void => {
-                document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()));
-                document.body.removeChild(document.getElementById(dialogContainer.getElementId()));
-            });
+                document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()))
+                document.body.removeChild(document.getElementById(dialogContainer.getElementId()))
+            })
 
-            let contentDiv: HTMLElement = document.getElementById('popupContentContainer');
-            contentDiv.innerHTML = ""; // remove old content
+            let contentDiv: HTMLElement = document.getElementById('popupContentContainer')
+            contentDiv.innerHTML = "" // remove old content
             
-            let popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore);
+            let popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore)
             popupTitle.render((e: MouseEvent) => {
-                e.stopPropagation();
+                e.stopPropagation()
                 
                 popupTitle.setVisible(false);
-                let contentDiv: HTMLElement = document.getElementById('popupContentContainer');
+                let contentDiv: HTMLElement = document.getElementById('popupContentContainer')
 
                 // delete episode content for all existing episodes in the preview list;
-                contentDiv.innerHTML = "";
+                contentDiv.innerHTML = ""
                 
-                listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle);
-            });
+                listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle)
+            })
             
-            popupTitle.setText(isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName : programDataStore.boxSetName);
+            popupTitle.setText(isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName : programDataStore.boxSetName)
 
-            let itemsForCurrentList: BaseItem[] = isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].episodes : programDataStore.movies;
-            listElementFactory.createEpisodeElements(itemsForCurrentList, contentDiv);
+            let itemsForCurrentList: BaseItem[] = isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].episodes : programDataStore.movies
+            listElementFactory.createEpisodeElements(itemsForCurrentList, contentDiv)
             
             // scroll to the episode that is currently playing
-            contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView();
+            contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView()
         }
     }
     function unloadVideoView(): void {
         // Clear old data and reset previewContainerLoaded flag
-        authService.setAuthHeaderValue("");
-        programDataStore.clear();
+        authService.setAuthHeaderValue("")
+        programDataStore.clear()
 
         if (document.getElementById("dialogBackdropContainer"))
-            document.body.removeChild(document.getElementById("dialogBackdropContainer"));
+            document.body.removeChild(document.getElementById("dialogBackdropContainer"))
         if (document.getElementById("dialogContainer"))
-            document.body.removeChild(document.getElementById("dialogContainer"));
+            document.body.removeChild(document.getElementById("dialogContainer"))
         
-        previewContainerLoaded = false; // Reset flag when unloading
+        previewContainerLoaded = false // Reset flag when unloading
     }
     
     function isPreviewButtonCreated(): boolean {
-        return document.querySelector('.buttons').querySelector('#popupPreviewButton') !== null;
+        return document.querySelector('.buttons').querySelector('#popupPreviewButton') !== null
     }
 }

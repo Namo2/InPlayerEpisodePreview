@@ -24,26 +24,29 @@ export class DataFetcher {
             const urlPathname: string = url.pathname;
 
             // Process data from POST requests
-            if (config.body && typeof config.body === 'string') {
-                // Endpoint: /Sessions/Playing
-                if (urlPathname.includes('Sessions/Playing')) {
-                    const playingInfo: PlaybackProgressInfo = JSON.parse(config.body)
+            // Endpoint: /Sessions/Playing
+            if (config.body && typeof config.body === 'string' && urlPathname.includes('Sessions/Playing')) {
+                const playingInfo: PlaybackProgressInfo = JSON.parse(config.body)
 
-                    // save the media id of the currently played video
-                    this.programDataStore.activeMediaSourceId = playingInfo.MediaSourceId
+                // save the media id of the currently played video
+                this.programDataStore.activeMediaSourceId = playingInfo.MediaSourceId
 
-                    // Endpoint: /Sessions/Playing/Progress
-                    if (urlPathname.includes('Progress')) {
-                        // update the playback progress of the currently played video
-                        const episode: BaseItem = this.programDataStore.getItemById(playingInfo.MediaSourceId)
-                        if (episode) {
-                            episode.UserData.PlaybackPositionTicks = playingInfo.PositionTicks
-                            episode.UserData.PlayedPercentage = 100 / episode.RunTimeTicks * playingInfo.PositionTicks
-                            episode.UserData.Played = episode.UserData.PlayedPercentage > 90 // 90 is the default percentage for watched episodes
-                            this.programDataStore.updateItem(episode)
-                        }
+                // Endpoint: /Sessions/Playing/Progress
+                if (!urlPathname.includes('Progress')) return
+                
+                // update the playback progress of the currently played video
+                const episode: BaseItem = this.programDataStore.getItemById(playingInfo.MediaSourceId)
+                if (!episode) return
+                        
+                this.programDataStore.updateItem({
+                    ...episode,
+                    UserData: {
+                        ...episode.UserData,
+                        PlaybackPositionTicks: playingInfo.PositionTicks,
+                        PlayedPercentage: 100 / episode.RunTimeTicks * playingInfo.PositionTicks,
+                        Played: episode.UserData.PlayedPercentage > 90 // 90 is the default percentage for watched episodes
                     }
-                }
+                })
             }
 
             if (urlPathname.includes('Episodes')) {
@@ -60,38 +63,15 @@ export class DataFetcher {
                 this.programDataStore.userId = extractKeyFromString(url.search, 'UserId=', '&')
                 response.clone().json().then((data: ItemDto): void => this.saveEpisodeData(data))
 
-            } else if (urlPathname.includes('PlayedItems')) {
-                // update the played state of the episode
-                this.logger.debug('Received PlayedItems')
-
-                const itemId: string = extractKeyFromString(urlPathname, 'PlayedItems/')
-                const changedItem: BaseItem = this.programDataStore.getItemById(itemId)
-                if (changedItem) {
-                    response.clone().json().then((data) => changedItem.UserData.Played = data["Played"])
-                    this.programDataStore.updateItem(changedItem)
-                }
-
-
-            } else if (urlPathname.includes('FavoriteItems')) {
-                // update the favourite state of the episode
-                this.logger.debug('Received FavoriteItems')
-
-                const itemId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
-                const changedItem: BaseItem = this.programDataStore.getItemById(itemId);
-                if (changedItem) {
-                    response.clone().json().then((data) => changedItem.UserData.IsFavorite = data["IsFavorite"]);
-                    this.programDataStore.updateItem(changedItem)
-                }
-                
-            } else if (urlPathname.includes('Items') && url.search.includes('ParentId')) {
+            } else if (urlPathname.includes('User') && urlPathname.includes('Items') && url.search.includes('ParentId')) {
                 this.logger.debug('Received Items with ParentId')
 
                 this.programDataStore.userId = extractKeyFromString(urlPathname, 'Users/', '/')
                 response.clone().json().then((data: ItemDto): void => this.saveItemData(data))
-                
-            } else if (urlPathname.includes('Items')) {
+
+            } else if (urlPathname.includes('User') && urlPathname.includes('Items')) {
                 this.logger.debug('Received Items without ParentId')
-                
+
                 response.clone().json().then((data: BaseItem): void => {
                     this.logger.debug('Received single item data -> Setting BoxSet name');
 
@@ -99,9 +79,31 @@ export class DataFetcher {
                     if (ItemType[data.Type] === ItemType.BoxSet)
                         this.programDataStore.boxSetName = data.Name
                 });
+                
+            } else if (urlPathname.includes('PlayedItems')) {
+                // update the played state of the episode
+                this.logger.debug('Received PlayedItems')
+
+                const itemId: string = extractKeyFromString(urlPathname, 'PlayedItems/')
+                const changedItem: BaseItem = this.programDataStore.getItemById(itemId)
+                if (!changedItem) return
+                
+                response.clone().json().then((data) => changedItem.UserData.Played = data["Played"])
+                this.programDataStore.updateItem(changedItem)
+
+            } else if (urlPathname.includes('FavoriteItems')) {
+                // update the favourite state of the episode
+                this.logger.debug('Received FavoriteItems')
+
+                const itemId: string = extractKeyFromString(urlPathname, 'FavoriteItems/');
+                const changedItem: BaseItem = this.programDataStore.getItemById(itemId);
+                if (!changedItem) return
+                    
+                response.clone().json().then((data) => changedItem.UserData.IsFavorite = data["IsFavorite"]);
+                this.programDataStore.updateItem(changedItem)
             }
 
-            return response;
+            return response
 
             function extractKeyFromString(searchString: string, startString: string, endString: string = ''): string {
                 const startIndex: number = searchString.indexOf(startString) + startString.length
@@ -118,7 +120,7 @@ export class DataFetcher {
     public saveItemData(itemDto: ItemDto): void {
         if (this.checkIfDataIsMovieData(itemDto) && itemDto.Items.length > 0) {
             this.saveMovieData(itemDto)
-            return;
+            return
         }
 
         if (this.checkIfDataIsEpisodeData(itemDto)) {

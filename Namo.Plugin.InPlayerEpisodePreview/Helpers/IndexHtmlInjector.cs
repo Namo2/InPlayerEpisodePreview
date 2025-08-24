@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.RegularExpressions;
 using MediaBrowser.Common.Net;
 using Microsoft.Extensions.Logging;
@@ -94,7 +95,9 @@ public static class IndexHtmlInjector
             Logger.LogError("Unable to get base path from config, using '/': {0}", e);
         }
 
+        string versionTag = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0.0";
+        
         return
-            $"<script plugin=\"InPlayerEpisodePreview\" version=\"1.4.0.0\" src=\"{basePath}/InPlayerPreview/ClientScript\"></script>";
+            $"<script plugin=\"InPlayerEpisodePreview\" version=\"{versionTag}\" src=\"{basePath}/InPlayerPreview/ClientScript\"></script>";
     }
 }

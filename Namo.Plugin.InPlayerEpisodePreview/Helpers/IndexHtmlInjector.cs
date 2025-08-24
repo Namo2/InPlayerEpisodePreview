@@ -95,6 +95,6 @@ public static class IndexHtmlInjector
         }
 
         return
-            $"<script plugin=\"InPlayerEpisodePreview\" version=\"1.3.1.0\" src=\"{basePath}/InPlayerPreview/ClientScript\"></script>";
+            $"<script plugin=\"InPlayerEpisodePreview\" version=\"1.4.0.0\" src=\"{basePath}/InPlayerPreview/ClientScript\"></script>";
     }
 }

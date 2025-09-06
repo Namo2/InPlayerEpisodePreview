@@ -3,8 +3,8 @@ import {ProgramDataStore} from "../Services/ProgramDataStore";
 
 export class PopupTitleTemplate extends BaseTemplate {
     constructor(container: HTMLElement, positionAfterIndex: number, private programDataStore: ProgramDataStore) {
-        super(container, positionAfterIndex);
-        this.setElementId('popupTitleContainer');
+        super(container, positionAfterIndex)
+        this.setElementId('popupTitleContainer')
     }
 
     getTemplate(): string {
@@ -17,26 +17,26 @@ export class PopupTitleTemplate extends BaseTemplate {
                 }
                 <h1 class="actionSheetTitle"></h1>
             </div>
-        `;
+        `
     }
 
     public render(clickHandler: Function) {
-        let renderedElement = this.addElementToContainer();
-        
+        const renderedElement = this.addElementToContainer();
         if (this.programDataStore.isSeries)
-            renderedElement.addEventListener('click', (e) => clickHandler(e));
+            renderedElement.addEventListener('click', (e) => clickHandler(e))
+        if (this.programDataStore.isMovie && this.programDataStore.boxSetName !== '')
+            renderedElement.addEventListener('click', (e) => e.stopPropagation())
     }
     
     public setText(text: string) {
-        let renderedElement = this.getElement();
-        renderedElement.querySelector('h1').innerText = text;
+        this.getElement().querySelector('h1').innerText = text
     }
     
     public setVisible(isVisible: boolean) {
-        let renderedElement = this.getElement();
+        const renderedElement = this.getElement()
         if (isVisible) {
             renderedElement.classList.remove('hide');
-            return;
+            return
         }
         
         renderedElement.classList.add('hide');

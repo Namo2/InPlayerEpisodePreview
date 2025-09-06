@@ -10,44 +10,43 @@ import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 import {DataFetcher} from "./Services/DataFetcher";
 import {BaseItem} from "./Models/Episode";
-import {Season} from "./Models/Season";
 
 // load and inject inPlayerPreview.css into the page
 /*
  * Inject style to be used for the preview popup
  */
-let inPlayerPreviewStyle: HTMLStyleElement = document.createElement('style');
-inPlayerPreviewStyle.id = 'inPlayerPreviewStyle';
-inPlayerPreviewStyle.textContent += '.selectedListItem {height: auto;}';
-inPlayerPreviewStyle.textContent += '.previewListItem {flex-direction: column; align-items: flex-start;}';
-inPlayerPreviewStyle.textContent += '.previewListItemContent {width: 100%; min-height: 15.5vh; position: relative; display: flex; flex-direction: column;}';
-inPlayerPreviewStyle.textContent += '.previewPopup {animation: 140ms ease-out 0s 1 normal both running scaleup; position: fixed; margin: 0px; bottom: 1.5vh; left: 50vw; width: 48vw;}';
-inPlayerPreviewStyle.textContent += '.previewPopupTitle {max-height: 4vh;}';
-inPlayerPreviewStyle.textContent += '.previewPopupScroller {max-height: 60vh;}';
-inPlayerPreviewStyle.textContent += '.previewQuickActionContainer {margin-left: auto; margin-right: 1em;}';
-inPlayerPreviewStyle.textContent += '.previewEpisodeContainer {width: 100%;}';
-inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;}';
-inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {max-width: 30%;}';
-inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {margin-left: 0.5em; margin-top: 1em; margin-right: 1.5em; display: block;}';
-inPlayerPreviewStyle.textContent += '.previewEpisodeDetails {margin-left: 1em; justify-content: start !important;}';
-document?.head?.appendChild(inPlayerPreviewStyle);
+let inPlayerPreviewStyle: HTMLStyleElement = document.createElement('style')
+inPlayerPreviewStyle.id = 'inPlayerPreviewStyle'
+inPlayerPreviewStyle.textContent += '.selectedListItem {height: auto;}'
+inPlayerPreviewStyle.textContent += '.previewListItem {flex-direction: column; align-items: flex-start;}'
+inPlayerPreviewStyle.textContent += '.previewListItemContent {width: 100%; min-height: 15.5vh; position: relative; display: flex; flex-direction: column;}'
+inPlayerPreviewStyle.textContent += '.previewPopup {animation: 140ms ease-out 0s 1 normal both running scaleup; position: fixed; margin: 0px; bottom: 1.5vh; left: 50vw; width: 48vw;}'
+inPlayerPreviewStyle.textContent += '.previewPopupTitle {max-height: 4vh;}'
+inPlayerPreviewStyle.textContent += '.previewPopupScroller {max-height: 60vh;}'
+inPlayerPreviewStyle.textContent += '.previewQuickActionContainer {margin-left: auto; margin-right: 1em;}'
+inPlayerPreviewStyle.textContent += '.previewEpisodeContainer {width: 100%;}'
+inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;}'
+inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {max-width: 30%;}'
+inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {margin-left: 0.5em; margin-top: 1em; margin-right: 1.5em; display: block;}'
+inPlayerPreviewStyle.textContent += '.previewEpisodeDetails {margin-left: 1em; justify-content: start !important;}'
+document?.head?.appendChild(inPlayerPreviewStyle)
 
 // init services and helpers
-const logger: Logger = new Logger();
-const authService: AuthService = new AuthService();
-const programDataStore: ProgramDataStore = new ProgramDataStore();
-const dataLoader: DataLoader = new DataLoader(authService);
-new DataFetcher(programDataStore, authService, logger);
-const playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger);
-const listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore);
+const logger: Logger = new Logger()
+const authService: AuthService = new AuthService()
+const programDataStore: ProgramDataStore = new ProgramDataStore()
+const dataLoader: DataLoader = new DataLoader(authService)
+new DataFetcher(programDataStore, authService, logger)
+const playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger)
+const listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore)
 
-const videoPaths: string[] = ['/video'];
-let previousRoutePath: string = null;
-document.addEventListener('viewshow', viewShowEventHandler);
-let previewContainerLoaded: boolean = false;
+const videoPaths: string[] = ['/video']
+let previousRoutePath: string = null
+let previewContainerLoaded: boolean = false
+document.addEventListener('viewshow', viewShowEventHandler)
 
 function viewShowEventHandler(): void {
-    const currentRoutePath: string = getLocationPath();
+    const currentRoutePath: string = getLocationPath()
 
     function getLocationPath(): string {
         const location: string = window.location.toString()
@@ -62,7 +61,7 @@ function viewShowEventHandler(): void {
     // This function attempts to load the video view, retrying up to 3 times if necessary.
     function attemptLoadVideoView(retryCount = 0): void {
         if (videoPaths.includes(currentRoutePath)) {
-            if ((programDataStore.movies.length > 0 && programDataStore.boxSetName !== '') || (programDataStore.seasons.length > 0 && programDataStore.seasons[programDataStore.activeSeasonIndex].episodes.length > 1)) {
+            if (programDataStore.dataIsAllowedForPreview) {
                 // Check if the preview container is already loaded before loading
                 if (!previewContainerLoaded && !isPreviewButtonCreated()) {
                     loadVideoView()
@@ -81,7 +80,7 @@ function viewShowEventHandler(): void {
     
     function loadVideoView(): void {
         // add preview button to the page
-        let parent: HTMLElement = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
+        const parent: HTMLElement = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
         
         let index: number = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("btnUserRating"));
         // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
@@ -93,31 +92,25 @@ function viewShowEventHandler(): void {
 
         function previewButtonClickHandler(): void {
             const isSeries: boolean = programDataStore.isSeries
-            
-            if (isSeries) {
-                // refresh active season
-                programDataStore.activeSeasonIndex = programDataStore.seasons
-                    .findIndex((season: Season): boolean => season.episodes.some((episode: BaseItem): boolean => episode.Id === programDataStore.activeMediaSourceId)) ?? 0
-            }
-            
-            let dialogBackdrop: DialogBackdropContainerTemplate = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1)
+
+            const dialogBackdrop: DialogBackdropContainerTemplate = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1)
             dialogBackdrop.render()
-            
-            let dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1)
+
+            const dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1)
             dialogContainer.render((): void => {
                 document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()))
                 document.body.removeChild(document.getElementById(dialogContainer.getElementId()))
             })
 
-            let contentDiv: HTMLElement = document.getElementById('popupContentContainer')
+            const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
             contentDiv.innerHTML = "" // remove old content
-            
-            let popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore)
+
+            const popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore)
             popupTitle.render((e: MouseEvent) => {
                 e.stopPropagation()
                 
                 popupTitle.setVisible(false);
-                let contentDiv: HTMLElement = document.getElementById('popupContentContainer')
+                const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
 
                 // delete episode content for all existing episodes in the preview list;
                 contentDiv.innerHTML = ""
@@ -126,8 +119,9 @@ function viewShowEventHandler(): void {
             })
             
             popupTitle.setText(isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName : programDataStore.boxSetName)
+            popupTitle.setVisible(programDataStore.isSeries || programDataStore.boxSetName !== '')
 
-            let itemsForCurrentList: BaseItem[] = isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].episodes : programDataStore.movies
+            const itemsForCurrentList: BaseItem[] = isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].episodes : programDataStore.movies
             listElementFactory.createEpisodeElements(itemsForCurrentList, contentDiv)
             
             // scroll to the episode that is currently playing

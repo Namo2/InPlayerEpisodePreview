@@ -45,7 +45,10 @@ export class ListElementTemplate extends BaseTemplate {
                  data-id="${this.item.IndexNumber}">
                 <div class="previewEpisodeContainer flex">
                     <button class="listItem previewEpisodeTitle" type="button">
-                        <span>${this.item.IndexNumber}</span>
+                        ${this.item.IndexNumber && (this.programDataStore.isSeries || this.programDataStore.boxSetName !== '') 
+                            ? `<span>${this.item.IndexNumber}</span>`
+                            : ''
+                        }
                         <div class="listItemBody actionsheetListItemBody">
                             <span class="actionSheetItemText">${this.item.Name}</span>
                         </div>
@@ -70,7 +73,7 @@ export class ListElementTemplate extends BaseTemplate {
                                             class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
                                             data-action="link"
                                             style="${backgroundImageStyle}">
-                                        <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${!this.item.UserData.PlayedPercentage ? "hide" : ""}">
+                                        <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${this.item.UserData.PlayedPercentage ? '' : 'hide'}">
                                             <div class="itemProgressBar">
                                                 <div class="itemProgressBarForeground"
                                                      style="width:${this.item.UserData.PlayedPercentage}%;"></div>
@@ -90,7 +93,7 @@ export class ListElementTemplate extends BaseTemplate {
                                 </div>
                             </div>
                         </div>
-                        <span class="previewEpisodeDescription">${this.item.Description}</span>
+                        <span class="previewEpisodeDescription">${this.item.Description ?? 'loading...'}</span>
                     </div>
                 </div>
             </div>

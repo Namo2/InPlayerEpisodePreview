@@ -168,15 +168,11 @@ export class DataFetcher {
             const season: Season = {
                 seasonId: seasonId,
                 seasonName: group[seasonId][0].SeasonName,
-                episodes: group[seasonId]
+                episodes: group[seasonId],
+                IndexNumber: seasons.length
             }
             
-            season.episodes.sort((a: BaseItem, b: BaseItem): number => a.IndexNumber - b.IndexNumber)
-            
             seasons.push(season)
-            if (season.episodes.some((episode: BaseItem): boolean => episode.Id === this.programDataStore.activeMediaSourceId))
-                this.programDataStore.activeSeasonIndex = seasons.length - 1
-            
             value = iterator.next()
         }
 

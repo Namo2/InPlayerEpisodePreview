@@ -12,6 +12,8 @@ export class ListElementFactory {
     }
     
     public createEpisodeElements(episodes: BaseItem[], parentDiv: HTMLElement): void {
+        episodes.sort((a, b) => a.IndexNumber - b.IndexNumber)
+        
         for (let i: number = 0; i < episodes.length; i++) {
             if (this.programDataStore.isMovie) {
                 episodes[i].IndexNumber = i + 1
@@ -66,8 +68,10 @@ export class ListElementFactory {
     }
     
     public createSeasonElements(seasons: Season[], parentDiv: HTMLElement, currentSeasonIndex: number, titleContainer: PopupTitleTemplate): void {
+        seasons.sort((a, b) => a.IndexNumber - b.IndexNumber)
+        
         for (let i: number = 0; i < seasons.length; i++) {
-            const season = new SeasonListElementTemplate(parentDiv, i, seasons[i], i === currentSeasonIndex);
+            const season = new SeasonListElementTemplate(parentDiv, i, seasons[i], seasons[i].IndexNumber === currentSeasonIndex);
             season.render((e: MouseEvent): void => {
                 e.stopPropagation();
                 

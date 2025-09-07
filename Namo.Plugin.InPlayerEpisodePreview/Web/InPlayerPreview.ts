@@ -9,7 +9,7 @@ import {PlaybackHandler} from "./Services/PlaybackHandler";
 import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 import {DataFetcher} from "./Services/DataFetcher";
-import {BaseItem} from "./Models/Episode";
+import {ItemType} from "./Models/ItemType";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -91,8 +91,6 @@ function viewShowEventHandler(): void {
         previewButton.render(previewButtonClickHandler)
 
         function previewButtonClickHandler(): void {
-            const isSeries: boolean = programDataStore.isSeries
-
             const dialogBackdrop: DialogBackdropContainerTemplate = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1)
             dialogBackdrop.render()
 
@@ -115,14 +113,32 @@ function viewShowEventHandler(): void {
                 // delete episode content for all existing episodes in the preview list;
                 contentDiv.innerHTML = ""
                 
-                listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeasonIndex, popupTitle)
+                listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeason.IndexNumber, popupTitle)
             })
-            
-            popupTitle.setText(isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].seasonName : programDataStore.boxSetName)
-            popupTitle.setVisible(programDataStore.isSeries || programDataStore.boxSetName !== '')
 
-            const itemsForCurrentList: BaseItem[] = isSeries ? programDataStore.seasons[programDataStore.activeSeasonIndex].episodes : programDataStore.movies
-            listElementFactory.createEpisodeElements(itemsForCurrentList, contentDiv)
+            switch (programDataStore.type) {
+                case ItemType.Series:
+                    popupTitle.setText(programDataStore.activeSeason.seasonName)
+                    popupTitle.setVisible(true)
+                    listElementFactory.createEpisodeElements(programDataStore.activeSeason.episodes, contentDiv)
+                    break
+                case ItemType.Movie:
+                    popupTitle.setText('')
+                    popupTitle.setVisible(false)
+                    listElementFactory.createEpisodeElements(programDataStore.movies.filter(movie => movie.Id === programDataStore.activeMediaSourceId), contentDiv)
+                    break
+                case ItemType.Video:
+                    popupTitle.setText('')
+                    popupTitle.setVisible(false)
+                    listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
+                    break
+                case ItemType.BoxSet:
+                case ItemType.Folder:
+                    popupTitle.setText(programDataStore.boxSetName)
+                    popupTitle.setVisible(true)
+                    listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
+                    break
+            }
             
             // scroll to the episode that is currently playing
             contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView()
@@ -131,7 +147,6 @@ function viewShowEventHandler(): void {
     function unloadVideoView(): void {
         // Clear old data and reset previewContainerLoaded flag
         authService.setAuthHeaderValue("")
-        programDataStore.clear()
 
         if (document.getElementById("dialogBackdropContainer"))
             document.body.removeChild(document.getElementById("dialogBackdropContainer"))

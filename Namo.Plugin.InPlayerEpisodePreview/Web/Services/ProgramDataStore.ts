@@ -7,7 +7,14 @@ export class ProgramDataStore {
     private _programData: ProgramData
 
     constructor() {
-        this.clear()
+        this._programData = {
+            userId: '',
+            activeMediaSourceId: '',
+            boxSetName: '',
+            type: undefined,
+            movies: [],
+            seasons: []
+        }
     }
 
     public get userId(): string {
@@ -26,8 +33,8 @@ export class ProgramDataStore {
         this._programData.activeMediaSourceId = activeMediaSourceId
     }
 
-    public get activeSeasonIndex(): number {
-        return this.seasons.find(season => season.episodes.some(episode => episode.Id === this.activeMediaSourceId)).IndexNumber ?? 0
+    public get activeSeason(): Season {
+        return this.seasons.find(season => season.episodes.some(episode => episode.Id === this.activeMediaSourceId))
     }
     
     public get type(): ItemType {
@@ -47,11 +54,7 @@ export class ProgramDataStore {
     }
     
     public get movies(): BaseItem[] {
-        if (this.boxSetName !== '')
-            return this._programData.movies
-        
-        // Only show the current running movie. Will be adjusted later when ItemType.Folder or similar is introduced
-        return this._programData.movies.filter(movie => movie.Id === this.activeMediaSourceId)
+        return this._programData.movies
     }
     
     public set movies(movies: BaseItem[]) {
@@ -65,14 +68,6 @@ export class ProgramDataStore {
     public set seasons(seasons: Season[]) {
         this._programData.seasons = seasons
     }
-
-    public get isSeries(): boolean {
-        return this.type === ItemType.Series
-    }
-    
-    public get isMovie(): boolean {
-        return this.type === ItemType.Movie
-    }
     
     public get dataIsAllowedForPreview() {
         if (!this.allowedPreviewTypes.includes(this.type))
@@ -80,8 +75,12 @@ export class ProgramDataStore {
         
         switch (this.type) {
             case ItemType.Series:
-                return this.seasons.at(this.activeSeasonIndex)?.episodes.length >= this.minimumElementsNeeded
+                return this.activeSeason.episodes.length >= this.minimumElementsNeeded
             case ItemType.Movie:
+                return true
+            case ItemType.BoxSet:
+            case ItemType.Folder:
+            case ItemType.Video:
                 return this.movies.length >= this.minimumElementsNeeded
             default:
                 return false
@@ -90,7 +89,7 @@ export class ProgramDataStore {
     
     public get allowedPreviewTypes() { 
         // TODO: get from plugin config in the future
-        return [ItemType.Series, ItemType.Movie]
+        return [ItemType.Series, ItemType.BoxSet, ItemType.Movie, ItemType.Folder, ItemType.Video]
     }
     
     public get minimumElementsNeeded(): number {
@@ -104,7 +103,10 @@ export class ProgramDataStore {
                 return this.seasons
                     .flatMap(season => season.episodes)
                     .find(episode => episode.Id)
+            case ItemType.BoxSet:
             case ItemType.Movie:
+            case ItemType.Folder:
+            case ItemType.Video:
                 return this.movies.find(movie => movie.Id === itemId)
             default: 
                 return undefined
@@ -123,20 +125,11 @@ export class ProgramDataStore {
                     ]
                 }
                 break
+            case ItemType.BoxSet:
             case ItemType.Movie:
+            case ItemType.Folder:
+            case ItemType.Video:
                 this.movies = [... this.movies.filter(movie => movie.Id !== itemToUpdate.Id), itemToUpdate]
         }
-    }
-
-    public clear(): void {
-        this._programData = {
-            userId: '',
-            activeMediaSourceId: '',
-            activeSeasonIndex: 0,
-            boxSetName: '',
-            type: undefined,
-            movies: [],
-            seasons: []
-        };
     }
 }

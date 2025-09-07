@@ -10,6 +10,8 @@ import {PlaybackProgressInfo} from "../Models/PlaybackProgressInfo";
  * The classes which derives from this interface, will provide the functionality to handle the data input from the server if the PlaybackState is changed.
  */
 export class DataFetcher {
+    private static nextDataIsChildData: boolean = false
+    
     constructor(private programDataStore: ProgramDataStore, private authService: AuthService, private logger: Logger) {
         const {fetch: originalFetch} = window
         window.fetch = async (...args): Promise<Response> => {
@@ -29,24 +31,25 @@ export class DataFetcher {
                 const playingInfo: PlaybackProgressInfo = JSON.parse(config.body)
 
                 // save the media id of the currently played video
-                this.programDataStore.activeMediaSourceId = playingInfo.MediaSourceId
+                if (this.programDataStore.activeMediaSourceId !== playingInfo.MediaSourceId)
+                    this.programDataStore.activeMediaSourceId = playingInfo.MediaSourceId
 
                 // Endpoint: /Sessions/Playing/Progress
-                if (!urlPathname.includes('Progress')) return
-                
-                // update the playback progress of the currently played video
-                const episode: BaseItem = this.programDataStore.getItemById(playingInfo.MediaSourceId)
-                if (!episode) return
-                        
-                this.programDataStore.updateItem({
-                    ...episode,
-                    UserData: {
-                        ...episode.UserData,
-                        PlaybackPositionTicks: playingInfo.PositionTicks,
-                        PlayedPercentage: 100 / episode.RunTimeTicks * playingInfo.PositionTicks,
-                        Played: episode.UserData.PlayedPercentage > 90 // 90 is the default percentage for watched episodes
+                if (urlPathname.includes('Progress')) {
+                    // update the playback progress of the currently played video
+                    const episode: BaseItem = this.programDataStore.getItemById(playingInfo.MediaSourceId)
+                    if (episode) {
+                        this.programDataStore.updateItem({
+                            ...episode,
+                            UserData: {
+                                ...episode.UserData,
+                                PlaybackPositionTicks: playingInfo.PositionTicks,
+                                PlayedPercentage: 100 / episode.RunTimeTicks * playingInfo.PositionTicks,
+                                Played: episode.UserData.PlayedPercentage > 90 // 90 is the default percentage for watched episodes
+                            }
+                        })
                     }
-                })
+                }
             }
 
             if (urlPathname.includes('Episodes')) {
@@ -61,7 +64,10 @@ export class DataFetcher {
                 this.logger.debug('Received Episodes')
 
                 this.programDataStore.userId = extractKeyFromString(url.search, 'UserId=', '&')
-                response.clone().json().then((data: ItemDto): void => this.saveEpisodeData(data))
+                response.clone().json().then((data: ItemDto): void => {
+                    this.programDataStore.type = ItemType.Series
+                    this.programDataStore.seasons = this.getFormattedEpisodeData(data)
+                })
 
             } else if (urlPathname.includes('User') && urlPathname.includes('Items') && url.search.includes('ParentId')) {
                 this.logger.debug('Received Items with ParentId')
@@ -75,10 +81,23 @@ export class DataFetcher {
                 response.clone().json().then((data: BaseItem): void => {
                     this.logger.debug('Received single item data -> Setting BoxSet name');
 
-                    // set boxSetName for list title
-                    if (ItemType[data.Type] === ItemType.BoxSet)
-                        this.programDataStore.boxSetName = data.Name
-                });
+                    switch (ItemType[data.Type]) {
+                        case ItemType.BoxSet:
+                        case ItemType.Folder:
+                            DataFetcher.nextDataIsChildData = true
+                            this.programDataStore.boxSetName = data.Name
+                            break
+                        case ItemType.Movie: // could be single video (e.g. started from dashboard)
+                        case ItemType.Video:
+                            DataFetcher.nextDataIsChildData = false
+                            this.saveItemData({
+                                Items: [data],
+                                TotalRecordCount: 1,
+                                StartIndex: 0
+                            })
+                            break
+                    }
+                })
                 
             } else if (urlPathname.includes('PlayedItems')) {
                 // update the played state of the episode
@@ -114,44 +133,51 @@ export class DataFetcher {
 
                 return searchString.substring(startIndex)
             }
-        };
+        }
     }
     
     public saveItemData(itemDto: ItemDto): void {
-        if (this.checkIfDataIsMovieData(itemDto) && itemDto.Items.length > 0) {
-            this.saveMovieData(itemDto)
+        if (!itemDto || !itemDto.Items || itemDto.Items.length === 0)
             return
+        
+        const firstItem = itemDto.Items.at(0)
+        const itemDtoType: ItemType = ItemType[firstItem?.Type]
+        switch (itemDtoType) {
+            case ItemType.Episode:
+                // do not overwrite data if we only receive one item which already exists
+                if (itemDto.Items.length > 1 || !this.programDataStore.seasons.flatMap(season => season.episodes).some(episode => episode.Id === firstItem.Id)) {
+                    this.programDataStore.type = ItemType.Series
+                    this.programDataStore.seasons = this.getFormattedEpisodeData(itemDto)
+                }
+                break
+            case ItemType.Movie:
+                // do not overwrite data if we only receive one item which already exists
+                if (itemDto.Items.length > 1 || !this.programDataStore.movies.some(movie => movie.Id === firstItem.Id)) {
+                    this.programDataStore.type = DataFetcher.nextDataIsChildData ? ItemType.BoxSet : ItemType.Movie
+                    this.programDataStore.movies = itemDto.Items.map((movie, idx) => ({
+                        ...movie,
+                        IndexNumber: idx + 1
+                    }))
+                }
+                break
+            case ItemType.Video:
+                // do not overwrite data if we only receive one item which already exists
+                if (itemDto.Items.length > 1 || !this.programDataStore.movies.some(video => video.Id === firstItem.Id)) {
+                    this.programDataStore.type = DataFetcher.nextDataIsChildData ? ItemType.Folder : ItemType.Video
+                    itemDto.Items.sort((a, b) => (a.SortName && b.SortName) ? a.SortName.localeCompare(b.SortName) : 0)
+                    this.programDataStore.movies = itemDto.Items.map((video, idx) => ({
+                        ...video,
+                        IndexNumber: idx + 1
+                    }))
+                }
+                break
         }
-
-        if (this.checkIfDataIsEpisodeData(itemDto)) {
-            this.saveEpisodeData(itemDto)
-            return
-        }
+        DataFetcher.nextDataIsChildData = false
 
         // this.logger.error("Couldn't save items from response", itemDto);
     }
-
-    public checkIfDataIsMovieData(itemDto: ItemDto): boolean {
-        return itemDto
-            && itemDto.Items
-            && itemDto.Items.length > 0
-            && ItemType[itemDto.Items[0].Type] === ItemType.Movie
-    }
-
-    public checkIfDataIsEpisodeData(itemDto: ItemDto): boolean {
-        return itemDto
-            && itemDto.Items
-            && itemDto.Items.length > 0
-            && ItemType[itemDto.Items[0].Type] === ItemType.Episode
-    }
-
-    public saveMovieData(itemDto: ItemDto): void {
-        this.programDataStore.type = ItemType.Movie
-        this.programDataStore.movies = itemDto.Items
-    }
     
-    public saveEpisodeData(itemDto: ItemDto): void {
-        this.programDataStore.type = ItemType.Series
+    public getFormattedEpisodeData = (itemDto: ItemDto) => {
         const episodeData: BaseItem[] = itemDto.Items
         
         // get all different seasonIds
@@ -167,7 +193,7 @@ export class DataFetcher {
             const seasonId: string = value.value
             const season: Season = {
                 seasonId: seasonId,
-                seasonName: group[seasonId][0].SeasonName,
+                seasonName: group[seasonId].at(0).SeasonName,
                 episodes: group[seasonId],
                 IndexNumber: seasons.length
             }
@@ -176,7 +202,7 @@ export class DataFetcher {
             value = iterator.next()
         }
 
-        this.programDataStore.seasons = seasons
+        return seasons
         
         function groupBy<T>(arr: T[], fn: (item: T) => any): Record<string, T[]> {
             return arr.reduce<Record<string, T[]>>((prev: Record<string, T[]>, curr: T): {} => {

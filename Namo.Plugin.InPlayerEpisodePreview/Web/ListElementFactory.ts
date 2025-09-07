@@ -15,11 +15,6 @@ export class ListElementFactory {
         episodes.sort((a, b) => a.IndexNumber - b.IndexNumber)
         
         for (let i: number = 0; i < episodes.length; i++) {
-            if (this.programDataStore.isMovie) {
-                episodes[i].IndexNumber = i + 1
-                this.programDataStore.updateItem(episodes[i])
-            }
-            
             const episode = new ListElementTemplate(parentDiv, i, episodes[i], this.playbackHandler, this.programDataStore);
             episode.render((e: MouseEvent): void => {
                 e.stopPropagation();

@@ -44,10 +44,10 @@ export class ListElementTemplate extends BaseTemplate {
                  data-id="${this.item.IndexNumber}">
                 <div class="previewEpisodeContainer flex">
                     <button class="listItem previewEpisodeTitle" type="button">
-                        ${this.item.IndexNumber && (this.programDataStore.type === ItemType.Series || this.programDataStore.boxSetName !== '') 
-                            ? `<span>${this.item.IndexNumber}</span>`
-                            : ''
-                        }
+                        ${(
+                            this.item.IndexNumber && 
+                            this.programDataStore.type !== ItemType.Movie
+                        ) ? `<span>${this.item.IndexNumber}</span>` : ''}
                         <div class="listItemBody actionsheetListItemBody">
                             <span class="actionSheetItemText">${this.item.Name}</span>
                         </div>

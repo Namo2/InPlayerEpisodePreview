@@ -1,11 +1,10 @@
-﻿import {BaseTemplate} from "../BaseTemplate";
-import {BaseItem} from "../../Models/Episode";
-import {ProgramDataStore} from "../../Services/ProgramDataStore";
+﻿import {BaseTemplate} from "../BaseTemplate"
+import {BaseItem} from "../../Models/Episode"
 
 export class PlayStateIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem, private programDataStore: ProgramDataStore) {
-        super(container, positionAfterIndex);
-        this.setElementId('playStateButton-' + this.episode.IndexNumber);
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
+        super(container, positionAfterIndex)
+        this.setElementId('playStateButton-' + this.episode.IndexNumber)
     }
 
     getTemplate(): string {
@@ -24,22 +23,10 @@ export class PlayStateIconTemplate extends BaseTemplate {
                     title="Mark played">
                 <span class="material-icons check playstatebutton-icon-${this.episode?.UserData?.Played ? "played" : "unplayed"}"></span>
             </button>
-        `;
+        `
     }
 
     public render(): void {
-        this.addElementToContainer();
-    }
-
-    /**
-     * Unused - Will maybe be used in further updates on this
-     */
-    public update(): void {
-        // get current episode data
-        const season = this.programDataStore.seasons.find(s => s.episodes.some(e => e.Id === this.episode.Id));
-        const newData = season.episodes.find(e => e.Id === this.episode.Id);
-        
-        const playStateIcon = this.getElement();
-        playStateIcon.setAttribute("data-played", newData.UserData.Played.toString());
+        this.addElementToContainer()
     }
 }

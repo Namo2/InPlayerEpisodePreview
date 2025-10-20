@@ -11,7 +11,9 @@ export class EpisodeDetailsTemplate extends BaseTemplate {
         // language=HTML
         return `
             <div id="${this.getElementId()}-details" class="itemMiscInfo itemMiscInfo-primary previewEpisodeDetails">
-                <div class="mediaInfoItem">${(new Date(this.episode.PremiereDate)).toLocaleDateString(this.getLocale())}</div>
+                ${this.episode.PremiereDate ? `<div class="mediaInfoItem">
+                    ${(new Date(this.episode.PremiereDate)).toLocaleDateString(this.getLocale())}
+                </div>` : ''}
                 <div class="mediaInfoItem">${this.formatRunTime(this.episode.RunTimeTicks)}</div>
                 ${this.episode.CommunityRating ? `<div class="starRatingContainer mediaInfoItem">
                     <span class="material-icons starIcon star" aria-hidden="true"></span>

@@ -1,9 +1,9 @@
-﻿export interface PlayBackInfo {
+﻿export type PlayBackInfo = {
     MediaSources: MediaSource[]
     PlaySessionId: string
 }
 
-export interface MediaSource {
+export type MediaSource = {
     Protocol: string
     Id: string
     Path: string
@@ -39,7 +39,7 @@ export interface MediaSource {
     DefaultSubtitleStreamIndex: number
 }
 
-export interface MediaStream {
+export type MediaStream = {
     Codec: string
     ColorSpace?: string
     ColorTransfer?: string
@@ -75,4 +75,4 @@ export interface MediaStream {
     SampleRate?: number
 }
 
-export interface RequiredHttpHeaders {}
+export type RequiredHttpHeaders = {}

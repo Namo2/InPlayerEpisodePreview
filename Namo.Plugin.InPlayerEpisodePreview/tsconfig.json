@@ -1,7 +1,7 @@
 ﻿{
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
+        "module": "CommonJS",
+        "target": "ES2022",
         "sourceMap": true,
         "outDir": "./Web/",
     },

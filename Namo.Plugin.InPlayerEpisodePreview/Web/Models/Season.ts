@@ -1,7 +1,8 @@
 ﻿import {BaseItem} from "./Episode";
 
-export interface Season {
-    seasonId: string;
-    seasonName: string;
-    episodes: BaseItem[];
+export type Season = {
+    seasonId: string
+    seasonName: string
+    episodes: BaseItem[]
+    IndexNumber: number
 }

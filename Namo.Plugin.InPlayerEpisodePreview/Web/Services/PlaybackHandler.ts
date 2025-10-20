@@ -8,18 +8,14 @@ export class PlaybackHandler {
 
     async play(episodeId: string, startPositionTicks: number): Promise<void | Response> {
         try {
-            return await fetch(`../${Endpoints.BASE}${Endpoints.PLAY_MEDIA}`
+            const url = new URL(`${window['ApiClient']['_serverAddress']}/${Endpoints.BASE}${Endpoints.PLAY_MEDIA}`
                 .replace('{userId}', this.programDataStore.userId)
                 .replace('{episodeId}', episodeId)
-                .replace('{ticks}', startPositionTicks.toString())
-            );
-        } catch (err) {
-            // We Skip error messages, if it is a URL constructor argument. Because relative path can throw errors even if url is valid
-            if (err instanceof TypeError) {
-                return;
-            }
+                .replace('{ticks}', startPositionTicks.toString()))
             
-            return this.logger.error(`Couldn't start the playback of an episode. Error: ${err}`);
+            return await fetch(url)
+        } catch (ex) {
+            return this.logger.error(`Couldn't start the playback of an episode`, ex)
         }
     }
 }

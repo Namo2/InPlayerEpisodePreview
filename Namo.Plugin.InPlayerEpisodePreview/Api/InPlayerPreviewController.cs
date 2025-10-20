@@ -87,7 +87,6 @@ public class InPlayerPreviewController : ControllerBase
     public ActionResult GetClientScript()
     {
         var scriptStream = _assembly.GetManifestResourceStream(_playerPreviewScriptPath);
-        _logger.LogError("InPlayerEpisodePreviewPlugin: {0}", _playerPreviewScriptPath);
         if (scriptStream == null)
             return NotFound();
 

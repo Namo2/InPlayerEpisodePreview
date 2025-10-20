@@ -5,7 +5,7 @@
     constructor() {
     }
 
-    public getAuthHeader(): string {
+    public getAuthHeaderKey(): string {
         return this._authHeader;
     }
     

@@ -26,11 +26,12 @@ This preview is missing the new buttons for marking an episode as completed or f
 ## 🔧 Installation
 
 ### Jellyfin Web Client (Server)
-<details open>
-<summary> See instructions... </summary>
 
 > [!NOTE]
 > It is highly recommended to have [file-transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) at least v2.2.1.0 installed. It helps avoid permission issues while modifying index.html on any kind of installation!
+
+<details open>
+<summary> See instructions... </summary>
 
 1. Add the manifest `https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/master/manifest.json` as a Jellyfin plugin repository to your server.
 2. Install the plugin `InPlayerEpisodePreview` from the repository.

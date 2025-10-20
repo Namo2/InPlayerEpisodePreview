@@ -13,7 +13,7 @@ public static class IndexHtmlInjector
 
     public static string FileTransformer(PatchRequestPayload payload)
     {
-        Logger.LogInformation("Attempting to inject script by using FileTransformation plugin.");
+        Logger.LogDebug("Attempting to inject script by using FileTransformation plugin.");
         
         string scriptElement = GetScriptElement();
         string indexContents = payload.Contents!;
@@ -28,7 +28,7 @@ public static class IndexHtmlInjector
 
     public static void Direct()
     {
-        Logger.LogInformation("Attempting to inject script by changing file directly.");
+        Logger.LogDebug("Attempting to inject script by changing file directly.");
 
         var applicationPaths = InPlayerEpisodePreviewPlugin.Instance.ViewableApplicationPaths;
 
@@ -44,11 +44,11 @@ public static class IndexHtmlInjector
 
         if (indexContents.Contains(scriptElement))
         {
-            Logger.LogInformation("Found client script injected in {0}", indexFile);
+            Logger.LogDebug("Found client script injected in {0}", indexFile);
             return;
         }
 
-        Logger.LogInformation("Attempting to inject preview script code in {0}", indexFile);
+        Logger.LogDebug("Attempting to inject preview script code in {0}", indexFile);
 
         // Replace old script
         indexContents = Regex.Replace(indexContents, ScriptTagRegex, "");
@@ -57,7 +57,7 @@ public static class IndexHtmlInjector
         int bodyClosing = indexContents.LastIndexOf("</body>", StringComparison.Ordinal);
         if (bodyClosing == -1)
         {
-            Logger.LogInformation("Could not find closing body tag in {0}", indexFile);
+            Logger.LogWarning("Could not find closing body tag in {0}", indexFile);
             return;
         }
         
@@ -65,7 +65,7 @@ public static class IndexHtmlInjector
         try
         {
             File.WriteAllText(indexFile, indexContents);
-            Logger.LogInformation("Finished injecting preview script code in {0}", indexFile);
+            Logger.LogDebug("Finished injecting preview script code in {0}", indexFile);
         }
         catch (Exception e)
         {

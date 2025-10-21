@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "1.4.1.0",
+        "changelog": "minimize info logs",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.4.1.0/InPlayerEpisodePreview_1.4.1.0.zip",
+        "checksum": "f884d2c10090f7f84aaab80e594b8a54",
+        "timestamp": "2025-10-21T18:02:32Z"
+      },
+      {
         "version": "1.4.0.0",
         "changelog": "✨ 10.11.0 Release Update",
         "targetAbi": "10.11.0.0",

@@ -283,3 +283,5 @@ node_modules/
 
 # Omnisharp crash logs
 mono_crash.*.json
+
+build.sh

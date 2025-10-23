@@ -10,11 +10,11 @@
     "versions": [
       {
         "version": "1.4.2.0",
-        "changelog": "removed episode limit in loading",
+        "changelog": "",
         "targetAbi": "10.11.0",
         "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.4.2.0/InPlayerEpisodePreview_1.4.2.0.zip",
-        "checksum": "c2d4330d82d226c30918dda3322c530c",
-        "timestamp": "2025-10-23T17:08:00Z"
+        "checksum": "1844e25ed62f5d692324c4f6d07d4793",
+        "timestamp": "2025-10-23T19:35:40Z"
       },
       {
         "version": "1.4.1.0",

@@ -53,8 +53,8 @@ export class DataFetcher {
             }
 
             if (urlPathname.includes('Episodes')) {
-                // remove new 'startItemId' query parameter, to still get the full list of episodes
-                const cleanedURL = url.href.replace(/startItemId=[^&]+&?/, '')
+                // remove new 'startItemId' and 'limit' query parameter, to still get the full list of episodes
+                const cleanedURL = url.href.replace(/startItemId=[^&]+&?/, '').replace(/limit=[^&]+&?/, '')
                 resource = new URL(cleanedURL)
             }
 

@@ -102,7 +102,7 @@ export class ProgramDataStore {
             case ItemType.Series:
                 return this.seasons
                     .flatMap(season => season.episodes)
-                    .find(episode => episode.Id)
+                    .find(episode => episode.Id === itemId)
             case ItemType.BoxSet:
             case ItemType.Movie:
             case ItemType.Folder:

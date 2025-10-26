@@ -9,8 +9,16 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "1.4.3.0",
+        "changelog": "- Starting a new episode will only start the stream on the current device\n - Playtime should now show correct values for all episodes",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.4.3.0/InPlayerEpisodePreview_1.4.3.0.zip",
+        "checksum": "478bc6a21477089b56ba2d9a2eaf63ed",
+        "timestamp": "2025-10-26T18:18:47Z"
+      },
+      {
         "version": "1.4.2.0",
-        "changelog": "",
+        "changelog": "load all episodes correctly",
         "targetAbi": "10.11.0",
         "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.4.2.0/InPlayerEpisodePreview_1.4.2.0.zip",
         "checksum": "1844e25ed62f5d692324c4f6d07d4793",

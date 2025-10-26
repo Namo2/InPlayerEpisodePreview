@@ -10,6 +10,7 @@ export class PlaybackHandler {
         try {
             const url = new URL(`${window['ApiClient']['_serverAddress']}/${Endpoints.BASE}${Endpoints.PLAY_MEDIA}`
                 .replace('{userId}', this.programDataStore.userId)
+                .replace('{deviceId}', window['ApiClient']['_deviceId'])
                 .replace('{episodeId}', episodeId)
                 .replace('{ticks}', startPositionTicks.toString()))
             

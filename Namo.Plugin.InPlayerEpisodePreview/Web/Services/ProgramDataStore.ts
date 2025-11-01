@@ -2,6 +2,7 @@
 import {Season} from "../Models/Season";
 import {BaseItem} from "../Models/Episode";
 import {ItemType} from "../Models/ItemType";
+import {DefaultPluginSettings, PluginSettings} from "../Models/PluginSettings";
 
 export class ProgramDataStore {
     private _programData: ProgramData
@@ -13,7 +14,8 @@ export class ProgramDataStore {
             boxSetName: '',
             type: undefined,
             movies: [],
-            seasons: []
+            seasons: [],
+            settings: DefaultPluginSettings
         }
     }
 
@@ -68,6 +70,14 @@ export class ProgramDataStore {
     public set seasons(seasons: Season[]) {
         this._programData.seasons = seasons
     }
+
+    public get settings(): PluginSettings {
+        return this._programData.settings
+    }
+
+    public set settings(settings: PluginSettings) {
+        this._programData.settings = settings
+    }
     
     public get dataIsAllowedForPreview() {
         if (!this.allowedPreviewTypes.includes(this.type))
@@ -87,9 +97,8 @@ export class ProgramDataStore {
         }
     }
     
-    public get allowedPreviewTypes() { 
-        // TODO: get from plugin config in the future
-        return [ItemType.Series, ItemType.BoxSet, ItemType.Movie, ItemType.Folder, ItemType.Video]
+    public get allowedPreviewTypes() {
+        return this.settings.EnabledItemTypes
     }
     
     public get minimumElementsNeeded(): number {

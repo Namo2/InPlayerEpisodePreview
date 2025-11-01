@@ -12,9 +12,11 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public PluginConfiguration() {}
 
-    /// <summary>
-    /// Whether or not the plugin should inject the client-side script tag into jellyfin-web.
-    /// default = true
-    /// </summary>
-    public bool InjectClientScript { get; set; } = true;
+    public List<int> EnabledItemTypes { get; set; } = [
+        (int)AvailablePreviewItemTypes.Series,
+        (int)AvailablePreviewItemTypes.Movie,
+        (int)AvailablePreviewItemTypes.Video,
+        (int)AvailablePreviewItemTypes.BoxSet,
+        (int)AvailablePreviewItemTypes.Folder
+    ];
 }

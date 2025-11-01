@@ -10,6 +10,7 @@ import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 import {DataFetcher} from "./Services/DataFetcher";
 import {ItemType} from "./Models/ItemType";
+import { PluginSettings } from "./Models/PluginSettings";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -39,6 +40,19 @@ const dataLoader: DataLoader = new DataLoader(authService)
 new DataFetcher(programDataStore, authService, logger)
 const playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger)
 const listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore)
+
+function initialize() {
+    // Ensure ApiClient exists and user is logged in
+    if (typeof window['ApiClient'] === 'undefined' || !window['ApiClient'].getCurrentUserId?.()) {
+        setTimeout(initialize, 300) // Increased retry delay slightly
+        return
+    }
+
+    window['ApiClient']
+        .getPluginConfiguration('73833d5f-0bcb-45dc-ab8b-7ce668f4345d')
+        .then((config: PluginSettings) => programDataStore.settings = config)
+}
+initialize()
 
 const videoPaths: string[] = ['/video']
 let previousRoutePath: string = null

@@ -19,4 +19,7 @@ public class PluginConfiguration : BasePluginConfiguration
         (int)AvailablePreviewItemTypes.BoxSet,
         (int)AvailablePreviewItemTypes.Folder
     ];
+
+    public bool BlurDescription { get; set; } = false;
+    public bool BlurThumbnail { get; set; } = false;
 }

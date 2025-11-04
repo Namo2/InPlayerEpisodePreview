@@ -30,6 +30,8 @@ inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;
 inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {max-width: 30%;}'
 inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {margin-left: 0.5em; margin-top: 1em; margin-right: 1.5em; display: block;}'
 inPlayerPreviewStyle.textContent += '.previewEpisodeDetails {margin-left: 1em; justify-content: start !important;}'
+inPlayerPreviewStyle.textContent += '.blur {filter: blur(6px); transition: filter 0.3s ease; display: inline-block;}'
+inPlayerPreviewStyle.textContent += '.blur:hover {filter: blur(0); }'
 document?.head?.appendChild(inPlayerPreviewStyle)
 
 // init services and helpers

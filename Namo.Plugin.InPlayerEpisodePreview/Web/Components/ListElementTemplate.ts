@@ -69,7 +69,7 @@ export class ListElementTemplate extends BaseTemplate {
                                     <canvas aria-hidden="true" width="20" height="20"
                                             class="blurhash-canvas lazy-hidden"></canvas>
                                     <button id="previewEpisodeImageCard-${this.item.IndexNumber}"
-                                            class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
+                                            class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast ${this.programDataStore.settings.BlurDescription ? 'blur' : ''}"
                                             data-action="link"
                                             style="${backgroundImageStyle}">
                                         <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${this.item.UserData.PlayedPercentage ? '' : 'hide'}">
@@ -92,7 +92,9 @@ export class ListElementTemplate extends BaseTemplate {
                                 </div>
                             </div>
                         </div>
-                        <span class="previewEpisodeDescription">${this.item.Description ?? 'loading...'}</span>
+                        <span class="previewEpisodeDescription ${this.programDataStore.settings.BlurDescription ? 'blur' : ''}">
+                            ${this.item.Description ?? 'loading...'}
+                        </span>
                     </div>
                 </div>
             </div>

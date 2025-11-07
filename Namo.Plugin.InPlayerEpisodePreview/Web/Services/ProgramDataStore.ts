@@ -34,7 +34,7 @@ export class ProgramDataStore {
     }
 
     public get activeSeason(): Season {
-        return this.seasons.find(season => season.episodes.some(episode => episode.id === this.activeMediaSourceId))
+        return this.seasons.find(season => season.episodes.some(episode => episode.Id === this.activeMediaSourceId))
     }
     
     public get type(): ItemType {
@@ -102,7 +102,7 @@ export class ProgramDataStore {
             case ItemType.Series:
                 return this.seasons
                     .flatMap(season => season.episodes)
-                    .find(episode => episode.id === itemId)
+                    .find(episode => episode.Id === itemId)
             case ItemType.BoxSet:
             case ItemType.Movie:
             case ItemType.Folder:
@@ -116,11 +116,11 @@ export class ProgramDataStore {
     public updateItem(itemToUpdate: Episode): void {
         switch (this.type) {
             case ItemType.Series: {
-                    const season: Season = this.seasons.find(season => season.id === itemToUpdate.id)
+                    const season: Season = this.seasons.find(season => season.id === itemToUpdate.Id)
                     this.seasons = [
-                        ... this.seasons.filter(season => season.id !== itemToUpdate.id), {
+                        ... this.seasons.filter(season => season.id !== itemToUpdate.Id), {
                             ...season,
-                            episodes: [... season.episodes.filter(episode => episode.id !== itemToUpdate.id), itemToUpdate]
+                            episodes: [... season.episodes.filter(episode => episode.Id !== itemToUpdate.Id), itemToUpdate]
                         }
                     ]
                 }

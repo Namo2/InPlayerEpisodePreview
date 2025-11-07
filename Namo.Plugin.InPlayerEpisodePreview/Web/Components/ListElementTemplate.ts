@@ -14,7 +14,7 @@ export class ListElementTemplate extends BaseTemplate {
     
     constructor(container: HTMLElement, positionAfterIndex: number, private item: Episode, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex)
-        this.setElementId(`episode-${item.indexNumber}`)
+        this.setElementId(`episode-${item.IndexNumber}`)
 
         // create temp quick action container
         this.quickActionContainer = document.createElement('div')
@@ -41,15 +41,15 @@ export class ListElementTemplate extends BaseTemplate {
             <div id="${this.getElementId()}"
                  class="listItem listItem-button actionSheetMenuItem emby-button previewListItem"
                  is="emby-button"
-                 data-id="${this.item.indexNumber}">
+                 data-id="${this.item.IndexNumber}">
                 <div class="previewEpisodeContainer flex">
                     <button class="listItem previewEpisodeTitle" type="button">
                         ${(
-                            this.item.indexNumber && 
+                            this.item.IndexNumber && 
                             this.programDataStore.type !== ItemType.Movie
-                        ) ? `<span>${this.item.indexNumber}</span>` : ''}
+                        ) ? `<span>${this.item.IndexNumber}</span>` : ''}
                         <div class="listItemBody actionsheetListItemBody">
-                            <span class="actionSheetItemText">${this.item.name}</span>
+                            <span class="actionSheetItemText">${this.item.Name}</span>
                         </div>
                     </button>
                     <div class="previewQuickActionContainer flex">
@@ -67,13 +67,13 @@ export class ListElementTemplate extends BaseTemplate {
                                     </div>
                                     <canvas aria-hidden="true" width="20" height="20"
                                             class="blurhash-canvas lazy-hidden"></canvas>
-                                    <button id="previewEpisodeImageCard-${this.item.indexNumber}"
+                                    <button id="previewEpisodeImageCard-${this.item.IndexNumber}"
                                             class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
                                             data-action="link">
                                     </button>
                                     <div class="cardOverlayContainer itemAction"
                                          data-action="link">
-                                        <button id="start-episode-${this.item.indexNumber}"
+                                        <button id="start-episode-${this.item.IndexNumber}"
                                                 is="paper-icon-button-light"
                                                 class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary"
                                                 data-action="resume">
@@ -84,7 +84,7 @@ export class ListElementTemplate extends BaseTemplate {
                                 </div>
                             </div>
                         </div>
-                        <span class="previewEpisodeDescription">${this.item.description ?? 'loading...'}</span>
+                        <span class="previewEpisodeDescription">${this.item.Description ?? 'loading...'}</span>
                     </div>
                 </div>
             </div>
@@ -96,7 +96,7 @@ export class ListElementTemplate extends BaseTemplate {
         renderedElement.addEventListener('click', (e) => clickHandler(e))
         
         // add event handler to start the playback of this episode
-        const episodeImageCard: HTMLElement = document.getElementById(`start-episode-${this.item.indexNumber}`)
-        episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.id, 0))
+        const episodeImageCard: HTMLElement = document.getElementById(`start-episode-${this.item.IndexNumber}`)
+        episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.Id, 0))
     }
 }

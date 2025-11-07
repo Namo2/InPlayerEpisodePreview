@@ -1,8 +1,8 @@
 ﻿export type Episode = {
-    id: string
-    name: string
-    indexNumber: number
-    description: string
+    Id: string
+    Name: string
+    IndexNumber: number
+    Description: string
 }
 
 export type ItemDto = {

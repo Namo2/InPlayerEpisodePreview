@@ -12,7 +12,7 @@ export class ListElementFactory {
     }
     
     public createEpisodeElements(episodes: Episode[], parentDiv: HTMLElement): void {
-        episodes.sort((a, b) => a.indexNumber - b.indexNumber)
+        episodes.sort((a, b) => a.IndexNumber - b.IndexNumber)
         
         for (let i: number = 0; i < episodes.length; i++) {
             const episode = new ListElementTemplate(parentDiv, i, episodes[i], this.playbackHandler, this.programDataStore);
@@ -25,14 +25,14 @@ export class ListElementFactory {
                     element.classList.remove('selectedListItem');
                 });
                 
-                const episodeContainer: Element = document.querySelector(`[data-id="${episodes[i].indexNumber}"]`).querySelector('.previewListItemContent');
+                const episodeContainer: Element = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
                 
                 // load episode description
-                if (!episodes[i].description) {
-                    const request: XMLHttpRequest = this.dataLoader.loadEpisodeDescription(episodes[i].id, (): void => {
-                        episodes[i].description = request.response?.Description;
+                if (!episodes[i].Description) {
+                    const request: XMLHttpRequest = this.dataLoader.loadEpisodeDescription(episodes[i].Id, (): void => {
+                        episodes[i].Description = request.response?.Description;
                         this.programDataStore.updateItem(episodes[i]);
-                        episodeContainer.querySelector('.previewEpisodeDescription').textContent = episodes[i].description;
+                        episodeContainer.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
                     });
                 }
                 
@@ -44,15 +44,15 @@ export class ListElementFactory {
                 episodeContainer.parentElement.scrollIntoView({ block: "start" });
             });
 
-            if (episodes[i].id === this.programDataStore.activeMediaSourceId) {
-                const episodeNode: Element = document.querySelector(`[data-id="${episodes[i].indexNumber}"]`).querySelector('.previewListItemContent');
+            if (episodes[i].Id === this.programDataStore.activeMediaSourceId) {
+                const episodeNode: Element = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
                 
                 // preload episode description for the currently playing episode
-                if (!episodes[i].description) {
-                    const request: XMLHttpRequest = this.dataLoader.loadEpisodeDescription(episodes[i].id, (): void => {
-                        episodes[i].description = request.response?.Description;
+                if (!episodes[i].Description) {
+                    const request: XMLHttpRequest = this.dataLoader.loadEpisodeDescription(episodes[i].Id, (): void => {
+                        episodes[i].Description = request.response?.Description;
                         this.programDataStore.updateItem(episodes[i]);
-                        episodeNode.querySelector('.previewEpisodeDescription').textContent = episodes[i].description;
+                        episodeNode.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
                     });
                 }
                 

@@ -57,7 +57,8 @@ public class InPlayerPreviewController : ControllerBase
         EncodingHelper encodingHelper)
     {
         _assembly = Assembly.GetExecutingAssembly();
-        _playerPreviewScriptPath = $"{InPlayerEpisodePreviewPlugin.Instance?.GetType().Namespace}.Web.InPlayerPreview.js";
+        _playerPreviewScriptPath =
+            $"{InPlayerEpisodePreviewPlugin.Instance?.GetType().Namespace}.Web.InPlayerPreview.js";
 
         _libraryManager = libraryManager;
         _itemRepository = itemRepository;
@@ -124,18 +125,18 @@ public class InPlayerPreviewController : ControllerBase
             _logger.LogInformation(message);
             return NotFound(message);
         }
-        
-        _sessionManager.SendPlayCommand(session.Id, session.Id, 
+
+        _sessionManager.SendPlayCommand(session.Id, session.Id,
             new PlayRequest
             {
                 ItemIds = [item.Id],
                 StartPositionTicks = ticks,
                 PlayCommand = PlayCommand.PlayNow,
             }, CancellationToken.None);
-        
+
         return NoContent();
     }
-    
+
     /// <summary>
     /// This controller returns the description of the given episode.
     /// Could be replaced by /Users/{userId}/Items/{episodeId}, if frontend loads whole data
@@ -148,12 +149,39 @@ public class InPlayerPreviewController : ControllerBase
     public ActionResult GetMediaDescription([FromRoute] Guid id)
     {
         BaseItem? item = _libraryManager.GetItemById(id);
-        if (item is not null) 
+        if (item is not null)
             return new OkObjectResult(new EpisodeDescriptionDto(item.Overview));
-        
+
         // Error case
         const string message = "Couldn't find item to play";
         _logger.LogInformation(message);
         return NotFound(message);
+    }
+
+    /// <summary>
+    /// This controller returns the description of the given episode.
+    /// Could be replaced by /Users/{userId}/Items/{episodeId}, if frontend loads whole data
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpGet("Series/{id}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult GetSeriesData([FromRoute] Guid id)
+    {
+        List<Season> seasons =
+        [
+            .. _libraryManager.GetItemList(new InternalItemsQuery()
+            {
+                ParentId = id
+            }).Select(season => new Season(season.Id, season.IndexNumber ?? 0, season.Name, [
+                .. _libraryManager.GetItemList(new InternalItemsQuery()
+                {
+                    ParentId = season.Id
+                }).Select(episode => new Episode(episode.Id, episode.IndexNumber ?? 0, episode.Name, episode.Overview))
+            ]))
+        ];
+
+        return new OkObjectResult(seasons);
     }
 }

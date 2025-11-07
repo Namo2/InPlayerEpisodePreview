@@ -1,4 +1,11 @@
-﻿export type ItemDto = {
+﻿export type Episode = {
+    id: string
+    name: string
+    indexNumber: number
+    description: string
+}
+
+export type ItemDto = {
     Items: BaseItem[];
     TotalRecordCount: number;
     StartIndex: number;

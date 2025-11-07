@@ -4,7 +4,7 @@ import {PlayStateIconTemplate} from "./QuickActions/PlayStateIconTemplate"
 import {PlaybackHandler} from "../Services/PlaybackHandler"
 import {EpisodeDetailsTemplate} from "./EpisodeDetails"
 import {ProgramDataStore} from "../Services/ProgramDataStore"
-import {BaseItem} from "../Models/Episode"
+import {BaseItem, Episode} from "../Models/Episode"
 import {ItemType} from "../Models/ItemType"
 
 export class ListElementTemplate extends BaseTemplate {
@@ -12,16 +12,16 @@ export class ListElementTemplate extends BaseTemplate {
     private playStateIcon: PlayStateIconTemplate
     private favoriteIcon: FavoriteIconTemplate
     
-    constructor(container: HTMLElement, positionAfterIndex: number, private item: BaseItem, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private item: Episode, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex)
-        this.setElementId(`episode-${item.IndexNumber}`)
+        this.setElementId(`episode-${item.indexNumber}`)
 
         // create temp quick action container
         this.quickActionContainer = document.createElement('div')
         
         // create quick actions
-        this.playStateIcon = new PlayStateIconTemplate(this.quickActionContainer, -1, this.item)
-        this.favoriteIcon = new FavoriteIconTemplate(this.quickActionContainer, 0, this.item)
+        // this.playStateIcon = new PlayStateIconTemplate(this.quickActionContainer, -1, this.item)
+        // this.favoriteIcon = new FavoriteIconTemplate(this.quickActionContainer, 0, this.item)
     }
     
     getTemplate(): string {
@@ -30,26 +30,26 @@ export class ListElementTemplate extends BaseTemplate {
         this.favoriteIcon.render()
         
         // add episode details/info
-        const detailsContainer: HTMLDivElement = document.createElement('div')
-        const details: EpisodeDetailsTemplate = new EpisodeDetailsTemplate(detailsContainer, -1, this.item)
-        details.render()
+        // const detailsContainer: HTMLDivElement = document.createElement('div')
+        // const details: EpisodeDetailsTemplate = new EpisodeDetailsTemplate(detailsContainer, -1, this.item)
+        // details.render()
         
-        const backgroundImageStyle: string = `background-image: url('../Items/${this.item.Id}/Images/Primary?tag=${this.item.ImageTags.Primary}')`
+        // const backgroundImageStyle: string = `background-image: url('../Items/${this.item.id}/Images/Primary?tag=${this.item.ImageTags.Primary}')`
         
         // language=HTML
         return `
             <div id="${this.getElementId()}"
                  class="listItem listItem-button actionSheetMenuItem emby-button previewListItem"
                  is="emby-button"
-                 data-id="${this.item.IndexNumber}">
+                 data-id="${this.item.indexNumber}">
                 <div class="previewEpisodeContainer flex">
                     <button class="listItem previewEpisodeTitle" type="button">
                         ${(
-                            this.item.IndexNumber && 
+                            this.item.indexNumber && 
                             this.programDataStore.type !== ItemType.Movie
-                        ) ? `<span>${this.item.IndexNumber}</span>` : ''}
+                        ) ? `<span>${this.item.indexNumber}</span>` : ''}
                         <div class="listItemBody actionsheetListItemBody">
-                            <span class="actionSheetItemText">${this.item.Name}</span>
+                            <span class="actionSheetItemText">${this.item.name}</span>
                         </div>
                     </button>
                     <div class="previewQuickActionContainer flex">
@@ -58,7 +58,6 @@ export class ListElementTemplate extends BaseTemplate {
                 </div>
 
                 <div class="previewListItemContent hide">
-                    ${detailsContainer.innerHTML}
                     <div class="flex">
                         <div class="card overflowBackdropCard card-hoverable card-withuserdata previewEpisodeImageCard">
                             <div class="cardBox">
@@ -68,20 +67,13 @@ export class ListElementTemplate extends BaseTemplate {
                                     </div>
                                     <canvas aria-hidden="true" width="20" height="20"
                                             class="blurhash-canvas lazy-hidden"></canvas>
-                                    <button id="previewEpisodeImageCard-${this.item.IndexNumber}"
+                                    <button id="previewEpisodeImageCard-${this.item.indexNumber}"
                                             class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast"
-                                            data-action="link"
-                                            style="${backgroundImageStyle}">
-                                        <div class="innerCardFooter fullInnerCardFooter innerCardFooterClear ${this.item.UserData.PlayedPercentage ? '' : 'hide'}">
-                                            <div class="itemProgressBar">
-                                                <div class="itemProgressBarForeground"
-                                                     style="width:${this.item.UserData.PlayedPercentage}%;"></div>
-                                            </div>
-                                        </div>
+                                            data-action="link">
                                     </button>
                                     <div class="cardOverlayContainer itemAction"
                                          data-action="link">
-                                        <button id="start-episode-${this.item.IndexNumber}"
+                                        <button id="start-episode-${this.item.indexNumber}"
                                                 is="paper-icon-button-light"
                                                 class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary"
                                                 data-action="resume">
@@ -92,7 +84,7 @@ export class ListElementTemplate extends BaseTemplate {
                                 </div>
                             </div>
                         </div>
-                        <span class="previewEpisodeDescription">${this.item.Description ?? 'loading...'}</span>
+                        <span class="previewEpisodeDescription">${this.item.description ?? 'loading...'}</span>
                     </div>
                 </div>
             </div>
@@ -100,11 +92,11 @@ export class ListElementTemplate extends BaseTemplate {
     }
 
     public render(clickHandler: Function): void {
-        let renderedElement: HTMLElement = this.addElementToContainer()
+        const renderedElement: HTMLElement = this.addElementToContainer()
         renderedElement.addEventListener('click', (e) => clickHandler(e))
         
         // add event handler to start the playback of this episode
-        let episodeImageCard: HTMLElement = document.getElementById(`start-episode-${this.item.IndexNumber}`)
-        episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks))
+        const episodeImageCard: HTMLElement = document.getElementById(`start-episode-${this.item.indexNumber}`)
+        episodeImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.id, 0))
     }
 }

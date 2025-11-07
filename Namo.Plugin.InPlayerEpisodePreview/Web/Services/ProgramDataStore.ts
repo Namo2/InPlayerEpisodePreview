@@ -1,6 +1,6 @@
 ﻿import {ProgramData} from "../Models/ProgramData";
 import {Season} from "../Models/Season";
-import {BaseItem} from "../Models/Episode";
+import {BaseItem, Episode} from "../Models/Episode";
 import {ItemType} from "../Models/ItemType";
 
 export class ProgramDataStore {
@@ -34,7 +34,7 @@ export class ProgramDataStore {
     }
 
     public get activeSeason(): Season {
-        return this.seasons.find(season => season.episodes.some(episode => episode.Id === this.activeMediaSourceId))
+        return this.seasons.find(season => season.episodes.some(episode => episode.id === this.activeMediaSourceId))
     }
     
     public get type(): ItemType {
@@ -97,30 +97,30 @@ export class ProgramDataStore {
         return 1
     }
 
-    public getItemById(itemId: string): BaseItem {
+    public getItemById(itemId: string): Episode {
         switch (this.type) {
             case ItemType.Series:
                 return this.seasons
                     .flatMap(season => season.episodes)
-                    .find(episode => episode.Id === itemId)
+                    .find(episode => episode.id === itemId)
             case ItemType.BoxSet:
             case ItemType.Movie:
             case ItemType.Folder:
             case ItemType.Video:
-                return this.movies.find(movie => movie.Id === itemId)
+                // return this.movies.find(movie => movie.Id === itemId)
             default: 
                 return undefined
         }
     }
 
-    public updateItem(itemToUpdate: BaseItem): void {
+    public updateItem(itemToUpdate: Episode): void {
         switch (this.type) {
             case ItemType.Series: {
-                    const season: Season = this.seasons.find(season => season.seasonId === itemToUpdate.SeasonId)
+                    const season: Season = this.seasons.find(season => season.id === itemToUpdate.id)
                     this.seasons = [
-                        ... this.seasons.filter(season => season.seasonId !== itemToUpdate.SeasonId), {
+                        ... this.seasons.filter(season => season.id !== itemToUpdate.id), {
                             ...season,
-                            episodes: [... season.episodes.filter(episode => episode.Id !== itemToUpdate.Id), itemToUpdate]
+                            episodes: [... season.episodes.filter(episode => episode.id !== itemToUpdate.id), itemToUpdate]
                         }
                     ]
                 }
@@ -129,7 +129,7 @@ export class ProgramDataStore {
             case ItemType.Movie:
             case ItemType.Folder:
             case ItemType.Video:
-                this.movies = [... this.movies.filter(movie => movie.Id !== itemToUpdate.Id), itemToUpdate]
+                // this.movies = [... this.movies.filter(movie => movie.Id !== itemToUpdate.Id), itemToUpdate]
         }
     }
 }

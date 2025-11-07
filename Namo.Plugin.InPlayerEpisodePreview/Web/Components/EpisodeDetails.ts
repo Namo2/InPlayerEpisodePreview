@@ -1,29 +1,15 @@
 ﻿import {BaseTemplate} from "./BaseTemplate";
-import {BaseItem} from "../Models/Episode";
+import {BaseItem, Episode} from "../Models/Episode";
 
 export class EpisodeDetailsTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: Episode) {
         super(container, positionAfterIndex);
-        this.setElementId(`episode-${episode.IndexNumber}`);
+        this.setElementId(`episode-${episode.indexNumber}`);
     }
 
     getTemplate(): string {
         // language=HTML
         return `
-            <div id="${this.getElementId()}-details" class="itemMiscInfo itemMiscInfo-primary previewEpisodeDetails">
-                ${this.episode.PremiereDate ? `<div class="mediaInfoItem">
-                    ${(new Date(this.episode.PremiereDate)).toLocaleDateString(this.getLocale())}
-                </div>` : ''}
-                <div class="mediaInfoItem">${this.formatRunTime(this.episode.RunTimeTicks)}</div>
-                ${this.episode.CommunityRating ? `<div class="starRatingContainer mediaInfoItem">
-                    <span class="material-icons starIcon star" aria-hidden="true"></span>
-                    ${this.episode.CommunityRating.toFixed(1)}
-                </div>` : ''}
-                ${this.episode.CriticRating ? `<div class="mediaInfoItem mediaInfoCriticRating ${this.episode.CriticRating >= 60 ? 'mediaInfoCriticRatingFresh' : 'mediaInfoCriticRatingRotten'}">
-                    ${this.episode.CriticRating}
-                </div>` : ''}
-                <div class="endsAt mediaInfoItem">${this.formatEndTime(this.episode.RunTimeTicks, this.episode.UserData.PlaybackPositionTicks)}</div>
-            </div>
         `;
     }
 

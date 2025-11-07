@@ -61,12 +61,10 @@ function viewShowEventHandler(): void {
     // This function attempts to load the video view, retrying up to 3 times if necessary.
     function attemptLoadVideoView(retryCount = 0): void {
         if (videoPaths.includes(currentRoutePath)) {
-            if (programDataStore.dataIsAllowedForPreview) {
-                // Check if the preview container is already loaded before loading
-                if (!previewContainerLoaded && !isPreviewButtonCreated()) {
-                    loadVideoView()
-                    previewContainerLoaded = true // Set flag to true after loading
-                }
+            // Check if the preview container is already loaded before loading
+            if (!previewContainerLoaded && !isPreviewButtonCreated()) {
+                loadVideoView()
+                previewContainerLoaded = true // Set flag to true after loading
             } else if (retryCount < 3) { // Retry up to 3 times
                 setTimeout((): void => {
                     logger.debug(`Retry #${retryCount + 1}`)
@@ -77,11 +75,11 @@ function viewShowEventHandler(): void {
             unloadVideoView()
         }
     }
-    
+
     function loadVideoView(): void {
         // add preview button to the page
         const parent: HTMLElement = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
-        
+
         let index: number = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("btnUserRating"));
         // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
         if (index === -1)
@@ -106,44 +104,79 @@ function viewShowEventHandler(): void {
             const popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore)
             popupTitle.render((e: MouseEvent) => {
                 e.stopPropagation()
-                
+
                 popupTitle.setVisible(false);
                 const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
 
                 // delete episode content for all existing episodes in the preview list;
                 contentDiv.innerHTML = ""
-                
-                listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeason.IndexNumber, popupTitle)
+
+                listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeason.indexNumber, popupTitle)
             })
+
+            if (programDataStore.seasons.length < 1) {
+                const request: XMLHttpRequest = dataLoader.loadSeries(programDataStore.activeMediaSourceId, () => {
+                    programDataStore.seasons = request.response ?? [];
+
+                    switch (programDataStore.type) {
+                        case ItemType.Series:
+                            popupTitle.setText(programDataStore.activeSeason.name)
+                            popupTitle.setVisible(true)
+                            listElementFactory.createEpisodeElements(programDataStore.activeSeason.episodes, contentDiv)
+                            break
+                        // case ItemType.Movie:
+                        //     popupTitle.setText('')
+                        //     popupTitle.setVisible(false)
+                        //     listElementFactory.createEpisodeElements(programDataStore.movies.filter(movie => movie.Id === programDataStore.activeMediaSourceId), contentDiv)
+                        //     break
+                        // case ItemType.Video:
+                        //     popupTitle.setText('')
+                        //     popupTitle.setVisible(false)
+                        //     listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
+                        //     break
+                        // case ItemType.BoxSet:
+                        // case ItemType.Folder:
+                        //     popupTitle.setText(programDataStore.boxSetName)
+                        //     popupTitle.setVisible(true)
+                        //     listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
+                        //     break
+                    }
+
+                    // scroll to the episode that is currently playing
+                    contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView()
+                });
+                return
+            }
 
             switch (programDataStore.type) {
                 case ItemType.Series:
-                    popupTitle.setText(programDataStore.activeSeason.seasonName)
+                    popupTitle.setText(programDataStore.activeSeason.name)
                     popupTitle.setVisible(true)
                     listElementFactory.createEpisodeElements(programDataStore.activeSeason.episodes, contentDiv)
                     break
-                case ItemType.Movie:
-                    popupTitle.setText('')
-                    popupTitle.setVisible(false)
-                    listElementFactory.createEpisodeElements(programDataStore.movies.filter(movie => movie.Id === programDataStore.activeMediaSourceId), contentDiv)
-                    break
-                case ItemType.Video:
-                    popupTitle.setText('')
-                    popupTitle.setVisible(false)
-                    listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
-                    break
-                case ItemType.BoxSet:
-                case ItemType.Folder:
-                    popupTitle.setText(programDataStore.boxSetName)
-                    popupTitle.setVisible(true)
-                    listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
-                    break
+                // case ItemType.Movie:
+                //     popupTitle.setText('')
+                //     popupTitle.setVisible(false)
+                //     listElementFactory.createEpisodeElements(programDataStore.movies.filter(movie => movie.Id === programDataStore.activeMediaSourceId), contentDiv)
+                //     break
+                // case ItemType.Video:
+                //     popupTitle.setText('')
+                //     popupTitle.setVisible(false)
+                //     listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
+                //     break
+                // case ItemType.BoxSet:
+                // case ItemType.Folder:
+                //     popupTitle.setText(programDataStore.boxSetName)
+                //     popupTitle.setVisible(true)
+                //     listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
+                //     break
             }
-            
+
             // scroll to the episode that is currently playing
             contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView()
         }
     }
+
     function unloadVideoView(): void {
         // Clear old data and reset previewContainerLoaded flag
         authService.setAuthHeaderValue("")
@@ -152,10 +185,10 @@ function viewShowEventHandler(): void {
             document.body.removeChild(document.getElementById("dialogBackdropContainer"))
         if (document.getElementById("dialogContainer"))
             document.body.removeChild(document.getElementById("dialogContainer"))
-        
+
         previewContainerLoaded = false // Reset flag when unloading
     }
-    
+
     function isPreviewButtonCreated(): boolean {
         return document.querySelector('.buttons').querySelector('#popupPreviewButton') !== null
     }

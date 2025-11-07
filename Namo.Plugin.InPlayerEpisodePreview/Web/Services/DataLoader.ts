@@ -19,4 +19,19 @@ export class DataLoader {
 
         return episodeDescriptionRequest;
     }
+
+    public loadSeries(seriesId: string, onloadend: (this: XMLHttpRequest, ev: ProgressEvent<EventTarget>) => void): XMLHttpRequest {
+        const requestUrl = `../${Endpoints.BASE}${Endpoints.LOAD_SERIES}`
+            .replace('{id}', seriesId);
+
+        const request = new XMLHttpRequest();
+        request.responseType = 'json';
+
+        request.open('GET', requestUrl);
+        this.authService.addAuthHeaderIntoHttpRequest(request);
+        request.send();
+        request.onloadend = onloadend;
+
+        return request;
+    }
 }

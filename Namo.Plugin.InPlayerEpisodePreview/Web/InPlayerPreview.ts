@@ -18,20 +18,70 @@ import { PluginSettings } from "./Models/PluginSettings";
  */
 let inPlayerPreviewStyle: HTMLStyleElement = document.createElement('style')
 inPlayerPreviewStyle.id = 'inPlayerPreviewStyle'
-inPlayerPreviewStyle.textContent += '.selectedListItem {height: auto;}'
-inPlayerPreviewStyle.textContent += '.previewListItem {flex-direction: column; align-items: flex-start;}'
-inPlayerPreviewStyle.textContent += '.previewListItemContent {width: 100%; min-height: 15.5vh; position: relative; display: flex; flex-direction: column;}'
-inPlayerPreviewStyle.textContent += '.previewPopup {animation: 140ms ease-out 0s 1 normal both running scaleup; position: fixed; margin: 0px; bottom: 1.5vh; left: 50vw; width: 48vw;}'
-inPlayerPreviewStyle.textContent += '.previewPopupTitle {max-height: 4vh;}'
-inPlayerPreviewStyle.textContent += '.previewPopupScroller {max-height: 60vh;}'
-inPlayerPreviewStyle.textContent += '.previewQuickActionContainer {margin-left: auto; margin-right: 1em;}'
-inPlayerPreviewStyle.textContent += '.previewEpisodeContainer {width: 100%;}'
-inPlayerPreviewStyle.textContent += '.previewEpisodeTitle {pointer-events: none;}'
-inPlayerPreviewStyle.textContent += '.previewEpisodeImageCard {max-width: 30%;}'
-inPlayerPreviewStyle.textContent += '.previewEpisodeDescription {margin-left: 0.5em; margin-top: 1em; margin-right: 1.5em; display: block;}'
-inPlayerPreviewStyle.textContent += '.previewEpisodeDetails {margin-left: 1em; justify-content: start !important;}'
-inPlayerPreviewStyle.textContent += '.blur {filter: blur(6px); transition: filter 0.3s ease; display: inline-block;}'
-inPlayerPreviewStyle.textContent += '.blur:hover {filter: blur(0); }'
+inPlayerPreviewStyle.textContent = `
+.selectedListItem {
+    height: auto;
+}
+.previewListItem {
+    flex-direction: column; 
+    align-items: flex-start;
+}
+.previewListItemContent {
+    width: 100%; 
+    min-height: 15.5vh; 
+    position: relative; 
+    display: flex; 
+    flex-direction: column;
+}
+.previewPopup {
+    animation: 140ms ease-out 0s 1 normal both running scaleup; 
+    position: fixed; 
+    margin: 0px; 
+    bottom: 1.5vh; 
+    left: 50vw; 
+    width: 48vw;
+}
+.previewPopupTitle {
+    max-height: 4vh;
+}
+.previewPopupScroller {
+    max-height: 60vh;
+}
+.previewQuickActionContainer {
+    margin-left: auto; 
+    margin-right: 1em;
+}
+.previewEpisodeContainer {
+    width: 100%;
+}
+.previewEpisodeTitle {
+    pointer-events: none;
+}
+.previewEpisodeImageCard {
+    max-width: 30%;
+}
+.previewEpisodeDescription {
+    margin-left: 0.5em; 
+    margin-top: 1em; 
+    margin-right: 1.5em; 
+    display: block;
+}
+.previewEpisodeDetails {
+    margin-left: 1em; 
+    justify-content: start !important;
+}
+.blur {
+    filter: blur(6px); 
+    transition: filter 0.3s ease; 
+    display: inline-block;
+}
+.blur:hover {
+    filter: blur(0);
+}
+.previewEpisodeImageCard:hover .blur {
+    filter: blur(0);
+}
+`
 document?.head?.appendChild(inPlayerPreviewStyle)
 
 // init services and helpers

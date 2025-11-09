@@ -56,13 +56,14 @@
                                type="checkbox"/>
                         <span>Enable Preview Button for Folders</span>
                     </label>
-                </div>               
+                </div>
+                <hr>
                 <div class="checkboxContainer checkboxContainer-withDescription">
-                <label class="emby-checkbox-label">
-                    <input id="blurDescriptionr" is="emby-checkbox" name="blurDescriptionr"
-                           type="checkbox"/>
-                    <span>Blur episode description</span>
-                </label>
+                    <label class="emby-checkbox-label">
+                        <input id="blurDescription" is="emby-checkbox" name="blurDescription"
+                               type="checkbox"/>
+                        <span>Blur episode description</span>
+                    </label>
                     <div class="fieldDescription">Show episode description only on hover</div>
                 </div>
                 <div class="checkboxContainer checkboxContainer-withDescription">
@@ -73,8 +74,8 @@
                     </label>
                     <div class="fieldDescription">Show episode thumbnail only on hover</div>
                 </div>
-                
-                
+
+
                 <div style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                     <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
                     <div>
@@ -107,7 +108,7 @@
 
                 document.querySelector('#blurDescription').checked = config.BlurDescription
                 document.querySelector('#blurThumbnail').checked = config.BlurThumbnail
-                
+
                 Dashboard.hideLoadingMsg()
             });
         }
@@ -115,7 +116,7 @@
         async function saveConfig(e) {
             e.preventDefault()
             Dashboard.showLoadingMsg()
-            
+
             const config = await ApiClient.getPluginConfiguration(pluginId);
 
             const enabledItemTypes = [];
@@ -133,14 +134,14 @@
 
             config.BlurDescription = document.querySelector('#blurDescription').checked
             config.BlurThumbnail = document.querySelector('#blurThumbnail').checked
-            
+
             try {
                 const result = await ApiClient.updatePluginConfiguration(pluginId, config)
                 Dashboard.processPluginConfigurationUpdateResult(result)
             } catch {
                 Dashboard.hideLoadingMsg()
             }
-            
+
             return false
         }
 

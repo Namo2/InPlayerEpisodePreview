@@ -1,9 +1,9 @@
-
 <div align="right">
   <details>
     <summary >🌐 Language</summary>
     <div>
       <div align="center">
+        <p>The following translations were automatically generated using AI. Please note that they may include inaccuracies or reference older versions of this readme.</p>
         <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=en">English</a>
         | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=zh-CN">简体中文</a>
         | <a href="https://openaitx.github.io/view.html?user=Namo2&project=InPlayerEpisodePreview&lang=zh-TW">繁體中文</a>
@@ -28,6 +28,7 @@
       </div>
     </div>
   </details>
+
 </div>
 
 In Player Episode Preview

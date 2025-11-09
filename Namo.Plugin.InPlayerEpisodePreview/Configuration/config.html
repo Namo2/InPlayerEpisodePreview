@@ -5,28 +5,148 @@
     <title>InPlayerEpisodePreview</title>
 </head>
 <body>
-<div id="configurationPage" data-role="page" class="page type-interior pluginConfigurationPage">
+<div id="InPlayerEpisodePreviewPage" data-role="page" class="page type-interior pluginConfigurationPage">
     <div data-role="content">
         <div class="content-primary">
-            <form class="gotifyConfigurationForm">
-                <div class="verticalSection verticalSection-extrabottompadding">
-                    <div class="sectionTitleContainer flex align-items-center">
-                        <h2 class="sectionTitle">In Player Episode Preview</h2>
-                        <a is="emby-button" class="raised button-alt headerHelpButton" target="_blank"
-                           href="https://github.com/Namo2/InPlayerEpisodePreview">${Help}</a>
-                    </div>
-                    <br/>
+            <div class="verticalSection">
+                <div class="sectionTitleContainer">
+                    <h2 class="sectionTitle">In Player Episode Preview</h2>
+                    <a is="emby-linkbutton" class="raised raised-mini emby-button" style="margin-left: 2em;"
+                       target="_blank" href="https://github.com/Namo2/InPlayerEpisodePreview">
+                        <i class="md-icon button-icon button-icon-left secondaryText"></i>
+                        <span>Help</span>
+                    </a>
+                </div>
+            </div>
+            <hr>
+            <br/>
+
+            <form id="InPlayerEpisodePreviewForm">
+                <div class="checkboxContainer">
+                    <label class="emby-checkbox-label">
+                        <input id="enabledItemTypes-series" is="emby-checkbox" name="enabledItemTypes-series"
+                               type="checkbox"/>
+                        <span>Enable Preview Button for TV Shows</span>
+                    </label>
+                </div>
+                <div class="checkboxContainer">
+                    <label class="emby-checkbox-label">
+                        <input id="enabledItemTypes-movie" is="emby-checkbox" name="enabledItemTypes-movie"
+                               type="checkbox"/>
+                        <span>Enable Preview Button for Movies</span>
+                    </label>
+                </div>
+                <div class="checkboxContainer">
+                    <label class="emby-checkbox-label">
+                        <input id="enabledItemTypes-boxset" is="emby-checkbox" name="enabledItemTypes-boxset"
+                               type="checkbox"/>
+                        <span>Enable Preview Button for Collections / BoxSets</span>
+                    </label>
+                </div>
+                <div class="checkboxContainer">
+                    <label class="emby-checkbox-label">
+                        <input id="enabledItemTypes-video" is="emby-checkbox" name="enabledItemTypes-video"
+                               type="checkbox"/>
+                        <span>Enable Preview Button for (Home)Videos</span>
+                    </label>
+                </div>
+                <div class="checkboxContainer">
+                    <label class="emby-checkbox-label">
+                        <input id="enabledItemTypes-folder" is="emby-checkbox" name="enabledItemTypes-folder"
+                               type="checkbox"/>
+                        <span>Enable Preview Button for Folders</span>
+                    </label>
+                </div>
+                <hr>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="blurDescription" is="emby-checkbox" name="blurDescription"
+                               type="checkbox"/>
+                        <span>Blur episode description</span>
+                    </label>
+                    <div class="fieldDescription">Show episode description only on hover</div>
+                </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="blurThumbnail" is="emby-checkbox" name="blurThumbnail"
+                               type="checkbox"/>
+                        <span>Blur episode thumbnail</span>
+                    </label>
+                    <div class="fieldDescription">Show episode thumbnail only on hover</div>
+                </div>
+
+
+                <div style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
+                    <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
                     <div>
-                        <p>There are no settings available yet.</p>
-                        <br/>
-                        <p>If you have a question or a problem, please refer to the Github page under Help</p>
+                        All changes require a page refresh to take effect. <br/>
+                        If old settings persist, please force clear browser cache.
                     </div>
+                </div>
+                <div>
+                    <button class="raised button-submit block emby-button" is="emby-button" type="submit">
+                        <span>Save</span>
+                    </button>
                 </div>
             </form>
         </div>
     </div>
-    
+
     <script type="text/javascript">
+        const pluginId = '73833d5f-0bcb-45dc-ab8b-7ce668f4345d'
+        const page = document.querySelector('#InPlayerEpisodePreviewPage')
+        const form = document.querySelector('#InPlayerEpisodePreviewForm')
+
+        function loadConfig() {
+            Dashboard.showLoadingMsg()
+            ApiClient.getPluginConfiguration(pluginId).then((config) => {
+                document.querySelector('#enabledItemTypes-series').checked = config.EnabledItemTypes.includes(28)
+                document.querySelector('#enabledItemTypes-movie').checked = config.EnabledItemTypes.includes(13)
+                document.querySelector('#enabledItemTypes-boxset').checked = config.EnabledItemTypes.includes(5)
+                document.querySelector('#enabledItemTypes-video').checked = config.EnabledItemTypes.includes(35)
+                document.querySelector('#enabledItemTypes-folder').checked = config.EnabledItemTypes.includes(10)
+
+                document.querySelector('#blurDescription').checked = config.BlurDescription
+                document.querySelector('#blurThumbnail').checked = config.BlurThumbnail
+
+                Dashboard.hideLoadingMsg()
+            });
+        }
+
+        async function saveConfig(e) {
+            e.preventDefault()
+            Dashboard.showLoadingMsg()
+
+            const config = await ApiClient.getPluginConfiguration(pluginId);
+
+            const enabledItemTypes = [];
+            if (document.querySelector('#enabledItemTypes-series').checked)
+                enabledItemTypes.push(28);
+            if (document.querySelector('#enabledItemTypes-movie').checked)
+                enabledItemTypes.push(13);
+            if (document.querySelector('#enabledItemTypes-boxset').checked)
+                enabledItemTypes.push(5);
+            if (document.querySelector('#enabledItemTypes-video').checked)
+                enabledItemTypes.push(35);
+            if (document.querySelector('#enabledItemTypes-folder').checked)
+                enabledItemTypes.push(10);
+            config.EnabledItemTypes = enabledItemTypes
+
+            config.BlurDescription = document.querySelector('#blurDescription').checked
+            config.BlurThumbnail = document.querySelector('#blurThumbnail').checked
+
+            try {
+                const result = await ApiClient.updatePluginConfiguration(pluginId, config)
+                Dashboard.processPluginConfigurationUpdateResult(result)
+            } catch {
+                Dashboard.hideLoadingMsg()
+            }
+
+            return false
+        }
+
+        page.addEventListener('pageshow', loadConfig)
+        form.addEventListener('submit', saveConfig)
     </script>
 </div>
 </body>

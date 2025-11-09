@@ -87,7 +87,6 @@ public class InPlayerPreviewController : ControllerBase
     public ActionResult GetClientScript()
     {
         var scriptStream = _assembly.GetManifestResourceStream(_playerPreviewScriptPath);
-        _logger.LogError("InPlayerEpisodePreviewPlugin: {0}", _playerPreviewScriptPath);
         if (scriptStream == null)
             return NotFound();
 
@@ -99,15 +98,19 @@ public class InPlayerPreviewController : ControllerBase
     /// Could be replaced by /Sessions/{sessionId}/Playing, if frontend loads session itself
     /// </summary>
     /// <param name="userId"></param>
+    /// <param name="deviceId"></param>
     /// <param name="id"></param>
     /// <param name="ticks"></param>
     /// <returns></returns>
-    [HttpGet("Users/{userId}/Items/{id}/Play/{ticks}")]
+    [HttpGet("Users/{userId}/{deviceId}/Items/{id}/Play/{ticks}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult StartMedia([FromRoute] Guid userId, [FromRoute] Guid id, [FromRoute] long ticks = 0)
+    public ActionResult StartMedia([FromRoute] Guid userId, [FromRoute] string deviceId, [FromRoute] Guid id,
+        [FromRoute] long ticks = 0)
     {
-        SessionInfo? session = _sessionManager.Sessions.FirstOrDefault(session => session.UserId.Equals(userId));
+        SessionInfo? session =
+            _sessionManager.Sessions.FirstOrDefault(session => 
+                session.UserId.Equals(userId) && session.DeviceId.Equals(deviceId));
         if (session is null)
         {
             _logger.LogInformation("Couldn't find a valid session for this user");

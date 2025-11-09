@@ -1,12 +1,15 @@
-﻿const webpack = require('webpack');
+﻿const path = require('path')
 
 module.exports = () => {
+    const projectRoot = __dirname
+    
     return {
+        context: projectRoot,
         mode: "development",
         devtool: "inline-source-map",
         entry: "./Web/InPlayerPreview.ts",
         output: {
-            path: __dirname + "/Web",
+            path: path.resolve(projectRoot, "Web"),
             filename: "InPlayerPreview.js"
         },
         resolve: {

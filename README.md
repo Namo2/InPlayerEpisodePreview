@@ -61,7 +61,6 @@ This preview is missing the new buttons for marking an episode as completed or f
 
 > [!NOTE]
 > It is highly recommended to have [file-transformation](https://github.com/IAmParadox27/jellyfin-plugin-file-transformation) at least v2.2.1.0 installed. It helps avoid permission issues while modifying index.html on any kind of installation!
-
 <details open>
 <summary> See instructions... </summary>
 

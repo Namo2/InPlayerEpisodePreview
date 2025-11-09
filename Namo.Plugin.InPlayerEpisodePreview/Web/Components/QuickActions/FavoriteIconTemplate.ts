@@ -1,11 +1,10 @@
-import {BaseTemplate} from "../BaseTemplate";
-import {BaseItem} from "../../Models/Episode";
-import {ProgramDataStore} from "../../Services/ProgramDataStore";
+import {BaseTemplate} from "../BaseTemplate"
+import {BaseItem} from "../../Models/Episode"
 
 export class FavoriteIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem, private programDataStore: ProgramDataStore) {
-        super(container, positionAfterIndex);
-        this.setElementId('favoriteButton-' + episode.IndexNumber);
+    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
+        super(container, positionAfterIndex)
+        this.setElementId('favoriteButton-' + episode.IndexNumber)
     }
 
     getTemplate(): string {
@@ -24,24 +23,10 @@ export class FavoriteIconTemplate extends BaseTemplate {
                     title="Add to favorites">
                 <span class="material-icons favorite"></span>
             </button>
-        `;
-
-
+        `
     }
 
     public render(): void {
-        this.addElementToContainer();
-    }
-
-    /**
-     * Unused - Will maybe be used in further updates on this
-     */
-    public update(): void {
-        // get current episode data
-        const season = this.programDataStore.seasons.find(s => s.episodes.some(e => e.Id === this.episode.Id));
-        const newData = season.episodes.find(e => e.Id === this.episode.Id);
-        
-        const favoriteIcon = this.getElement();
-        favoriteIcon.setAttribute("data-isfavorite", newData.UserData.IsFavorite.toString());
+        this.addElementToContainer()
     }
 }

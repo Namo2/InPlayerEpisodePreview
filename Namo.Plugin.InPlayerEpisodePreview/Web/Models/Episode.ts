@@ -38,6 +38,7 @@ export type BaseItem = {
     SeasonId?: string
     SeriesPrimaryImageTag?: string
     SeasonName?: string
+    SortName?: string
 }
 
 export type UserData = {

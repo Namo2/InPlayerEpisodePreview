@@ -12,7 +12,7 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public PluginConfiguration() {}
 
-    public List<int> EnabledItemTypes { get; set; } = [
+    public int[] EnabledItemTypes { get; set; } = [
         (int)AvailablePreviewItemTypes.Series,
         (int)AvailablePreviewItemTypes.Movie,
         (int)AvailablePreviewItemTypes.Video,

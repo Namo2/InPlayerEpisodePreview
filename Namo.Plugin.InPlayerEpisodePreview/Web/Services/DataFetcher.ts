@@ -15,14 +15,21 @@ export class DataFetcher {
     constructor(private programDataStore: ProgramDataStore, private authService: AuthService, private logger: Logger) {
         const {fetch: originalFetch} = window
         window.fetch = async (...args): Promise<Response> => {
-            let resource: URL = args[0] as URL
-            const config: RequestInit = args[1] ?? {}
+            const {origin} = window.location;
+            let resource = args[0] as RequestInfo;
+            const config: RequestInit = args[1] ?? {};
+
+            const toUrl = (input: RequestInfo): URL => {
+                if (input instanceof URL) return input;
+                if (input instanceof Request) return new URL(input.url);
+                return new URL(String(input), origin);
+            };
 
             if (config && config.headers) {
                 this.authService.setAuthHeaderValue(config.headers[this.authService.getAuthHeaderKey()] ?? '')
             }
 
-            const url: URL = new URL(resource);
+            const url: URL = toUrl(resource);
             const urlPathname: string = url.pathname;
 
             // Process data from POST requests
@@ -54,8 +61,8 @@ export class DataFetcher {
 
             if (urlPathname.includes('Episodes')) {
                 // remove new 'startItemId' and 'limit' query parameter, to still get the full list of episodes
-                const cleanedURL = url.href.replace(/startItemId=[^&]+&?/, '').replace(/limit=[^&]+&?/, '')
-                resource = new URL(cleanedURL)
+                const cleanedURL = url.href.replace(/startItemId=[^&]+&?/, '').replace(/limit=[^&]+&?/, '');
+                resource = toUrl(cleanedURL).toString();
             }
 
             const response: Response = await originalFetch(resource, config)

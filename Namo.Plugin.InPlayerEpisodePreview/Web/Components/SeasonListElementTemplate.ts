@@ -25,7 +25,7 @@ export class SeasonListElementTemplate extends BaseTemplate {
     }
 
     public render(clickHandler: Function): void {
-        let renderedElement: HTMLElement = this.addElementToContainer();
+        const renderedElement: HTMLElement = this.addElementToContainer();
         renderedElement.addEventListener('click', (e: MouseEvent): void => clickHandler(e));
     }
 }

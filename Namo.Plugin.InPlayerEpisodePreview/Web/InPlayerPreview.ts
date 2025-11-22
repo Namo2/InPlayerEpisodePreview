@@ -3,7 +3,6 @@ import {AuthService} from "./Services/AuthService";
 import {PreviewButtonTemplate} from "./Components/PreviewButtonTemplate";
 import {ProgramDataStore} from "./Services/ProgramDataStore";
 import {DataLoader} from "./Services/DataLoader";
-import {DialogBackdropContainerTemplate} from "./Components/DialogBackdropContainerTemplate";
 import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
 import {PlaybackHandler} from "./Services/PlaybackHandler";
 import {ListElementFactory} from "./ListElementFactory";
@@ -157,17 +156,11 @@ function viewShowEventHandler(): void {
         previewButton.render(previewButtonClickHandler)
 
         function previewButtonClickHandler(): void {
-            const dialogBackdrop: DialogBackdropContainerTemplate = new DialogBackdropContainerTemplate(document.body, document.body.children.length - 1)
-            dialogBackdrop.render()
-
             const dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1)
-            dialogContainer.render((): void => {
-                document.body.removeChild(document.getElementById(dialogBackdrop.getElementId()))
-                document.body.removeChild(document.getElementById(dialogContainer.getElementId()))
-            })
+            dialogContainer.render()
 
             const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
-            contentDiv.innerHTML = "" // remove old content
+            contentDiv.innerHTML = '' // remove old content
 
             const popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore)
             popupTitle.render((e: MouseEvent) => {
@@ -177,7 +170,7 @@ function viewShowEventHandler(): void {
                 const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
 
                 // delete episode content for all existing episodes in the preview list;
-                contentDiv.innerHTML = ""
+                contentDiv.innerHTML = ''
                 
                 listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeason.IndexNumber, popupTitle)
             })

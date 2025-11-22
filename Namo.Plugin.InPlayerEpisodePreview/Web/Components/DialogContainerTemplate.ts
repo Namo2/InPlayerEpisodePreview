@@ -1,26 +1,36 @@
 import {BaseTemplate} from "./BaseTemplate";
-import {PopupFocusContainer} from "./PopupFocusContainer";
 
 export class DialogContainerTemplate extends BaseTemplate {
+    dialogBackdropId = 'dialogBackdrop'
+    dialogContainerId = 'dialogContainer'
+    popupContentContainerId = 'popupContentContainer'
+    popupFocusContainerId = 'popupFocusContainer'
+    
     constructor(container: HTMLElement, positionAfterIndex: number) {
         super(container, positionAfterIndex);
-        this.setElementId('dialogContainer');
+        this.setElementId('previewPopup');
     }
 
     getTemplate(): string {
-        let tempContainerDiv: HTMLDivElement = document.createElement('div');
-        let focusContainerDiv: PopupFocusContainer = new PopupFocusContainer(tempContainerDiv, -1);
-        focusContainerDiv.render();
-
         return `
-            <div id="${this.getElementId()}" class="dialogContainer">
-                ${tempContainerDiv.innerHTML}
-            <div>
+            <div id="${this.getElementId()}">
+                <div id="${this.dialogBackdropId}" class="dialogBackdrop dialogBackdropOpened"></div>
+                <div id="${this.dialogContainerId}" class="dialogContainer">
+                    <div id="${this.popupFocusContainerId}" 
+                        class="focuscontainer dialog actionsheet-not-fullscreen actionSheet centeredDialog opened previewPopup actionSheetContent" 
+                        data-history="true" 
+                        data-removeonclose="true">
+                        <div id="${this.popupContentContainerId}" class="actionSheetScroller scrollY previewPopupScroller"/>
+                    </div>
+                </div>
+            </div>
         `;
     }
 
-    public render(dialogContainerClickHandler: Function): void {
-        let renderedElement: HTMLElement = this.addElementToContainer();
-        renderedElement.addEventListener('click', (e: MouseEvent): any => dialogContainerClickHandler(e));
+    public render(): void {
+        const renderedElement: HTMLElement = this.addElementToContainer();
+        renderedElement.addEventListener('click', (e: MouseEvent): any => {
+            this.getContainer().removeChild(document.getElementById(this.getElementId()))
+        });
     }
 }

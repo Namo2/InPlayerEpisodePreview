@@ -37,7 +37,7 @@ export class PreviewButtonTemplate extends BaseTemplate {
     }
 
     public render(clickHandler: Function): void {
-        let renderedElement: HTMLElement = this.addElementToContainer();
+        const renderedElement: HTMLElement = this.addElementToContainer();
         renderedElement.addEventListener('click', (): any => clickHandler());
     }
 }

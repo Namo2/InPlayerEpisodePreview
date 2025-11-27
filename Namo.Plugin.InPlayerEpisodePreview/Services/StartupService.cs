@@ -3,6 +3,7 @@ using System.Runtime.Loader;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 using Namo.Plugin.InPlayerEpisodePreview.Helpers;
+using Namo.Plugin.InPlayerEpisodePreview.JellyfinVersionSpecific;
 using Newtonsoft.Json.Linq;
 
 namespace Namo.Plugin.InPlayerEpisodePreview.Services;
@@ -58,11 +59,5 @@ public class StartupService(ILogger<InPlayerEpisodePreviewPlugin> logger) : ISch
         return Task.CompletedTask;
     }
 
-    public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()
-    {
-        yield return new TaskTriggerInfo()
-        {
-            Type = TaskTriggerInfoType.StartupTrigger
-        };
-    }
+    public IEnumerable<TaskTriggerInfo> GetDefaultTriggers() => StartupServiceHelper.GetDefaultTriggers();
 }

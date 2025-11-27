@@ -4,19 +4,19 @@ import {ProgramDataStore} from "./Services/ProgramDataStore";
 import {Season} from "./Models/Season";
 import {SeasonListElementTemplate} from "./Components/SeasonListElementTemplate";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
-import {DataLoader} from "./Services/DataLoader";
 import {PlaybackHandler} from "./Services/PlaybackHandler";
+import {Endpoints} from "./Endpoints";
 
 export class ListElementFactory {
-    constructor(private dataLoader: DataLoader, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
-    }
+    constructor(private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) { }
     
-    public createEpisodeElements(episodes: BaseItem[], parentDiv: HTMLElement): void {
+    public async createEpisodeElements(episodes: BaseItem[], parentDiv: HTMLElement): Promise<void> {
         episodes.sort((a, b) => a.IndexNumber - b.IndexNumber)
         
         for (let i: number = 0; i < episodes.length; i++) {
-            const episode = new ListElementTemplate(parentDiv, i, episodes[i], this.playbackHandler, this.programDataStore);
-            episode.render((e: MouseEvent): void => {
+            const episode = episodes[i]
+            const episodeListElementTemplate = new ListElementTemplate(parentDiv, i, episode, this.playbackHandler, this.programDataStore);
+            episodeListElementTemplate.render(async (e: MouseEvent) => {
                 e.stopPropagation();
                 
                 // hide episode content for all existing episodes in the preview list
@@ -25,15 +25,20 @@ export class ListElementFactory {
                     element.classList.remove('selectedListItem');
                 });
                 
-                const episodeContainer: Element = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
+                const episodeContainer: Element = document.querySelector(`[data-id="${episode.IndexNumber}"]`).querySelector('.previewListItemContent');
                 
                 // load episode description
-                if (!episodes[i].Description) {
-                    const request: XMLHttpRequest = this.dataLoader.loadEpisodeDescription(episodes[i].Id, (): void => {
-                        episodes[i].Description = request.response?.Description;
-                        this.programDataStore.updateItem(episodes[i]);
-                        episodeContainer.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
-                    });
+                if (!episode.Description) {
+                    const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.EPISODE_DESCRIPTION}`
+                        .replace('{episodeId}', episode.Id));
+                    const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+                    const newDescription: string = result?.Description
+                    
+                    this.programDataStore.updateItem({
+                        ...episode,
+                        Description: newDescription
+                    })
+                    episodeContainer.querySelector('.previewEpisodeDescription').textContent = newDescription
                 }
                 
                 // show episode content for the selected episode
@@ -44,16 +49,21 @@ export class ListElementFactory {
                 episodeContainer.parentElement.scrollIntoView({ block: "start" });
             });
 
-            if (episodes[i].Id === this.programDataStore.activeMediaSourceId) {
-                const episodeNode: Element = document.querySelector(`[data-id="${episodes[i].IndexNumber}"]`).querySelector('.previewListItemContent');
+            if (episode.Id === this.programDataStore.activeMediaSourceId) {
+                const episodeNode: Element = document.querySelector(`[data-id="${episode.IndexNumber}"]`).querySelector('.previewListItemContent');
                 
                 // preload episode description for the currently playing episode
-                if (!episodes[i].Description) {
-                    const request: XMLHttpRequest = this.dataLoader.loadEpisodeDescription(episodes[i].Id, (): void => {
-                        episodes[i].Description = request.response?.Description;
-                        this.programDataStore.updateItem(episodes[i]);
-                        episodeNode.querySelector('.previewEpisodeDescription').textContent = episodes[i].Description;
-                    });
+                if (!episode.Description) {
+                    const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.EPISODE_DESCRIPTION}`
+                        .replace('{episodeId}', episode.Id));
+                    const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+                    const newDescription: string = result?.Description
+
+                    this.programDataStore.updateItem({
+                        ...episode,
+                        Description: newDescription
+                    })
+                    episodeNode.querySelector('.previewEpisodeDescription').textContent = newDescription
                 }
                 
                 episodeNode.classList.remove('hide');
@@ -74,7 +84,7 @@ export class ListElementFactory {
                 titleContainer.setVisible(true);
                 
                 parentDiv.innerHTML = ""; // remove old content
-                this.createEpisodeElements(seasons[i].episodes, parentDiv);
+                this.createEpisodeElements(seasons[i].episodes, parentDiv).then();
             });
         }
     }

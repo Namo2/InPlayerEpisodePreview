@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+      <JellyfinVersion>10.11.3</JellyfinVersion>
+<!--      <JellyfinVersion>10.10.7</JellyfinVersion>-->
+      <TargetFramework Condition="$(JellyfinVersion.StartsWith('10.11'))">net9.0</TargetFramework>
+      <TargetFramework Condition="'$(JellyfinVersion)' == '10.10.7'">net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyVersion>1.5.0.0</AssemblyVersion>
@@ -11,12 +14,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Controller" Version="10.11.0" />
-    <PackageReference Include="Jellyfin.Model" Version="10.11.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+      <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinVersion)" />
+      <PackageReference Include="Jellyfin.Model" Version="$(JellyfinVersion)" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
-  <ItemGroup>
+    <ItemGroup Condition="'$(JellyfinVersion)' != '10.10.7'">
+        <None Include="JellyfinVersionSpecific/10.10.7/*.cs" />
+        <Compile Remove="JellyfinVersionSpecific/10.10.7/*.cs" />
+    </ItemGroup>
+
+    <ItemGroup Condition="!$(JellyfinVersion.StartsWith('10.11'))">
+        <None Include="JellyfinVersionSpecific/10.11.0/*.cs" />
+        <Compile Remove="JellyfinVersionSpecific/10.11.0/*.cs" />
+    </ItemGroup>
+
+
+    <ItemGroup>
     <None Remove="Web\InPlayerPreview.js" />
     <None Remove="Configuration\config.html" />
     <EmbeddedResource Include="Configuration\config.html" />

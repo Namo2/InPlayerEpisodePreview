@@ -2,7 +2,6 @@
 import {AuthService} from "./Services/AuthService";
 import {PreviewButtonTemplate} from "./Components/PreviewButtonTemplate";
 import {ProgramDataStore} from "./Services/ProgramDataStore";
-import {DataLoader} from "./Services/DataLoader";
 import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
 import {PlaybackHandler} from "./Services/PlaybackHandler";
 import {ListElementFactory} from "./ListElementFactory";
@@ -87,20 +86,18 @@ document?.head?.appendChild(inPlayerPreviewStyle)
 const logger: Logger = new Logger()
 const authService: AuthService = new AuthService()
 const programDataStore: ProgramDataStore = new ProgramDataStore()
-const dataLoader: DataLoader = new DataLoader(authService)
 new DataFetcher(programDataStore, authService, logger)
-const playbackHandler: PlaybackHandler = new PlaybackHandler(programDataStore, logger)
-const listElementFactory = new ListElementFactory(dataLoader, playbackHandler, programDataStore)
+const playbackHandler: PlaybackHandler = new PlaybackHandler(logger)
+const listElementFactory = new ListElementFactory(playbackHandler, programDataStore)
 
 function initialize() {
     // Ensure ApiClient exists and user is logged in
-    if (typeof window['ApiClient'] === 'undefined' || !window['ApiClient'].getCurrentUserId?.()) {
+    if (typeof ApiClient === 'undefined' || !ApiClient.getCurrentUserId?.()) {
         setTimeout(initialize, 300) // Increased retry delay slightly
         return
     }
 
-    window['ApiClient']
-        .getPluginConfiguration('73833d5f-0bcb-45dc-ab8b-7ce668f4345d')
+    ApiClient.getPluginConfiguration('73833d5f-0bcb-45dc-ab8b-7ce668f4345d')
         .then((config: PluginSettings) => programDataStore.settings = config)
 }
 initialize()

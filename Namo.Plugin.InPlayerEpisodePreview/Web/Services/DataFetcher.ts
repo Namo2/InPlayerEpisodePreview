@@ -69,8 +69,7 @@ export class DataFetcher {
 
             if (urlPathname.includes('Episodes')) {
                 this.logger.debug('Received Episodes')
-
-                this.programDataStore.userId = extractKeyFromString(url.search, 'UserId=', '&')
+                
                 response.clone().json().then((data: ItemDto): void => {
                     this.programDataStore.type = ItemType.Series
                     this.programDataStore.seasons = this.getFormattedEpisodeData(data)
@@ -78,8 +77,6 @@ export class DataFetcher {
 
             } else if (urlPathname.includes('User') && urlPathname.includes('Items') && url.search.includes('ParentId')) {
                 this.logger.debug('Received Items with ParentId')
-
-                this.programDataStore.userId = extractKeyFromString(urlPathname, 'Users/', '/')
                 response.clone().json().then((data: ItemDto): void => this.saveItemData(data))
 
             } else if (urlPathname.includes('User') && urlPathname.includes('Items')) {

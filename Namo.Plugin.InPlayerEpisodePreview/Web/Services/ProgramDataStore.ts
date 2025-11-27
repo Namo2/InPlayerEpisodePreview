@@ -9,7 +9,6 @@ export class ProgramDataStore {
 
     constructor() {
         this._programData = {
-            userId: '',
             activeMediaSourceId: '',
             boxSetName: '',
             type: undefined,
@@ -17,14 +16,6 @@ export class ProgramDataStore {
             seasons: [],
             settings: DefaultPluginSettings
         }
-    }
-
-    public get userId(): string {
-        return this._programData.userId
-    }
-
-    public set userId(userId: string) {
-        this._programData.userId = userId
     }
 
     public get activeMediaSourceId(): string {

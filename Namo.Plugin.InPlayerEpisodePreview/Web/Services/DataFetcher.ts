@@ -10,8 +10,6 @@ import {PlaybackProgressInfo} from "../Models/PlaybackProgressInfo";
  * The classes which derives from this interface, will provide the functionality to handle the data input from the server if the PlaybackState is changed.
  */
 export class DataFetcher {
-    private static nextDataIsChildData: boolean = false
-    
     constructor(private programDataStore: ProgramDataStore, private authService: AuthService, private logger: Logger) {
         const {fetch: originalFetch} = window
         window.fetch = async (...args): Promise<Response> => {
@@ -77,7 +75,7 @@ export class DataFetcher {
 
             } else if (urlPathname.includes('User') && urlPathname.includes('Items') && url.search.includes('ParentId')) {
                 this.logger.debug('Received Items with ParentId')
-                response.clone().json().then((data: ItemDto): void => this.saveItemData(data))
+                response.clone().json().then((data: ItemDto): void => this.saveItemData(data, url.searchParams.get('ParentId')))
 
             } else if (urlPathname.includes('User') && urlPathname.includes('Items')) {
                 this.logger.debug('Received Items without ParentId')
@@ -88,12 +86,11 @@ export class DataFetcher {
                     switch (ItemType[data.Type]) {
                         case ItemType.BoxSet:
                         case ItemType.Folder:
-                            DataFetcher.nextDataIsChildData = true
                             this.programDataStore.boxSetName = data.Name
+                            this.programDataStore.activeMediaSourceId = data.Id
                             break
                         case ItemType.Movie: // could be single video (e.g. started from dashboard)
                         case ItemType.Video:
-                            DataFetcher.nextDataIsChildData = false
                             this.saveItemData({
                                 Items: [data],
                                 TotalRecordCount: 1,
@@ -140,7 +137,7 @@ export class DataFetcher {
         }
     }
     
-    public saveItemData(itemDto: ItemDto): void {
+    public saveItemData(itemDto: ItemDto, parentId: string = ''): void {
         if (!itemDto || !itemDto.Items || itemDto.Items.length === 0)
             return
         
@@ -157,7 +154,7 @@ export class DataFetcher {
             case ItemType.Movie:
                 // do not overwrite data if we only receive one item which already exists
                 if (itemDto.Items.length > 1 || !this.programDataStore.movies.some(movie => movie.Id === firstItem.Id)) {
-                    this.programDataStore.type = DataFetcher.nextDataIsChildData ? ItemType.BoxSet : ItemType.Movie
+                    this.programDataStore.type = this.programDataStore.activeMediaSourceId === parentId ? ItemType.BoxSet : ItemType.Movie
                     this.programDataStore.movies = itemDto.Items.map((movie, idx) => ({
                         ...movie,
                         IndexNumber: idx + 1
@@ -167,7 +164,7 @@ export class DataFetcher {
             case ItemType.Video:
                 // do not overwrite data if we only receive one item which already exists
                 if (itemDto.Items.length > 1 || !this.programDataStore.movies.some(video => video.Id === firstItem.Id)) {
-                    this.programDataStore.type = DataFetcher.nextDataIsChildData ? ItemType.Folder : ItemType.Video
+                    this.programDataStore.type = this.programDataStore.activeMediaSourceId === parentId ? ItemType.Folder : ItemType.Video
                     itemDto.Items.sort((a, b) => (a.SortName && b.SortName) ? a.SortName.localeCompare(b.SortName) : 0)
                     this.programDataStore.movies = itemDto.Items.map((video, idx) => ({
                         ...video,
@@ -176,7 +173,6 @@ export class DataFetcher {
                 }
                 break
         }
-        DataFetcher.nextDataIsChildData = false
 
         // this.logger.error("Couldn't save items from response", itemDto);
     }

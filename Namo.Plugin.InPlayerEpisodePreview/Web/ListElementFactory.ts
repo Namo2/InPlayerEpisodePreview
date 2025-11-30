@@ -16,7 +16,7 @@ export class ListElementFactory {
         for (let i: number = 0; i < episodes.length; i++) {
             const episode = episodes[i]
             const episodeListElementTemplate = new ListElementTemplate(parentDiv, i, episode, this.playbackHandler, this.programDataStore);
-            episodeListElementTemplate.render(async (e: MouseEvent) => {
+            episodeListElementTemplate.render(async (e: Event) => {
                 e.stopPropagation();
                 
                 // hide episode content for all existing episodes in the preview list

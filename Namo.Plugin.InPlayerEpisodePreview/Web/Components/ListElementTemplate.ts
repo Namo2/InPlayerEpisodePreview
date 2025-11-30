@@ -42,8 +42,8 @@ export class ListElementTemplate extends BaseTemplate {
                  class="listItem listItem-button actionSheetMenuItem emby-button previewListItem"
                  is="emby-button"
                  data-id="${this.item.IndexNumber}">
-                <div class="previewEpisodeContainer flex">
-                    <button class="listItem previewEpisodeTitle" type="button">
+                <div class="previewEpisodeContainer flex" tabindex="0" role="button">
+                    <div class="listItem previewEpisodeTitle">
                         ${(
                                 this.item.IndexNumber &&
                                 this.programDataStore.type !== ItemType.Movie
@@ -51,7 +51,7 @@ export class ListElementTemplate extends BaseTemplate {
                         <div class="listItemBody actionsheetListItemBody">
                             <span class="actionSheetItemText">${this.item.Name}</span>
                         </div>
-                    </button>
+                    </div>
                     <div class="previewQuickActionContainer flex">
                         ${this.quickActionContainer.innerHTML}
                     </div>
@@ -66,11 +66,11 @@ export class ListElementTemplate extends BaseTemplate {
                                     <div class="cardPadder cardPadder-overflowBackdrop lazy-hidden-children">
                                         <span class="cardImageIcon material-icons tv" aria-hidden="true"/>
                                     </div>
-                                    <button id="previewEpisodeImageCard-${this.item.IndexNumber}"
+                                    <div id="previewEpisodeImageCard-${this.item.IndexNumber}"
                                             class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast ${this.programDataStore.settings.BlurThumbnail ? 'blur' : ''}"
                                             data-action="link"
                                             style="${backgroundImageStyle}">
-                                    </button>
+                                    </div>
                                     ${this.item.UserData.PlayedPercentage ? 
                                         `<div class="innerCardFooter fullInnerCardFooter innerCardFooterClear itemProgressBar">
                                             <div class="itemProgressBarForeground"
@@ -83,10 +83,9 @@ export class ListElementTemplate extends BaseTemplate {
                                              data-action="link">
                                             <button id="start-episode-${this.item.IndexNumber}"
                                                     is="paper-icon-button-light"
-                                                    class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary"
+                                                    class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary show-focus"
                                                     data-action="resume">
-                                                <span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover play_arrow"
-                                                    aria-hidden="true"/>
+                                                <span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover play_arrow" />
                                             </button>
                                         </div>` : ''
                                     }
@@ -105,6 +104,11 @@ export class ListElementTemplate extends BaseTemplate {
     public render(clickHandler: Function): void {
         const renderedElement: HTMLElement = this.addElementToContainer()
         renderedElement.addEventListener('click', (e) => clickHandler(e))
+        renderedElement.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' && (e.target as HTMLElement).classList.contains('previewEpisodeContainer')) {
+                clickHandler(e)
+            }
+        })
 
         if (this.item.Id !== this.programDataStore.activeMediaSourceId) {
             // add event handler to start the playback of this episode

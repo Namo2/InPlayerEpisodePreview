@@ -14,7 +14,7 @@ export class PlayStateIconTemplate extends BaseTemplate {
                     is="emby-playstatebutton"
                     type="button"
                     data-action="none"
-                    class="itemAction paper-icon-button-light emby-button"
+                    class="itemAction paper-icon-button-light emby-button show-focus"
                     data-id="${this.episode?.Id ?? ''}" 
                     data-serverid="${this.episode?.ServerId ?? ''}"
                     data-itemtype="Episode"

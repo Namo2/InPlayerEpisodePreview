@@ -13,7 +13,7 @@ export class FavoriteIconTemplate extends BaseTemplate {
             <button id="${this.getElementId()}"
                     is="emby-ratingbutton"
                     type="button"
-                    class="itemAction paper-icon-button-light emby-button"
+                    class="itemAction paper-icon-button-light emby-button show-focus"
                     data-action="none"
                     data-id="${this.episode?.Id ?? ''}"
                     data-serverid="${this.episode?.ServerId ?? ''}"

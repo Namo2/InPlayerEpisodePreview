@@ -195,9 +195,11 @@ function viewShowEventHandler(): void {
                     listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
                     break
             }
-            
-            // scroll to the episode that is currently playing
-            contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView()
+
+            // focus and scroll to the episode that is currently playing
+            const currentEpisode = this.getContainer().querySelector('.selectedListItem')?.parentElement as HTMLElement
+            currentEpisode?.scrollIntoView()
+            currentEpisode?.focus()
         }
     }
     function unloadVideoView(): void {

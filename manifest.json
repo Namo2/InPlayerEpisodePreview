@@ -9,6 +9,22 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "1.6.0.0",
+        "changelog": "- Correctly apply blur to episode thumbnail/description.\n - Show preview for movie collections when Movie type was disabled but not the Collection type.",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.6.0.0/InPlayerEpisodePreview_1.6.0.0-10.11.0.zip",
+        "checksum": "dea029dae14405b3ea8b7f6153a5bd26",
+        "timestamp": "2025-11-30T15:13:10Z"
+      },
+      {
+        "version": "1.6.0.0",
+        "changelog": "- Correctly apply blur to episode thumbnail/description.\n - Show preview for movie collections when Movie type was disabled but not the Collection type.",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.6.0.0/InPlayerEpisodePreview_1.6.0.0-10.10.7.zip",
+        "checksum": "abbf297fffc0e96c1b456e3e389dd6dd",
+        "timestamp": "2025-11-30T15:08:16Z"
+      },
+      {
         "version": "1.5.0.0",
         "changelog": "- Internal URL handling, resolves certain issues for other plugins like Meilisearch.\n - The first set of plugin settings are here. You will now be able to hide the preview button for movies.",
         "targetAbi": "10.11.0",

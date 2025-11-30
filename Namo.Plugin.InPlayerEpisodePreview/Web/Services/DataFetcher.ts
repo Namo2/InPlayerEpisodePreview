@@ -44,13 +44,16 @@ export class DataFetcher {
                     // update the playback progress of the currently played video
                     const episode: BaseItem = this.programDataStore.getItemById(playingInfo.MediaSourceId)
                     if (episode) {
+                        const playedPercentage = episode.RunTimeTicks > 0 ? (playingInfo.PositionTicks / episode.RunTimeTicks) * 100 : 0
+                        const played = playedPercentage >= this.programDataStore.serverSettings.MaxResumePct
+                        
                         this.programDataStore.updateItem({
                             ...episode,
                             UserData: {
                                 ...episode.UserData,
                                 PlaybackPositionTicks: playingInfo.PositionTicks,
-                                PlayedPercentage: 100 / episode.RunTimeTicks * playingInfo.PositionTicks,
-                                Played: episode.UserData.PlayedPercentage > 90 // 90 is the default percentage for watched episodes
+                                PlayedPercentage: playedPercentage,
+                                Played: played
                             }
                         })
                     }
@@ -59,8 +62,8 @@ export class DataFetcher {
 
             if (urlPathname.includes('Episodes')) {
                 // remove new 'startItemId' and 'limit' query parameter, to still get the full list of episodes
-                const cleanedURL = url.href.replace(/startItemId=[^&]+&?/, '').replace(/limit=[^&]+&?/, '');
-                resource = toUrl(cleanedURL).toString();
+                const cleanedURL = url.href.replace(/startItemId=[^&]+&?/, '').replace(/limit=[^&]+&?/, '')
+                resource = toUrl(cleanedURL).toString()
             }
 
             const response: Response = await originalFetch(resource, config)
@@ -81,7 +84,7 @@ export class DataFetcher {
                 this.logger.debug('Received Items without ParentId')
 
                 response.clone().json().then((data: BaseItem): void => {
-                    this.logger.debug('Received single item data -> Setting BoxSet name');
+                    this.logger.debug('Received single item data -> Setting BoxSet name')
 
                     switch (ItemType[data.Type]) {
                         case ItemType.BoxSet:

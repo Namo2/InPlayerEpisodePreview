@@ -9,6 +9,8 @@ import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 import {DataFetcher} from "./Services/DataFetcher";
 import {ItemType} from "./Models/ItemType";
 import { PluginSettings } from "./Models/PluginSettings";
+import {ServerSettings} from "./Models/ServerSettings";
+import {Endpoints} from "./Endpoints";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -98,7 +100,11 @@ function initialize() {
     }
 
     ApiClient.getPluginConfiguration('73833d5f-0bcb-45dc-ab8b-7ce668f4345d')
-        .then((config: PluginSettings) => programDataStore.settings = config)
+        .then((config: PluginSettings) => programDataStore.pluginSettings = config)
+
+    const serverSettingsUrl = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.SERVER_SETTINGS}`)
+    ApiClient.ajax({ type: 'GET', url: serverSettingsUrl, dataType: 'json' })
+        .then((config: ServerSettings) => programDataStore.serverSettings = config)
 }
 initialize()
 

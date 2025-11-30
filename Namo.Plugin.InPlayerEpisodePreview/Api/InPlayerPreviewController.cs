@@ -156,4 +156,21 @@ public class InPlayerPreviewController : ControllerBase
         _logger.LogInformation(message);
         return NotFound(message);
     }
+    
+    /// <summary>
+    /// This controller returns some values from the server configuration which are needed in the frontend.
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("ServerSettings")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult GetMediaDescription()
+    {
+        var serverSettings = new ServerSettingsDto(
+            _configurationManager.Configuration.MinResumePct,
+            _configurationManager.Configuration.MaxResumePct,
+            _configurationManager.Configuration.MinResumeDurationSeconds
+            );
+        return new OkObjectResult(serverSettings);
+    }
 }

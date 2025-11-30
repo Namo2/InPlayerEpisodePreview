@@ -3,6 +3,7 @@ import {Season} from "../Models/Season";
 import {BaseItem} from "../Models/Episode";
 import {ItemType} from "../Models/ItemType";
 import {DefaultPluginSettings, PluginSettings} from "../Models/PluginSettings";
+import {DefaultServerSettings, ServerSettings} from "../Models/ServerSettings";
 
 export class ProgramDataStore {
     private _programData: ProgramData
@@ -14,7 +15,8 @@ export class ProgramDataStore {
             type: undefined,
             movies: [],
             seasons: [],
-            settings: DefaultPluginSettings
+            pluginSettings: DefaultPluginSettings,
+            serverSettings: DefaultServerSettings
         }
     }
 
@@ -62,12 +64,20 @@ export class ProgramDataStore {
         this._programData.seasons = seasons
     }
 
-    public get settings(): PluginSettings {
-        return this._programData.settings
+    public get pluginSettings(): PluginSettings {
+        return this._programData.pluginSettings
     }
 
-    public set settings(settings: PluginSettings) {
-        this._programData.settings = settings
+    public set pluginSettings(settings: PluginSettings) {
+        this._programData.pluginSettings = settings
+    }
+
+    public get serverSettings(): ServerSettings {
+        return this._programData.serverSettings
+    }
+
+    public set serverSettings(settings: ServerSettings) {
+        this._programData.serverSettings = settings
     }
     
     public get dataIsAllowedForPreview() {
@@ -76,25 +86,20 @@ export class ProgramDataStore {
         
         switch (this.type) {
             case ItemType.Series:
-                return this.activeSeason.episodes.length >= this.minimumElementsNeeded
+                return this.activeSeason.episodes.length >= 1
             case ItemType.Movie:
                 return true
             case ItemType.BoxSet:
             case ItemType.Folder:
             case ItemType.Video:
-                return this.movies.length >= this.minimumElementsNeeded
+                return this.movies.length >= 1
             default:
                 return false
         }
     }
     
     public get allowedPreviewTypes() {
-        return this.settings.EnabledItemTypes
-    }
-    
-    public get minimumElementsNeeded(): number {
-        // TODO: get from plugin config in the future
-        return 1
+        return this.pluginSettings.EnabledItemTypes
     }
 
     public getItemById(itemId: string): BaseItem {

@@ -67,7 +67,7 @@ export class ListElementTemplate extends BaseTemplate {
                                         <span class="cardImageIcon material-icons tv" aria-hidden="true"/>
                                     </div>
                                     <button id="previewEpisodeImageCard-${this.item.IndexNumber}"
-                                            class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast ${this.programDataStore.settings.BlurThumbnail ? 'blur' : ''}"
+                                            class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast ${this.programDataStore.pluginSettings.BlurThumbnail ? 'blur' : ''}"
                                             data-action="link"
                                             style="${backgroundImageStyle}">
                                     </button>
@@ -93,7 +93,7 @@ export class ListElementTemplate extends BaseTemplate {
                                 </div>
                             </div>
                         </div>
-                        <span class="previewEpisodeDescription ${this.programDataStore.settings.BlurDescription ? 'blur' : ''}">
+                        <span class="previewEpisodeDescription ${this.programDataStore.pluginSettings.BlurDescription ? 'blur' : ''}">
                             ${this.item.Description ?? 'loading...'}
                         </span>
                     </div>

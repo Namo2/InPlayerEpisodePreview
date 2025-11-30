@@ -2,6 +2,7 @@
 import {BaseItem} from "./Episode";
 import {ItemType} from "./ItemType";
 import {PluginSettings} from "./PluginSettings";
+import {ServerSettings} from "./ServerSettings";
 
 export type ProgramData = {
     activeMediaSourceId: string
@@ -9,5 +10,6 @@ export type ProgramData = {
     boxSetName: string
     movies?: BaseItem[]
     seasons?: Season[]
-    settings: PluginSettings
+    pluginSettings: PluginSettings,
+    serverSettings: ServerSettings
 }

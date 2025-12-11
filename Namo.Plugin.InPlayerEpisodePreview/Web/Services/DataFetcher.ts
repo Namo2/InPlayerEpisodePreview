@@ -155,9 +155,20 @@ export class DataFetcher {
                 }
                 break
             case ItemType.Movie:
+                if (itemDto.Items.length > 1) {
+                    this.programDataStore.type = this.programDataStore.activeMediaSourceId !== '' && this.programDataStore.activeMediaSourceId === parentId ? ItemType.BoxSet : ItemType.Movie
+                    this.programDataStore.movies = itemDto.Items.map((movie, idx) => ({
+                        ...movie,
+                        IndexNumber: idx + 1
+                    }))
+                    break
+                }
+                
                 // do not overwrite data if we only receive one item which already exists
-                if (itemDto.Items.length > 1 || !this.programDataStore.movies.some(movie => movie.Id === firstItem.Id)) {
-                    this.programDataStore.type = this.programDataStore.activeMediaSourceId === parentId ? ItemType.BoxSet : ItemType.Movie
+                if (!this.programDataStore.movies.some(movie => movie.Id === firstItem.Id)) {
+                    if (!this.programDataStore.movies.some(movie => movie.SortName === firstItem.SortName)) {
+                        this.programDataStore.type = this.programDataStore.activeMediaSourceId !== '' && this.programDataStore.activeMediaSourceId === parentId ? ItemType.BoxSet : ItemType.Movie
+                    }
                     this.programDataStore.movies = itemDto.Items.map((movie, idx) => ({
                         ...movie,
                         IndexNumber: idx + 1
@@ -165,9 +176,21 @@ export class DataFetcher {
                 }
                 break
             case ItemType.Video:
+                if (itemDto.Items.length > 1) {
+                    this.programDataStore.type = this.programDataStore.activeMediaSourceId !== '' && this.programDataStore.activeMediaSourceId === parentId ? ItemType.Folder : ItemType.Video
+                    itemDto.Items.sort((a, b) => (a.SortName && b.SortName) ? a.SortName.localeCompare(b.SortName) : 0)
+                    this.programDataStore.movies = itemDto.Items.map((video, idx) => ({
+                        ...video,
+                        IndexNumber: idx + 1
+                    }))
+                    break
+                }
+                
                 // do not overwrite data if we only receive one item which already exists
-                if (itemDto.Items.length > 1 || !this.programDataStore.movies.some(video => video.Id === firstItem.Id)) {
-                    this.programDataStore.type = this.programDataStore.activeMediaSourceId === parentId ? ItemType.Folder : ItemType.Video
+                if (!this.programDataStore.movies.some(video => video.Id === firstItem.Id)) {
+                    if (!this.programDataStore.movies.some(video => video.SortName === firstItem.SortName)) {
+                        this.programDataStore.type = this.programDataStore.activeMediaSourceId !== '' && this.programDataStore.activeMediaSourceId === parentId ? ItemType.Folder : ItemType.Video
+                    }
                     itemDto.Items.sort((a, b) => (a.SortName && b.SortName) ? a.SortName.localeCompare(b.SortName) : 0)
                     this.programDataStore.movies = itemDto.Items.map((video, idx) => ({
                         ...video,

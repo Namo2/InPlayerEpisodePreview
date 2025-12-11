@@ -203,7 +203,11 @@ function viewShowEventHandler(): void {
             }
             
             // scroll to the episode that is currently playing
-            contentDiv.querySelector('.selectedListItem').parentElement.scrollIntoView()
+            const activeItem = contentDiv.querySelector('.selectedListItem') 
+            if (!activeItem) {
+                logger.error("Couldn't find active media source element in preview list. This should never happen", programDataStore)
+            }
+            activeItem?.parentElement.scrollIntoView()
         }
     }
     function unloadVideoView(): void {

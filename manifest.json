@@ -9,6 +9,22 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "1.6.1.2",
+        "changelog": "- Fixed a bug where movies with multiple versions were treated as collections",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.6.1/InPlayerEpisodePreview_1.6.1.2-10.11.0.zip",
+        "checksum": "94d14a0a95bb3d5d76342ac4e00a26d0",
+        "timestamp": "2025-12-11T21:37:25Z"
+      },
+      {
+        "version": "1.6.1.1",
+        "changelog": "- Fixed a bug where movies with multiple versions were treated as collections",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v1.6.1/InPlayerEpisodePreview_1.6.1.1-10.10.7.zip",
+        "checksum": "cabf84f319b9ad746f63aaca4ba86060",
+        "timestamp": "2025-12-11T21:35:23Z"
+      },
+      {
         "version": "1.6.0.0",
         "changelog": "- Correctly apply blur to episode thumbnail/description.\n - Show preview for movie collections when Movie type was disabled but not the Collection type.",
         "targetAbi": "10.11.0",

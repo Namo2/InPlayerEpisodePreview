@@ -54,6 +54,7 @@ export class ProgramDataStore {
     
     public set movies(movies: BaseItem[]) {
         this._programData.movies = movies
+        this._programData.seasons = []
     }
 
     public get seasons(): Season[] {
@@ -62,6 +63,7 @@ export class ProgramDataStore {
 
     public set seasons(seasons: Season[]) {
         this._programData.seasons = seasons
+        this._programData.movies = []
     }
 
     public get pluginSettings(): PluginSettings {

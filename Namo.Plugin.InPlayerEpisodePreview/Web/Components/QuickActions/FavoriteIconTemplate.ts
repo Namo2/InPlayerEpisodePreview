@@ -1,10 +1,10 @@
 import {BaseTemplate} from "../BaseTemplate"
-import {BaseItem} from "../../Models/Episode"
+import {PreviewItem} from "../../Models/PreviewData/PreviewItem"
 
 export class FavoriteIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private item: PreviewItem) {
         super(container, positionAfterIndex)
-        this.setElementId('favoriteButton-' + episode.IndexNumber)
+        this.setElementId('favoriteButton-' + item.Id)
     }
 
     getTemplate(): string {
@@ -15,11 +15,11 @@ export class FavoriteIconTemplate extends BaseTemplate {
                     type="button"
                     class="itemAction paper-icon-button-light emby-button"
                     data-action="none"
-                    data-id="${this.episode?.Id ?? ''}"
-                    data-serverid="${this.episode?.ServerId ?? ''}"
+                    data-id="${this.item?.Id ?? ''}"
+                    data-serverid="${this.item?.ServerId ?? ''}"
                     data-itemtype="Episode"
                     data-likes=""
-                    data-isfavorite="${this.episode?.UserData?.IsFavorite ?? false}"
+                    data-isfavorite="${this.item?.UserData?.IsFavorite ?? false}"
                     title="Add to favorites">
                 <span class="material-icons favorite"></span>
             </button>

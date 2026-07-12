@@ -10,9 +10,9 @@ export class PopupTitleTemplate extends BaseTemplate {
 
     getTemplate(): string {
         return `
-            <div id="${this.getElementId()}" class="actionSheetTitle listItem previewPopupTitle">
+            <div id="${this.getElementId()}" class="listItem previewPopupTitle">
                 ${
-                    this.programDataStore.type === ItemType.Series && this.programDataStore.seasons.length > 1 ? 
+                    this.programDataStore.groups.length > 1 ?
                     '<span class="actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons keyboard_backspace"></span>' : 
                     ''
                 }
@@ -22,17 +22,8 @@ export class PopupTitleTemplate extends BaseTemplate {
     }
 
     public render(clickHandler: Function) {
-        const renderedElement = this.addElementToContainer();
-        
-        switch (this.programDataStore.type) {
-            case ItemType.Series:
-                renderedElement.addEventListener('click', (e) => clickHandler(e))
-                break
-            case ItemType.BoxSet:
-            case ItemType.Folder:
-                renderedElement.addEventListener('click', (e) => e.stopPropagation())
-                break
-        }
+        const renderedElement = this.addElementToContainer()
+        renderedElement.addEventListener('click', (e) => clickHandler(e))
     }
     
     public setText(text: string) {

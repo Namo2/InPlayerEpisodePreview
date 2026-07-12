@@ -283,4 +283,10 @@ declare global {
         uploadItemImage(itemId: string, imageType: ImageType, file: File): Promise<void>
         uploadItemSubtitle(itemId: string, language: string, isForced: boolean, file: File): Promise<void>
         uploadUserImage(userId: string, imageType: ImageType, file: File): Promise<void>    }
+    
+    const Events: {
+        on(source: object, type: string, handler: (event: { type: string }, ...args: any[]) => void): void
+        off(source: object, type: string, handler: (event: { type: string }, ...args: any[]) => void): void
+        trigger(source: object, type: string, args?: any[]): void
+    }
 }

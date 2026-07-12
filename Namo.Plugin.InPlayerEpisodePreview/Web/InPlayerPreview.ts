@@ -1,5 +1,4 @@
 ﻿import {Logger} from "./Services/Logger";
-import {AuthService} from "./Services/AuthService";
 import {PreviewButtonTemplate} from "./Components/PreviewButtonTemplate";
 import {ProgramDataStore} from "./Services/ProgramDataStore";
 import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
@@ -8,9 +7,11 @@ import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 import {DataFetcher} from "./Services/DataFetcher";
 import {ItemType} from "./Models/ItemType";
-import { PluginSettings } from "./Models/PluginSettings";
+import {PluginSettings} from "./Models/PluginSettings";
 import {ServerSettings} from "./Models/ServerSettings";
 import {Endpoints} from "./Endpoints";
+import {Group} from "./Models/PreviewData/Group";
+import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -44,6 +45,9 @@ inPlayerPreviewStyle.textContent = `
 .previewPopupTitle {
     max-height: 4vh;
 }
+.previewPopupTitle h1.actionSheetTitle {
+    margin-left: 0 !important;
+}
 .previewPopupScroller {
     max-height: 60vh;
 }
@@ -51,34 +55,34 @@ inPlayerPreviewStyle.textContent = `
     margin-left: auto; 
     margin-right: 1em;
 }
-.previewEpisodeContainer {
+.previewItemContainer {
     width: 100%;
 }
-.previewEpisodeTitle {
+.previewItemTitle {
     pointer-events: none;
 }
-.previewEpisodeImageCard {
+.previewItemImageCard {
     max-width: 30%;
 }
-.previewEpisodeDescription {
-    margin-left: 0.5em; 
-    margin-top: 1em; 
-    margin-right: 1.5em; 
+.previewItemDescription {
+    margin-left: 0.5em;
+    margin-top: 1em;
+    margin-right: 1.5em;
     display: block;
 }
-.previewEpisodeDetails {
-    margin-left: 1em; 
+.previewItemDetails {
+    margin-left: 1em;
     justify-content: start !important;
 }
 .blur {
-    filter: blur(6px); 
-    transition: filter 0.3s ease; 
+    filter: blur(6px);
+    transition: filter 0.3s ease;
     display: inline-block;
 }
 .blur:hover {
     filter: blur(0);
 }
-.previewEpisodeImageCard:hover .blur {
+.previewItemImageCard:hover .blur {
     filter: blur(0);
 }
 `
@@ -86,18 +90,18 @@ document?.head?.appendChild(inPlayerPreviewStyle)
 
 // init services and helpers
 const logger: Logger = new Logger()
-const authService: AuthService = new AuthService()
 const programDataStore: ProgramDataStore = new ProgramDataStore()
-new DataFetcher(programDataStore, authService, logger)
 const playbackHandler: PlaybackHandler = new PlaybackHandler(logger)
 const listElementFactory = new ListElementFactory(playbackHandler, programDataStore)
 
 function initialize() {
-    // Ensure ApiClient exists and user is logged in
-    if (typeof ApiClient === 'undefined' || !ApiClient.getCurrentUserId?.()) {
+    // Ensure ApiClient/Events exist and user is logged in
+    if (typeof ApiClient === 'undefined' || typeof Events === 'undefined' || !ApiClient.getCurrentUserId?.()) {
         setTimeout(initialize, 300) // Increased retry delay slightly
         return
     }
+
+    new DataFetcher(programDataStore)
 
     ApiClient.getPluginConfiguration('73833d5f-0bcb-45dc-ab8b-7ce668f4345d')
         .then((config: PluginSettings) => programDataStore.pluginSettings = config)
@@ -113,6 +117,93 @@ let previousRoutePath: string = null
 let previewContainerLoaded: boolean = false
 document.addEventListener('viewshow', viewShowEventHandler)
 
+let lastTrackedPositionSecond: number = -1
+function onVideoTimeUpdate(this: HTMLVideoElement): void {
+    const positionSecond = Math.floor(this.currentTime)
+    if (positionSecond === lastTrackedPositionSecond) return
+    lastTrackedPositionSecond = positionSecond
+
+    const itemId = document.querySelector('.btnUserRating')?.getAttribute('data-id')
+    if (!itemId) return
+    programDataStore.activeMediaSourceId = itemId
+
+    const item = programDataStore.getItemById(itemId)
+    if (!item || !item.RunTimeTicks) return
+
+    const positionTicks = this.currentTime * 10_000_000
+    const playedPercentage = (positionTicks / item.RunTimeTicks) * 100
+
+    programDataStore.updateItem({
+        ...item,
+        UserData: {
+            ...item.UserData,
+            PlaybackPositionTicks: positionTicks,
+            PlayedPercentage: playedPercentage,
+            Played: playedPercentage >= programDataStore.serverSettings.MaxResumePct
+        }
+    })
+}
+
+// Tracks which BoxSet/Playlist details page (if any) was visited immediately before navigating into playback
+const DETAILS_ROUTE_PATH: string = '/details'
+const collectionLikeItemTypes: Set<ItemType> = new Set([ItemType.BoxSet, ItemType.Playlist])
+let pendingSourceCollectionId: string = null
+
+function recordSourceCollection(collectionId: string): void {
+    const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.SET_SOURCE_COLLECTION}`
+        .replace('{userId}', ApiClient.getCurrentUserId())
+        .replace('{deviceId}', ApiClient.deviceId())
+        .replace('{collectionId}', collectionId))
+    ApiClient.ajax({type: 'GET', url}).catch((ex: unknown) => logger.error("Couldn't record source collection for playback session", ex))
+}
+
+function captureSourceCollection(currentRoutePath: string): void {
+    const [currentPath, currentQuery] = currentRoutePath.split('?')
+    const previousPath = previousRoutePath?.split('?')[0]
+
+    if (currentPath === DETAILS_ROUTE_PATH) {
+        const detailsId = new URLSearchParams(currentQuery ?? '').get('id')
+        pendingSourceCollectionId = null
+        if (!detailsId) return
+
+        ApiClient.getItem(ApiClient.getCurrentUserId(), detailsId).then((item) => {
+            const itemType: ItemType = ItemType[item.Type as unknown as keyof typeof ItemType]
+            pendingSourceCollectionId = collectionLikeItemTypes.has(itemType) ? detailsId : null
+        })
+        return
+    }
+
+    if (videoPaths.includes(currentPath) && previousPath === DETAILS_ROUTE_PATH && pendingSourceCollectionId) {
+        recordSourceCollection(pendingSourceCollectionId)
+    }
+
+    pendingSourceCollectionId = null
+}
+
+// Retrieve the current colloection/playlist id thorugh a play action on a card the same way as hellyfin does it itself
+// https://github.com/jellyfin/jellyfin-web/blob/release-10.11.z/src/components/shortcuts.js#L216
+const PLAYBACK_TRIGGER_ACTIONS: Set<string> = new Set(['play', 'resume', 'playallfromhere'])
+function onDocumentClickCapture(event: MouseEvent): void {
+    const actionElement = (event.target as HTMLElement)?.closest?.('[data-action]') as HTMLElement | null
+    if (!actionElement || !PLAYBACK_TRIGGER_ACTIONS.has(actionElement.getAttribute('data-action'))) return
+
+    const card = actionElement.closest('[data-id]') as HTMLElement | null
+    if (!card) return
+
+    const childOfCollectionId = card.getAttribute('data-collectionid') ?? card.getAttribute('data-playlistid')
+    if (childOfCollectionId) {
+        recordSourceCollection(childOfCollectionId)
+        return
+    }
+
+    const cardItemType: ItemType = ItemType[card.getAttribute('data-type') as unknown as keyof typeof ItemType]
+    const cardId = card.getAttribute('data-id')
+    if (cardId && collectionLikeItemTypes.has(cardItemType)) {
+        recordSourceCollection(cardId)
+    }
+}
+document.addEventListener('click', onDocumentClickCapture, true)
+
 function viewShowEventHandler(): void {
     const currentRoutePath: string = getLocationPath()
 
@@ -123,18 +214,19 @@ function viewShowEventHandler(): void {
     }
 
     // Initial attempt to load the video view or schedule retries.
+    captureSourceCollection(currentRoutePath)
     attemptLoadVideoView()
     previousRoutePath = currentRoutePath
 
-    // This function attempts to load the video view, retrying up to 3 times if necessary.
+    // Attempts to load the video view, retrying up to 3 times if necessary.
     function attemptLoadVideoView(retryCount = 0): void {
         if (videoPaths.includes(currentRoutePath)) {
-            if (programDataStore.dataIsAllowedForPreview) {
+            // if (programDataStore.dataIsAllowedForPreview) {
                 // Check if the preview container is already loaded before loading
                 if (!previewContainerLoaded && !isPreviewButtonCreated()) {
                     loadVideoView()
                     previewContainerLoaded = true // Set flag to true after loading
-                }
+                // }
             } else if (retryCount < 3) { // Retry up to 3 times
                 setTimeout((): void => {
                     logger.debug(`Retry #${retryCount + 1}`)
@@ -158,7 +250,64 @@ function viewShowEventHandler(): void {
         const previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index)
         previewButton.render(previewButtonClickHandler)
 
-        function previewButtonClickHandler(): void {
+        document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.addEventListener('timeupdate', onVideoTimeUpdate)
+
+        async function previewButtonClickHandler(): Promise<void> {
+            const loadItemPreviewData = async (itemId: string): Promise<{
+                itemType: string, containerName: string | null, groups: Group[], activeGroupId: string, activeItemIndex: number
+            }> => {
+                const userId = ApiClient.getCurrentUserId()
+                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_PREVIEW_DATA}`
+                    .replace('{userId}', userId)
+                    .replace('{deviceId}', ApiClient.deviceId())
+                    .replace('{itemId}', itemId))
+                const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+                return {
+                    itemType: raw.ItemType,
+                    containerName: raw.ContainerName,
+                    groups: raw.Groups.map((g: any) => ({
+                        groupId: g.GroupId,
+                        groupName: g.GroupName,
+                        items: [],
+                        indexNumber: g.IndexNumber
+                    })),
+                    activeGroupId: raw.ActiveGroupId,
+                    activeItemIndex: raw.ActiveItemIndex
+                }
+            }
+
+            const PAGE_SIZE = programDataStore.pluginSettings.EpisodePageSize
+
+            const loadGroupItems = async (groupId: string, startIndex: number = 0, limit: number = PAGE_SIZE): Promise<GroupItemsResult> => {
+                const userId = ApiClient.getCurrentUserId()
+                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.GROUP_ITEMS}`
+                    .replace('{userId}', userId)
+                    .replace('{groupId}', groupId),
+                    { startIndex, limit })
+                const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+                const result: GroupItemsResult = { items: raw.Items, totalRecordCount: raw.TotalRecordCount }
+
+                const existing = programDataStore.groups.find(g => g.groupId === groupId)?.items ?? []
+                programDataStore.updateGroupItems(groupId, [...existing, ...result.items])
+                return result
+            }
+
+            const itemId = document.querySelector('.btnUserRating').getAttribute('data-id')
+            const { itemType, containerName, groups, activeGroupId, activeItemIndex } = await loadItemPreviewData(itemId)
+
+            programDataStore.groups = groups
+
+            // Load a 3-page window (page of the active episode, plus one page before and after)
+            const pageOfActiveEpisode = Math.floor(activeItemIndex / PAGE_SIZE)
+            const initialWindowStartIndex = Math.max(0, (pageOfActiveEpisode - 1) * PAGE_SIZE)
+            const initialWindowLimit = (pageOfActiveEpisode + 2) * PAGE_SIZE - initialWindowStartIndex
+
+            const initialPage: GroupItemsResult = await loadGroupItems(activeGroupId, initialWindowStartIndex, initialWindowLimit)
+            programDataStore.activeMediaSourceId = itemId
+            programDataStore.activeGroupId = activeGroupId
+            programDataStore.type = ItemType[itemType as keyof typeof ItemType]
+            programDataStore.boxSetName = containerName ?? ''
+
             const dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1)
             dialogContainer.render()
 
@@ -168,41 +317,18 @@ function viewShowEventHandler(): void {
             const popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore)
             popupTitle.render((e: MouseEvent) => {
                 e.stopPropagation()
-                
+
                 popupTitle.setVisible(false);
                 const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
-
-                // delete episode content for all existing episodes in the preview list;
                 contentDiv.innerHTML = ''
-                
-                listElementFactory.createSeasonElements(programDataStore.seasons, contentDiv, programDataStore.activeSeason.IndexNumber, popupTitle)
-            })
 
-            switch (programDataStore.type) {
-                case ItemType.Series:
-                    popupTitle.setText(programDataStore.activeSeason.seasonName)
-                    popupTitle.setVisible(true)
-                    listElementFactory.createEpisodeElements(programDataStore.activeSeason.episodes, contentDiv)
-                    break
-                case ItemType.Movie:
-                    popupTitle.setText('')
-                    popupTitle.setVisible(false)
-                    listElementFactory.createEpisodeElements(programDataStore.movies.filter(movie => movie.Id === programDataStore.activeMediaSourceId), contentDiv)
-                    break
-                case ItemType.Video:
-                    popupTitle.setText('')
-                    popupTitle.setVisible(false)
-                    listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
-                    break
-                case ItemType.BoxSet:
-                case ItemType.Folder:
-                    popupTitle.setText(programDataStore.boxSetName)
-                    popupTitle.setVisible(true)
-                    listElementFactory.createEpisodeElements(programDataStore.movies, contentDiv)
-                    break
-            }
+                listElementFactory.createGroupElements(programDataStore.groups, contentDiv, programDataStore.activeGroup.indexNumber, popupTitle, loadGroupItems)
+            })
             
-            // scroll to the episode that is currently playing
+            await listElementFactory.createLazyItemList(contentDiv, (startIndex) => loadGroupItems(activeGroupId, startIndex), initialPage, initialWindowStartIndex)
+            popupTitle.setText(programDataStore.activeGroup?.groupName ?? '')
+
+            // scroll to the item that is currently playing
             const activeItem = contentDiv.querySelector('.selectedListItem') 
             if (!activeItem) {
                 logger.error("Couldn't find active media source element in preview list. This should never happen", programDataStore)
@@ -212,13 +338,11 @@ function viewShowEventHandler(): void {
     }
     function unloadVideoView(): void {
         // Clear old data and reset previewContainerLoaded flag
-        authService.setAuthHeaderValue("")
-
-        if (document.getElementById("dialogBackdropContainer"))
-            document.body.removeChild(document.getElementById("dialogBackdropContainer"))
-        if (document.getElementById("dialogContainer"))
-            document.body.removeChild(document.getElementById("dialogContainer"))
+        document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.removeEventListener('timeupdate', onVideoTimeUpdate)
+        lastTrackedPositionSecond = -1
         
+        document.getElementById('previewPopup')?.remove()
+
         previewContainerLoaded = false // Reset flag when unloading
     }
     

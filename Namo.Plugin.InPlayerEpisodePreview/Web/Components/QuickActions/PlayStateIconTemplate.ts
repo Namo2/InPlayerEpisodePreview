@@ -1,10 +1,10 @@
-﻿import {BaseTemplate} from "../BaseTemplate"
-import {BaseItem} from "../../Models/Episode"
+import {BaseTemplate} from "../BaseTemplate"
+import {PreviewItem} from "../../Models/PreviewData/PreviewItem"
 
 export class PlayStateIconTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private episode: BaseItem) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private item: PreviewItem) {
         super(container, positionAfterIndex)
-        this.setElementId('playStateButton-' + this.episode.IndexNumber)
+        this.setElementId('playStateButton-' + this.item.Id)
     }
 
     getTemplate(): string {
@@ -15,13 +15,13 @@ export class PlayStateIconTemplate extends BaseTemplate {
                     type="button"
                     data-action="none"
                     class="itemAction paper-icon-button-light emby-button"
-                    data-id="${this.episode?.Id ?? ''}" 
-                    data-serverid="${this.episode?.ServerId ?? ''}"
+                    data-id="${this.item?.Id ?? ''}"
+                    data-serverid="${this.item?.ServerId ?? ''}"
                     data-itemtype="Episode"
                     data-likes=""
-                    data-played="${this.episode?.UserData?.Played ?? false}"
+                    data-played="${this.item?.UserData?.Played ?? false}"
                     title="Mark played">
-                <span class="material-icons check playstatebutton-icon-${this.episode?.UserData?.Played ? "played" : "unplayed"}"></span>
+                <span class="material-icons check playstatebutton-icon-${this.item?.UserData?.Played ? "played" : "unplayed"}"></span>
             </button>
         `
     }

@@ -1,10 +1,10 @@
 import {BaseTemplate} from "./BaseTemplate";
-import {Season} from "../Models/Season";
+import {Group} from "../Models/PreviewData/Group";
 
-export class SeasonListElementTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private season: Season, private isCurrentSeason: boolean) {
+export class GroupListElementTemplate extends BaseTemplate {
+    constructor(container: HTMLElement, positionAfterIndex: number, private group: Group, private isCurrentGroup: boolean) {
         super(container, positionAfterIndex);
-        this.setElementId(`episode-${season.seasonId}`);
+        this.setElementId(`group-${group.groupId}`);
     }
 
     getTemplate(): string {
@@ -13,11 +13,11 @@ export class SeasonListElementTemplate extends BaseTemplate {
             <div id="${this.getElementId()}"
                  class="listItem listItem-button actionSheetMenuItem emby-button previewListItem"
                  is="emby-button"
-                 data-id="${this.season.seasonId}">
-                <button class="listItem previewEpisodeTitle" type="button">
-                    <span class="${this.isCurrentSeason ? "material-icons check" : ""}"></span>
+                 data-id="${this.group.groupId}">
+                <button class="listItem previewItemTitle" type="button">
+                    <span class="${this.isCurrentGroup ? "material-icons check" : ""}"></span>
                     <div class="listItemBody actionsheetListItemBody">
-                        <span class="actionSheetItemText">${this.season.seasonName}</span>
+                        <span class="actionSheetItemText">${this.group.groupName}</span>
                     </div>
                 </button>
             </div>

@@ -49,7 +49,7 @@ inPlayerPreviewStyle.textContent = `
     margin-left: 0 !important;
 }
 .previewPopupScroller {
-    max-height: 60vh;
+    max-height: 60vh;aaa
 }
 .previewQuickActionContainer {
     margin-left: auto; 
@@ -117,13 +117,19 @@ let previousRoutePath: string = null
 let previewContainerLoaded: boolean = false
 document.addEventListener('viewshow', viewShowEventHandler)
 
+// Sometimes their can be stale rating buttons. thats why we take the last one from the DOM for the itemId
+function getLatestUserRatingItemId(): string | null {
+    const elements = document.querySelectorAll('.btnUserRating.autoSize.paper-icon-button-light')
+    return elements[elements.length - 1]?.getAttribute('data-id') ?? null
+}
+
 let lastTrackedPositionSecond: number = -1
 function onVideoTimeUpdate(this: HTMLVideoElement): void {
     const positionSecond = Math.floor(this.currentTime)
     if (positionSecond === lastTrackedPositionSecond) return
     lastTrackedPositionSecond = positionSecond
 
-    const itemId = document.querySelector('.btnUserRating')?.getAttribute('data-id')
+    const itemId = getLatestUserRatingItemId()
     if (!itemId) return
     programDataStore.activeMediaSourceId = itemId
 
@@ -292,7 +298,19 @@ function viewShowEventHandler(): void {
                 return result
             }
 
-            const itemId = document.querySelector('.btnUserRating').getAttribute('data-id')
+            const getNowPlayingItemIdFromSession = async (): Promise<string | null> => {
+                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.NOW_PLAYING_ITEM}`)
+                try {
+                    return await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+                } catch (ex: unknown) {
+                    logger.error("Couldn't resolve now-playing item from session, falling back to OSD rating button", ex)
+                    return null
+                }
+            }
+            
+            
+            // const itemId = await getNowPlayingItemIdFromSession() ?? getLatestUserRatingItemId()
+            const itemId = getLatestUserRatingItemId()
             const { itemType, containerName, groups, activeGroupId, activeItemIndex } = await loadItemPreviewData(itemId)
 
             programDataStore.groups = groups

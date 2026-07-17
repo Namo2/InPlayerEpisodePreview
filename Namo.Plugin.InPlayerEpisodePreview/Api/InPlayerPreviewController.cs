@@ -107,20 +107,15 @@ public class InPlayerPreviewController : ControllerBase
     /// This controller starts playback of a new item.
     /// Could be replaced by /Sessions/{sessionId}/Playing, if frontend loads session itself
     /// </summary>
-    /// <param name="userId"></param>
-    /// <param name="deviceId"></param>
     /// <param name="id"></param>
     /// <param name="ticks"></param>
     /// <returns></returns>
-    [HttpGet("Users/{userId}/{deviceId}/Items/{id}/Play/{ticks}")]
+    [HttpGet("Items/{id}/Play/{ticks}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult StartMedia([FromRoute] Guid userId, [FromRoute] string deviceId, [FromRoute] Guid id,
-        [FromRoute] long ticks = 0)
+    public ActionResult StartMedia([FromRoute] Guid id, [FromRoute] long ticks = 0)
     {
-        SessionInfo? session =
-            _sessionManager.Sessions.FirstOrDefault(session =>
-                session.UserId.Equals(userId) && session.DeviceId.Equals(deviceId));
+        SessionInfo? session = ResolveCurrentSession();
         if (session is null)
         {
             _logger.LogInformation("Couldn't find a valid session for this user");
@@ -144,6 +139,38 @@ public class InPlayerPreviewController : ControllerBase
             }, CancellationToken.None);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Returns the id of the item of  the current session.
+    /// This is experimental and will maybe used in future releases
+    /// </summary>
+    [HttpGet("NowPlayingItem")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult GetNowPlayingItem()
+    {
+        BaseItem? nowPlayingItem = ResolveCurrentSession()?.FullNowPlayingItem;
+        if (nowPlayingItem is null)
+            return NotFound("No item currently playing for this session");
+
+        return Ok(nowPlayingItem.Id);
+    }
+
+    /// <summary>
+    /// Resolves the session for the current request via <c>Jellyfin.Api.Helpers.RequestHelpers.GetSession</c>
+    /// </summary>
+    private SessionInfo? ResolveCurrentSession()
+    {
+        Type? requestHelpersType = Type.GetType("Jellyfin.Api.Helpers.RequestHelpers");
+        MethodInfo? getSessionMethod = requestHelpersType?.GetMethod("GetSession");
+        if (getSessionMethod is null)
+        {
+            _logger.LogWarning("Couldn't resolve Jellyfin.Api.Helpers.RequestHelpers.GetSession via reflection");
+            return null;
+        }
+
+        return getSessionMethod.Invoke(null, [_sessionManager, _userManager, HttpContext]) as SessionInfo;
     }
 
     /// <summary>

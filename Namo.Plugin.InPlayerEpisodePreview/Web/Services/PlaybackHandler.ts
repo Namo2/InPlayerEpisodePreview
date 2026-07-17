@@ -7,8 +7,6 @@ export class PlaybackHandler {
     async play(itemId: string, startPositionTicks: number): Promise<void | Response> {
         try {
             const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLAY_MEDIA}`
-                .replace('{userId}', ApiClient.getCurrentUserId())
-                .replace('{deviceId}', ApiClient.deviceId())
                 .replace('{itemId}', itemId)
                 .replace('{ticks}', startPositionTicks.toString()))
 

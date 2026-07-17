@@ -7,6 +7,7 @@ import {DefaultServerSettings, ServerSettings} from "../Models/ServerSettings";
 
 export class ProgramDataStore {
     private _programData: ProgramData
+    private _viewToken: number = 0
 
     constructor() {
         this._programData = {
@@ -109,5 +110,16 @@ export class ProgramDataStore {
                 ? { ...group, items: [...group.items.filter(item => item.Id !== itemToUpdate.Id), itemToUpdate] }
                 : group
         )
+    }
+
+    // Called whenever the popup switches what it's displaying (opening, selecting a group, going back to
+    // the group list). Any in-flight item load started before the switch can check isCurrentView() before
+    // touching the DOM/state, so it doesn't render into a view it no longer belongs to.
+    public beginNewView(): number {
+        return ++this._viewToken
+    }
+
+    public isCurrentView(token: number): boolean {
+        return token === this._viewToken
     }
 }

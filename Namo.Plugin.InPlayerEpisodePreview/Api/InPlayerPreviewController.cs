@@ -235,9 +235,7 @@ public class InPlayerPreviewController : ControllerBase
             var groups = seasons
                 .Select(s => new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0))
                 .ToList();
-
-            // Same query GetGroupItems uses for this season (minus paging), so the index lines up
-            // with the ordering the frontend will actually receive its pages in.
+            
             var episodesInSeason = _libraryManager.QueryItems(new InternalItemsQuery(user)
             {
                 ParentId = episode.ParentId,

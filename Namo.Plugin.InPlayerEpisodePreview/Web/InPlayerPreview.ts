@@ -313,6 +313,7 @@ function viewShowEventHandler(): void {
 
             const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
             contentDiv.innerHTML = '' // remove old content
+            const viewToken = programDataStore.beginNewView()
 
             const popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore)
             popupTitle.render((e: MouseEvent) => {
@@ -324,8 +325,8 @@ function viewShowEventHandler(): void {
 
                 listElementFactory.createGroupElements(programDataStore.groups, contentDiv, programDataStore.activeGroup.indexNumber, popupTitle, loadGroupItems)
             })
-            
-            await listElementFactory.createLazyItemList(contentDiv, (startIndex) => loadGroupItems(activeGroupId, startIndex), initialPage, initialWindowStartIndex)
+
+            await listElementFactory.createLazyItemList(contentDiv, (startIndex) => loadGroupItems(activeGroupId, startIndex), viewToken, initialPage, initialWindowStartIndex)
             popupTitle.setText(programDataStore.activeGroup?.groupName ?? '')
 
             // scroll to the item that is currently playing

@@ -101,7 +101,8 @@ export class ListElementFactory {
         parentDiv: HTMLElement,
         loadPage: (startIndex: number) => Promise<GroupItemsResult>,
         nextStartIndex: number,
-        totalLoaded: number
+        totalLoaded: number,
+        viewToken: number
     ): void {
         const sentinel = document.createElement('div')
         parentDiv.appendChild(sentinel)
@@ -112,13 +113,14 @@ export class ListElementFactory {
             sentinel.remove()
 
             const { items, totalRecordCount } = await loadPage(nextStartIndex)
-            if (parentDiv.children.length === 0) return
+            // The view may have moved on (e.g. back to the group list) while this page was loading.
+            if (!this.programDataStore.isCurrentView(viewToken)) return
 
             await this.createItemElements(items, parentDiv, totalLoaded)
 
             const newTotalLoaded = totalLoaded + items.length
             if (newTotalLoaded < totalRecordCount)
-                this.addScrollSentinel(parentDiv, loadPage, newTotalLoaded, newTotalLoaded)
+                this.addScrollSentinel(parentDiv, loadPage, newTotalLoaded, newTotalLoaded, viewToken)
         }, { root: parentDiv, threshold: 0 })
 
         observer.observe(sentinel)
@@ -129,7 +131,8 @@ export class ListElementFactory {
     private addScrollSentinelBackward(
         parentDiv: HTMLElement,
         loadPage: (startIndex: number) => Promise<GroupItemsResult>,
-        currentStartIndex: number
+        currentStartIndex: number,
+        viewToken: number
     ): void {
         if (currentStartIndex <= 0) return
 
@@ -144,11 +147,12 @@ export class ListElementFactory {
             const pageSize = this.programDataStore.pluginSettings.EpisodePageSize
             const newStartIndex = Math.max(0, currentStartIndex - pageSize)
             const { items } = await loadPage(newStartIndex)
-            if (parentDiv.children.length === 0) return
+            // The view may have moved on (e.g. back to the group list) while this page was loading.
+            if (!this.programDataStore.isCurrentView(viewToken)) return
 
             await this.prependItemElements(items, parentDiv, newStartIndex)
 
-            this.addScrollSentinelBackward(parentDiv, loadPage, newStartIndex)
+            this.addScrollSentinelBackward(parentDiv, loadPage, newStartIndex, viewToken)
         }, { root: parentDiv, threshold: 0 })
 
         observer.observe(sentinel)
@@ -157,17 +161,21 @@ export class ListElementFactory {
     public async createLazyItemList(
         parentDiv: HTMLElement,
         loadPage: (startIndex: number) => Promise<GroupItemsResult>,
+        viewToken: number,
         initialPage?: GroupItemsResult,
         initialOffset: number = 0
     ): Promise<void> {
         const firstPage = initialPage ?? await loadPage(0)
+        // The view may have moved on (e.g. back to the group list) while this page was loading.
+        if (!this.programDataStore.isCurrentView(viewToken)) return
+
         await this.createItemElements(firstPage.items, parentDiv, initialOffset)
 
         const totalLoaded = initialOffset + firstPage.items.length
         if (totalLoaded < firstPage.totalRecordCount)
-            this.addScrollSentinel(parentDiv, loadPage, totalLoaded, totalLoaded)
+            this.addScrollSentinel(parentDiv, loadPage, totalLoaded, totalLoaded, viewToken)
 
-        this.addScrollSentinelBackward(parentDiv, loadPage, initialOffset)
+        this.addScrollSentinelBackward(parentDiv, loadPage, initialOffset, viewToken)
     }
 
     public createGroupElements(
@@ -178,6 +186,9 @@ export class ListElementFactory {
         loadItems: (groupId: string, startIndex: number) => Promise<GroupItemsResult>
     ): void {
         groups.sort((a, b) => a.indexNumber - b.indexNumber)
+
+        // Invalidates any item load still in progresss
+        this.programDataStore.beginNewView()
 
         for (let i: number = 0; i < groups.length; i++) {
             const group = new GroupListElementTemplate(parentDiv, i, groups[i], groups[i].indexNumber === currentGroupIndex)
@@ -191,7 +202,8 @@ export class ListElementFactory {
                 // Reset in case this group was already loaded earlier in the same popup session,
                 // so re-fetching page 0 doesn't duplicate items already sitting in the store.
                 this.programDataStore.updateGroupItems(groups[i].groupId, [])
-                await this.createLazyItemList(parentDiv, (startIndex) => loadItems(groups[i].groupId, startIndex))
+                const viewToken = this.programDataStore.beginNewView()
+                await this.createLazyItemList(parentDiv, (startIndex) => loadItems(groups[i].groupId, startIndex), viewToken)
             })
         }
     }

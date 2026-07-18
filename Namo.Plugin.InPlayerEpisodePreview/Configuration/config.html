@@ -74,6 +74,14 @@
                     </label>
                     <div class="fieldDescription">Show episode thumbnail only on hover</div>
                 </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="showWatchedCount" is="emby-checkbox" name="showWatchedCount"
+                               type="checkbox"/>
+                        <span>Show "played/total watched" counts</span>
+                    </label>
+                    <div class="fieldDescription">Shows a watched count next to each group's name. Off by default, since loading large series/playlists can be slowed down a lot.</div>
+                </div>
 
 
                 <hr>
@@ -115,6 +123,7 @@
 
                 document.querySelector('#blurDescription').checked = config.BlurDescription
                 document.querySelector('#blurThumbnail').checked = config.BlurThumbnail
+                document.querySelector('#showWatchedCount').checked = config.ShowWatchedCount
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
 
                 Dashboard.hideLoadingMsg()
@@ -142,6 +151,7 @@
 
             config.BlurDescription = document.querySelector('#blurDescription').checked
             config.BlurThumbnail = document.querySelector('#blurThumbnail').checked
+            config.ShowWatchedCount = document.querySelector('#showWatchedCount').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10
 
             try {

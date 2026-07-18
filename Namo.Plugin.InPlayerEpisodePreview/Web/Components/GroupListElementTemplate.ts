@@ -1,8 +1,8 @@
 import {BaseTemplate} from "./BaseTemplate";
-import {Group} from "../Models/PreviewData/Group";
+import {formatWatchedCount, Group} from "../Models/PreviewData/Group";
 
 export class GroupListElementTemplate extends BaseTemplate {
-    constructor(container: HTMLElement, positionAfterIndex: number, private group: Group, private isCurrentGroup: boolean) {
+    constructor(container: HTMLElement, positionAfterIndex: number, private group: Group, private isCurrentGroup: boolean, private showWatchedCount: boolean) {
         super(container, positionAfterIndex);
         this.setElementId(`group-${group.groupId}`);
     }
@@ -19,6 +19,7 @@ export class GroupListElementTemplate extends BaseTemplate {
                     <div class="listItemBody actionsheetListItemBody">
                         <span class="actionSheetItemText">${this.group.groupName}</span>
                     </div>
+                    ${this.showWatchedCount ? `<div class="previewGroupWatchedCount">${formatWatchedCount(this.group.playedItemCount, this.group.totalItemCount)}</div>` : ''}
                 </button>
             </div>
         `;

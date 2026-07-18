@@ -6,6 +6,7 @@ import {ItemDetailsTemplate} from "./ItemDetails"
 import {ProgramDataStore} from "../Services/ProgramDataStore"
 import {PreviewItem} from "../Models/PreviewData/PreviewItem"
 import {ItemType} from "../Models/ItemType"
+import {togglePlayedStateLocally} from "../Services/DataFetcher"
 
 export class ListElementTemplate extends BaseTemplate {
     private readonly quickActionContainer: HTMLElement
@@ -108,6 +109,12 @@ export class ListElementTemplate extends BaseTemplate {
     public render(clickHandler: Function): void {
         const renderedElement: HTMLElement = this.addElementToContainer()
         renderedElement.addEventListener('click', (e) => clickHandler(e))
+        
+        const playStateButton: HTMLElement = document.getElementById(`playStateButton-${this.item.Id}`)
+        playStateButton?.addEventListener('click', (e: MouseEvent) => {
+            e.stopPropagation()
+            togglePlayedStateLocally(this.programDataStore, this.item.Id)
+        })
 
         if (this.item.Id !== this.programDataStore.activeMediaSourceId) {
             // add event handler to start the playback of this item

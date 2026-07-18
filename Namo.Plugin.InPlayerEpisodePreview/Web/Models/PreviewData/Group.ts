@@ -5,4 +5,10 @@ export type Group = {
     groupName: string
     items: PreviewItem[]
     indexNumber: number
+    playedItemCount: number
+    totalItemCount: number
 }
+
+export const formatWatchedCount = (playedItemCount: number, totalItemCount: number): string => 
+    `${playedItemCount}/${totalItemCount} watched`
+

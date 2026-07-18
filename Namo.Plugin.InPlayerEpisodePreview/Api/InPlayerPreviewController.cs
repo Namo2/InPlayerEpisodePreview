@@ -41,6 +41,7 @@ public class InPlayerPreviewController : ControllerBase
     private readonly IUserManager _userManager;
     private readonly IDtoService _dtoService;
     private readonly IAuthorizationContext _authorizationContext;
+    private readonly IUserDataManager _userDataManager;
 
     private readonly PluginConfiguration _config;
 
@@ -73,7 +74,8 @@ public class InPlayerPreviewController : ControllerBase
         ISessionManager sessionManager,
         IUserManager userManager,
         IDtoService dtoService,
-        IAuthorizationContext authorizationContext)
+        IAuthorizationContext authorizationContext,
+        IUserDataManager userDataManager)
     {
         _assembly = Assembly.GetExecutingAssembly();
         _playerPreviewScriptPath =
@@ -86,6 +88,7 @@ public class InPlayerPreviewController : ControllerBase
         _userManager = userManager;
         _dtoService = dtoService;
         _authorizationContext = authorizationContext;
+        _userDataManager = userDataManager;
 
         _config = InPlayerEpisodePreviewPlugin.Instance!.Configuration;
     }
@@ -244,12 +247,12 @@ public class InPlayerPreviewController : ControllerBase
             {
                 case >= 0 when source is Playlist playlist:
                 {
-                    var playlistGroup = new PreviewGroup(playlist.Id, playlist.Name, 0);
+                    var playlistGroup = new PreviewGroup(playlist.Id, playlist.Name, 0, CountPlayed(children, user), children.Count);
                     return Ok(new ItemPreviewDataResult(BaseItemKind.Playlist, playlist.Name, [playlistGroup], playlist.Id, memberIndex));
                 }
                 case >= 0 when source is BoxSet boxSet:
                 {
-                    var boxSetGroup = new PreviewGroup(boxSet.Id, boxSet.Name, 0);
+                    var boxSetGroup = new PreviewGroup(boxSet.Id, boxSet.Name, 0, CountPlayed(children, user), children.Count);
                     return Ok(new ItemPreviewDataResult(BaseItemKind.BoxSet, boxSet.Name, [boxSetGroup], boxSet.Id, memberIndex));
                 }
                 default:
@@ -265,8 +268,17 @@ public class InPlayerPreviewController : ControllerBase
                 ParentId = episode.SeriesId,
                 IncludeItemTypes = [BaseItemKind.Season]
             }).Items;
+            
+            List<PreviewGroup> groups = [..seasons.Select(s =>
+            {
+                if (!_config.ShowWatchedCount)
+                    return new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, 0, 0);
 
-            List<PreviewGroup> groups = [..seasons.Select(s => new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0))];
+                List<Episode> episodesInThisSeason = s is Folder seasonAsFolder
+                    ? [..GetCachedFolderChildren(seasonAsFolder, user).OfType<Episode>()]
+                    : [];
+                return new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, CountPlayed(episodesInThisSeason, user), episodesInThisSeason.Count);
+            })];
             
             var seasonId = episode.SeasonId != Guid.Empty ? episode.SeasonId : episode.ParentId;
             List<Episode> episodesInSeason = _libraryManager.GetItemById(seasonId) is Folder seasonFolder
@@ -293,8 +305,19 @@ public class InPlayerPreviewController : ControllerBase
             return Ok(new ItemPreviewDataResult(BaseItemKind.Folder, null, groups, parentFolder.Id, activeVideoIndex));
         }
 
-        var itemGroup = new PreviewGroup(item.Id, null, 0);
+        var itemGroup = new PreviewGroup(item.Id, null, 0, CountPlayed([item], user), 1);
         return Ok(new ItemPreviewDataResult(itemDto.Type, null, [itemGroup], item.Id, 0));
+    }
+
+    /// <summary>
+    /// Counts how many of the given items are marked played for <paramref name="user"/>.
+    /// </summary>
+    private int CountPlayed(IEnumerable<BaseItem> items, User user)
+    {
+        if (!_config.ShowWatchedCount)
+            return 0;
+
+        return items.Count(item => _userDataManager.GetUserData(user, item)?.Played ?? false);
     }
 
     /// <summary>
@@ -305,26 +328,34 @@ public class InPlayerPreviewController : ControllerBase
         if (ownChildren.OfType<Folder>().Any())
             return BuildFolderGroups(ownChildren, folder.Id, user);
 
-        if (_libraryManager.GetItemById(folder.ParentId) is not Folder parent)
-            return [new PreviewGroup(folder.Id, folder.Name, 0)];
+        if (_libraryManager.GetItemById(folder.ParentId) is Folder parent)
+            return BuildFolderGroups(GetCachedFolderChildren(parent, user), parent.Id, user);
+        
+        List<Video> videosInFolder = [..ownChildren.OfType<Video>()];
+        return [new PreviewGroup(folder.Id, folder.Name, 0, CountPlayed(videosInFolder, user), videosInFolder.Count)];
 
-        return BuildFolderGroups(GetCachedFolderChildren(parent, user), parent.Id, user);
     }
 
     /// <summary>
     /// Goes through all children and creates a group for each folder.
     /// Folder with no videos will be skipped.
-    /// Loose Videoss will be sorted under a static group "Videos"
+    /// Loose Videos will be sorted under a static group "Videos"
     /// </summary>
-    private static List<PreviewGroup> BuildFolderGroups(List<BaseItem> children, Guid looseVideosGroupId, User user)
+    private List<PreviewGroup> BuildFolderGroups(List<BaseItem> children, Guid looseVideosGroupId, User user)
     {
-        List<Folder> subfolders = [..children.OfType<Folder>()
-            .Where(f => GetCachedFolderChildren(f, user).OfType<Video>().Any())
-            .OrderBy(f => f.SortName)];
-        List<PreviewGroup> groups = [..subfolders.Select((f, i) => new PreviewGroup(f.Id, f.Name, i))];
+        List<PreviewGroup> groups = [];
+        foreach (var subfolder in children.OfType<Folder>().OrderBy(f => f.SortName))
+        {
+            List<Video> videosInSubfolder = [..GetCachedFolderChildren(subfolder, user).OfType<Video>()];
+            if (videosInSubfolder.Count == 0)
+                continue;
 
-        if (children.OfType<Video>().Any())
-            groups.Add(new PreviewGroup(looseVideosGroupId, "Videos", groups.Count));
+            groups.Add(new PreviewGroup(subfolder.Id, subfolder.Name, groups.Count, CountPlayed(videosInSubfolder, user), videosInSubfolder.Count));
+        }
+
+        List<Video> looseVideos = [..children.OfType<Video>()];
+        if (looseVideos.Count > 0)
+            groups.Add(new PreviewGroup(looseVideosGroupId, "Videos", groups.Count, CountPlayed(looseVideos, user), looseVideos.Count));
 
         return groups;
     }

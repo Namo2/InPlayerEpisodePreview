@@ -8,6 +8,7 @@ import {PlaybackHandler} from "./Services/PlaybackHandler";
 import {Endpoints} from "./Endpoints";
 import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
 import {ItemType} from "./Models/ItemType";
+import {activateSpinner, spinnerHtml} from "./Components/Spinner";
 
 // The backend already returns Playlists/BoxSets and Folders in their own manual item/dissplay order
 // sorting should only apply for season-based (Episode) groups, where it reflects actual episode order.
@@ -118,6 +119,13 @@ export class ListElementFactory {
         }
     }
 
+    // Swaps an idle sentinel marker into a visible spinner once it's actually triggered a page load.
+    private showSentinelSpinner(sentinel: HTMLElement): void {
+        sentinel.classList.add('previewScrollSpinner')
+        sentinel.innerHTML = spinnerHtml()
+        activateSpinner(sentinel)
+    }
+
     // Appends pages when scrolling to the bottom.
     private addScrollSentinel(
         parentDiv: HTMLElement,
@@ -132,12 +140,13 @@ export class ListElementFactory {
         const observer = new IntersectionObserver(async ([entry]) => {
             if (!entry.isIntersecting) return
             observer.disconnect()
-            sentinel.remove()
+            this.showSentinelSpinner(sentinel)
 
             const { items, totalRecordCount } = await loadPage(nextStartIndex)
             // The view may have moved on (e.g. back to the group list) while this page was loading.
             if (!this.programDataStore.isCurrentView(viewToken)) return
 
+            sentinel.remove()
             await this.createItemElements(items, parentDiv, totalLoaded)
 
             const newTotalLoaded = totalLoaded + items.length
@@ -164,15 +173,19 @@ export class ListElementFactory {
         const observer = new IntersectionObserver(async ([entry]) => {
             if (!entry.isIntersecting) return
             observer.disconnect()
-            sentinel.remove()
+
+            const scrollHeightBeforeSpinner = parentDiv.scrollHeight
+            this.showSentinelSpinner(sentinel)
+            parentDiv.scrollTop += parentDiv.scrollHeight - scrollHeightBeforeSpinner
 
             const pageSize = this.programDataStore.pluginSettings.EpisodePageSize
             const newStartIndex = Math.max(0, currentStartIndex - pageSize)
             const { items } = await loadPage(newStartIndex)
             // The view may have moved on (e.g. back to the group list) while this page was loading.
             if (!this.programDataStore.isCurrentView(viewToken)) return
-            
+
             const scrollHeightBeforePrepend = parentDiv.scrollHeight
+            sentinel.remove()
             await this.prependItemElements(items, parentDiv, newStartIndex)
             parentDiv.scrollTop += parentDiv.scrollHeight - scrollHeightBeforePrepend
 

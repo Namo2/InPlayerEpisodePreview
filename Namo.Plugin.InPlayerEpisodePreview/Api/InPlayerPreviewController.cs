@@ -12,6 +12,7 @@ using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Controller.Net;
 using MediaBrowser.Controller.Playlists;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Entities;
@@ -39,6 +40,7 @@ public class InPlayerPreviewController : ControllerBase
     private readonly ISessionManager _sessionManager;
     private readonly IUserManager _userManager;
     private readonly IDtoService _dtoService;
+    private readonly IAuthorizationContext _authorizationContext;
 
     private readonly PluginConfiguration _config;
 
@@ -70,7 +72,8 @@ public class InPlayerPreviewController : ControllerBase
         IServerConfigurationManager configurationManager,
         ISessionManager sessionManager,
         IUserManager userManager,
-        IDtoService dtoService)
+        IDtoService dtoService,
+        IAuthorizationContext authorizationContext)
     {
         _assembly = Assembly.GetExecutingAssembly();
         _playerPreviewScriptPath =
@@ -82,6 +85,7 @@ public class InPlayerPreviewController : ControllerBase
         _sessionManager = sessionManager;
         _userManager = userManager;
         _dtoService = dtoService;
+        _authorizationContext = authorizationContext;
 
         _config = InPlayerEpisodePreviewPlugin.Instance!.Configuration;
     }
@@ -116,9 +120,9 @@ public class InPlayerPreviewController : ControllerBase
     [HttpGet("Items/{id}/Play/{ticks}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult StartMedia([FromRoute] Guid id, [FromRoute] long ticks = 0)
+    public async Task<ActionResult> StartMedia([FromRoute] Guid id, [FromRoute] long ticks = 0)
     {
-        SessionInfo? session = ResolveCurrentSession();
+        SessionInfo? session = await ResolveCurrentSessionAsync();
         if (session is null)
         {
             _logger.LogInformation("Couldn't find a valid session for this user");
@@ -133,7 +137,7 @@ public class InPlayerPreviewController : ControllerBase
             return NotFound(message);
         }
 
-        _sessionManager.SendPlayCommand(session.Id, session.Id,
+        await _sessionManager.SendPlayCommand(session.Id, session.Id,
             new PlayRequest
             {
                 ItemIds = [item.Id],
@@ -146,14 +150,14 @@ public class InPlayerPreviewController : ControllerBase
 
     /// <summary>
     /// Returns the id of the item of  the current session.
-    /// This is experimental and will maybe used in future releases
+    /// This is experimental and will maybe be used in future releases
     /// </summary>
     [HttpGet("NowPlayingItem")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult GetNowPlayingItem()
+    public async Task<ActionResult> GetNowPlayingItem()
     {
-        BaseItem? nowPlayingItem = ResolveCurrentSession()?.FullNowPlayingItem;
+        BaseItem? nowPlayingItem = (await ResolveCurrentSessionAsync())?.FullNowPlayingItem;
         if (nowPlayingItem is null)
             return NotFound("No item currently playing for this session");
 
@@ -161,19 +165,19 @@ public class InPlayerPreviewController : ControllerBase
     }
 
     /// <summary>
-    /// Resolves the session for the current request via <c>Jellyfin.Api.Helpers.RequestHelpers.GetSession</c>
+    /// Resolves the session for the current request by using the AuthorizationToken from the request
     /// </summary>
-    private SessionInfo? ResolveCurrentSession()
+    private async Task<SessionInfo?> ResolveCurrentSessionAsync()
     {
-        Type? requestHelpersType = Type.GetType("Jellyfin.Api.Helpers.RequestHelpers");
-        MethodInfo? getSessionMethod = requestHelpersType?.GetMethod("GetSession");
-        if (getSessionMethod is null)
+        AuthorizationInfo authorizationInfo = await _authorizationContext.GetAuthorizationInfo(HttpContext);
+        if (string.IsNullOrEmpty(authorizationInfo.Token))
         {
-            _logger.LogWarning("Couldn't resolve Jellyfin.Api.Helpers.RequestHelpers.GetSession via reflection");
+            _logger.LogWarning("Couldn't resolve an auth token for the current request");
             return null;
         }
 
-        return getSessionMethod.Invoke(null, [_sessionManager, _userManager, HttpContext]) as SessionInfo;
+        var remoteEndpoint = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+        return await _sessionManager.GetSessionByAuthenticationToken(authorizationInfo.Token, authorizationInfo.DeviceId, remoteEndpoint);
     }
 
     /// <summary>

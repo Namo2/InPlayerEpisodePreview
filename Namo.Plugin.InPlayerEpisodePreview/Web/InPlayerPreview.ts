@@ -340,6 +340,7 @@ function viewShowEventHandler(): void {
                 return result
             }
 
+            // This is experimental and will maybe be used in future releases
             const getNowPlayingItemIdFromSession = async (): Promise<string | null> => {
                 const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.NOW_PLAYING_ITEM}`)
                 try {
@@ -350,8 +351,6 @@ function viewShowEventHandler(): void {
                 }
             }
             
-            
-            // const itemId = await getNowPlayingItemIdFromSession() ?? getLatestUserRatingItemId()
             const itemId = getLatestUserRatingItemId()
             const { itemType, containerName, groups, activeGroupId, activeItemIndex } = await loadItemPreviewData(itemId)
 

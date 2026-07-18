@@ -278,8 +278,51 @@ public class InPlayerPreviewController : ControllerBase
         }
 
         var itemDto = _dtoService.GetBaseItemDtos([item], PreviewDtoOptions, user)[0];
+        
+        if (itemDto.Type == BaseItemKind.Video && _libraryManager.GetItemById(item.ParentId) is Folder parentFolder)
+        {
+            var groups = GetFolderGroups(parentFolder, user);
+
+            List<Video> videosInFolder = [..GetCachedFolderChildren(parentFolder, user).OfType<Video>().OrderBy(v => v.SortName)];
+            var activeVideoIndex = Math.Max(0, videosInFolder.FindIndex(v => v.Id == item.Id));
+
+            return Ok(new ItemPreviewDataResult(BaseItemKind.Folder, null, groups, parentFolder.Id, activeVideoIndex));
+        }
+
         var itemGroup = new PreviewGroup(item.Id, null, 0);
         return Ok(new ItemPreviewDataResult(itemDto.Type, null, [itemGroup], item.Id, 0));
+    }
+
+    /// <summary>
+    /// </summary>
+    private List<PreviewGroup> GetFolderGroups(Folder folder, User user)
+    {
+        var ownChildren = GetCachedFolderChildren(folder, user);
+        if (ownChildren.OfType<Folder>().Any())
+            return BuildFolderGroups(ownChildren, folder.Id, user);
+
+        if (_libraryManager.GetItemById(folder.ParentId) is not Folder parent)
+            return [new PreviewGroup(folder.Id, folder.Name, 0)];
+
+        return BuildFolderGroups(GetCachedFolderChildren(parent, user), parent.Id, user);
+    }
+
+    /// <summary>
+    /// Goes through all children and creates a group for each folder.
+    /// Folder with no videos will be skipped.
+    /// Loose Videoss will be sorted under a static group "Videos"
+    /// </summary>
+    private static List<PreviewGroup> BuildFolderGroups(List<BaseItem> children, Guid looseVideosGroupId, User user)
+    {
+        List<Folder> subfolders = [..children.OfType<Folder>()
+            .Where(f => GetCachedFolderChildren(f, user).OfType<Video>().Any())
+            .OrderBy(f => f.SortName)];
+        List<PreviewGroup> groups = [..subfolders.Select((f, i) => new PreviewGroup(f.Id, f.Name, i))];
+
+        if (children.OfType<Video>().Any())
+            groups.Add(new PreviewGroup(looseVideosGroupId, "Videos", groups.Count));
+
+        return groups;
     }
 
     /// <summary>
@@ -316,6 +359,15 @@ public class InPlayerPreviewController : ControllerBase
             List<BaseItem> page = [..allChildren.Skip(startIndex).Take(limit)];
             var pageDtos = _dtoService.GetBaseItemDtos(page, PreviewDtoOptions, user);
             return Ok(new GroupItemsResult([..pageDtos.Select(d => d.ToPreviewItemDto())], allChildren.Count));
+        }
+        
+        if (groupItem is Folder folderGroup)
+        {
+            List<Video> videosInFolder = [..GetCachedFolderChildren(folderGroup, user).OfType<Video>().OrderBy(v => v.SortName)];
+            List<Video> page = [..videosInFolder.Skip(startIndex).Take(limit)];
+
+            var videoDtos = _dtoService.GetBaseItemDtos([..page], PreviewDtoOptions, user);
+            return Ok(new GroupItemsResult([..videoDtos.Select(d => d.ToPreviewItemDto())], videosInFolder.Count));
         }
 
         if (startIndex > 0)

@@ -9,9 +9,9 @@ import {Endpoints} from "./Endpoints";
 import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
 import {ItemType} from "./Models/ItemType";
 
-// The backend already returns Playlists/BoxSets in their own manual item order.
+// The backend already returns Playlists/BoxSets and Folders in their own manual item/dissplay order
 // sorting should only apply for season-based (Episode) groups, where it reflects actual episode order.
-const preserveBackendOrderTypes: Set<ItemType> = new Set([ItemType.Playlist, ItemType.BoxSet])
+const preserveBackendOrderTypes: Set<ItemType> = new Set([ItemType.Playlist, ItemType.BoxSet, ItemType.Folder])
 
 export class ListElementFactory {
     constructor(private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) { }

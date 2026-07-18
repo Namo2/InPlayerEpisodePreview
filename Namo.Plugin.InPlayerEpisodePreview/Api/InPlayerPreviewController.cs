@@ -262,18 +262,19 @@ public class InPlayerPreviewController : ControllerBase
                 IncludeItemTypes = [BaseItemKind.Season]
             }).Items;
 
-            var groups = seasons
-                .Select(s => new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0))
-                .ToList();
+            List<PreviewGroup> groups = [..seasons.Select(s => new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0))];
             
-            var episodesInSeason = _libraryManager.QueryItems(new InternalItemsQuery(user)
-            {
-                ParentId = episode.ParentId,
-                IncludeItemTypes = [BaseItemKind.Episode]
-            }).Items;
-            var activeItemIndex = Math.Max(0, episodesInSeason.ToList().FindIndex(e => e.Id == episode.Id));
+            var seasonId = episode.SeasonId != Guid.Empty ? episode.SeasonId : episode.ParentId;
+            List<Episode> episodesInSeason = _libraryManager.GetItemById(seasonId) is Folder seasonFolder
+                ? [
+                    ..GetCachedFolderChildren(seasonFolder, user)
+                    .OfType<Episode>()
+                    .OrderBy(e => e.IndexNumber ?? 0)
+                ]
+                : [];
+            var activeItemIndex = Math.Max(0, episodesInSeason.FindIndex(e => e.Id == episode.Id));
 
-            return Ok(new ItemPreviewDataResult(BaseItemKind.Episode, null, groups, episode.ParentId, activeItemIndex));
+            return Ok(new ItemPreviewDataResult(BaseItemKind.Episode, null, groups, seasonId, activeItemIndex));
         }
 
         var itemDto = _dtoService.GetBaseItemDtos([item], PreviewDtoOptions, user)[0];
@@ -298,24 +299,21 @@ public class InPlayerPreviewController : ControllerBase
         if (groupItem is null)
             return NotFound();
 
-        if (groupItem is Season)
+        if (groupItem is Season seasonGroup)
         {
-            var result = _libraryManager.QueryItems(new InternalItemsQuery(user)
-            {
-                ParentId = groupId,
-                IncludeItemTypes = [BaseItemKind.Episode],
-                StartIndex = startIndex,
-                Limit = limit
-            });
+            List<Episode> episodesInSeason = [..GetCachedFolderChildren(seasonGroup, user)
+                .OfType<Episode>()
+                .OrderBy(e => e.IndexNumber ?? 0)];
+            List<Episode> page = [..episodesInSeason.Skip(startIndex).Take(limit)];
 
-            var episodeDtos = _dtoService.GetBaseItemDtos([..result.Items], PreviewDtoOptions, user);
-            return Ok(new GroupItemsResult([..episodeDtos.Select(d => d.ToPreviewItemDto())], result.TotalRecordCount));
+            var episodeDtos = _dtoService.GetBaseItemDtos([..page], PreviewDtoOptions, user);
+            return Ok(new GroupItemsResult([..episodeDtos.Select(d => d.ToPreviewItemDto())], episodesInSeason.Count));
         }
 
         if (groupItem is Playlist or BoxSet)
         {
             var allChildren = GetCachedFolderChildren((Folder)groupItem, user);
-            var page = allChildren.Skip(startIndex).Take(limit).ToList();
+            List<BaseItem> page = [..allChildren.Skip(startIndex).Take(limit)];
             var pageDtos = _dtoService.GetBaseItemDtos(page, PreviewDtoOptions, user);
             return Ok(new GroupItemsResult([..pageDtos.Select(d => d.ToPreviewItemDto())], allChildren.Count));
         }
@@ -361,7 +359,7 @@ public class InPlayerPreviewController : ControllerBase
         if (FolderChildrenCache.TryGetValue(key, out var cached) && DateTime.UtcNow - cached.CachedAt < FolderChildrenCacheTtl)
             return cached.Children;
 
-        var children = folder.GetChildren(user, true, new InternalItemsQuery(user)).ToList();
+        List<BaseItem> children = [..folder.GetChildren(user, true, new InternalItemsQuery(user))];
         FolderChildrenCache[key] = (DateTime.UtcNow, children);
         return children;
     }

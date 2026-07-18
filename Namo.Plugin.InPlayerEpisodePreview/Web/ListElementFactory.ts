@@ -171,8 +171,10 @@ export class ListElementFactory {
             const { items } = await loadPage(newStartIndex)
             // The view may have moved on (e.g. back to the group list) while this page was loading.
             if (!this.programDataStore.isCurrentView(viewToken)) return
-
+            
+            const scrollHeightBeforePrepend = parentDiv.scrollHeight
             await this.prependItemElements(items, parentDiv, newStartIndex)
+            parentDiv.scrollTop += parentDiv.scrollHeight - scrollHeightBeforePrepend
 
             this.addScrollSentinelBackward(parentDiv, loadPage, newStartIndex, viewToken)
         }, { root: parentDiv, threshold: 0 })

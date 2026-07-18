@@ -5,6 +5,7 @@ export type PluginSettings = {
     BlurDescription: boolean,
     BlurThumbnail: boolean,
     EpisodePageSize: number,
+    ShowWatchedCount: boolean,
 }
 
 export const DefaultPluginSettings: PluginSettings = {
@@ -12,4 +13,5 @@ export const DefaultPluginSettings: PluginSettings = {
     BlurDescription: false,
     BlurThumbnail: false,
     EpisodePageSize: 10,
+    ShowWatchedCount: false,
 }

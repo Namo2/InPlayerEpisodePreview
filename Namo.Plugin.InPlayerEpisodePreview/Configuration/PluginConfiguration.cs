@@ -23,4 +23,9 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool BlurDescription { get; set; } = false;
     public bool BlurThumbnail { get; set; } = false;
     public int EpisodePageSize { get; set; } = 10;
+
+    /// <summary>
+    /// Whether to show "played/total watched" counts on groups.
+    /// </summary>
+    public bool ShowWatchedCount { get; set; } = false;
 }

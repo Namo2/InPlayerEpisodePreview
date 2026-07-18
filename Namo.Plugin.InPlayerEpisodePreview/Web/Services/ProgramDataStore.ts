@@ -103,6 +103,15 @@ export class ProgramDataStore {
             group.groupId === groupId ? { ...group, items } : group
         )
     }
+    
+    public adjustGroupPlayedCount(itemId: string, delta: number): Group | undefined {
+        const group = this.groups.find(g => g.items.some(item => item.Id === itemId))
+        if (!group) return undefined
+
+        const updatedGroup: Group = { ...group, playedItemCount: group.playedItemCount + delta }
+        this.groups = this.groups.map(g => g.groupId === group.groupId ? updatedGroup : g)
+        return updatedGroup
+    }
 
     public updateItem(itemToUpdate: PreviewItem): void {
         this.groups = this.groups.map(group =>
@@ -112,9 +121,7 @@ export class ProgramDataStore {
         )
     }
 
-    // Called whenever the popup switches what it's displaying (opening, selecting a group, going back to
-    // the group list). Any in-flight item load started before the switch can check isCurrentView() before
-    // touching the DOM/state, so it doesn't render into a view it no longer belongs to.
+    // Called whenever the popup switches what it's displaying (opening, selecting a group, going back to the group list)
     public beginNewView(): number {
         return ++this._viewToken
     }

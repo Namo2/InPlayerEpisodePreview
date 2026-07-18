@@ -213,11 +213,14 @@ export class ListElementFactory {
         this.programDataStore.beginNewView()
 
         for (let i: number = 0; i < groups.length; i++) {
-            const group = new GroupListElementTemplate(parentDiv, i, groups[i], groups[i].indexNumber === currentGroupIndex)
+            const group = new GroupListElementTemplate(parentDiv, i, groups[i], groups[i].indexNumber === currentGroupIndex, this.programDataStore.pluginSettings.ShowWatchedCount)
             group.render(async (e: MouseEvent): Promise<void> => {
                 e.stopPropagation()
 
+                this.programDataStore.activeGroupId = groups[i].groupId
                 titleContainer.setText(groups[i].groupName)
+                if (this.programDataStore.pluginSettings.ShowWatchedCount)
+                    titleContainer.setWatchedCount(groups[i].playedItemCount, groups[i].totalItemCount)
                 titleContainer.setVisible(true)
 
                 parentDiv.innerHTML = ''

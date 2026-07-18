@@ -48,12 +48,18 @@ inPlayerPreviewStyle.textContent = `
 .previewPopupTitle h1.actionSheetTitle {
     margin-left: 0 !important;
 }
+.previewGroupWatchedCount {
+    margin-left: auto;
+    margin-right: 1em;
+    padding-left: 1em;
+    white-space: nowrap;
+    opacity: 0.7;
+}
 .previewPopupScroller {
     max-height: 60vh;
 }
 .previewQuickActionContainer {
     margin-left: auto; 
-    margin-right: 1em;
 }
 .previewItemContainer {
     width: 100%;
@@ -317,7 +323,9 @@ function viewShowEventHandler(): void {
                         groupId: g.GroupId,
                         groupName: g.GroupName,
                         items: [],
-                        indexNumber: g.IndexNumber
+                        indexNumber: g.IndexNumber,
+                        playedItemCount: g.PlayedItemCount,
+                        totalItemCount: g.TotalItemCount
                     })),
                     activeGroupId: raw.ActiveGroupId,
                     activeItemIndex: raw.ActiveItemIndex
@@ -391,6 +399,7 @@ function viewShowEventHandler(): void {
 
             await listElementFactory.createLazyItemList(contentDiv, (startIndex) => loadGroupItems(activeGroupId, startIndex), viewToken, initialPage, initialWindowStartIndex)
             popupTitle.setText(programDataStore.activeGroup?.groupName ?? '')
+            popupTitle.setWatchedCount(programDataStore.activeGroup?.playedItemCount ?? 0, programDataStore.activeGroup?.totalItemCount ?? 0)
 
             // scroll to the item that is currently playing
             const activeItem = contentDiv.querySelector('.selectedListItem') 

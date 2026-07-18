@@ -59,7 +59,7 @@ export class ListElementTemplate extends BaseTemplate {
 
                 <div class="previewListItemContent hide">
                     ${detailsContainer.innerHTML}
-                    <div class="flex">
+                    <div class="flex previewItemContentRow">
                         <div class="card overflowBackdropCard card-hoverable card-withuserdata previewItemImageCard">
                             <div class="cardBox">
                                 <div class="cardScalable">
@@ -93,9 +93,12 @@ export class ListElementTemplate extends BaseTemplate {
                                 </div>
                             </div>
                         </div>
-                        <span class="previewItemDescription ${this.programDataStore.pluginSettings.BlurDescription ? 'blur' : ''}">
-                            ${this.item.Description ?? 'loading...'}
-                        </span>
+                        <div class="previewItemDescriptionColumn">
+                            <span class="previewItemDescription ${this.programDataStore.pluginSettings.BlurDescription ? 'blur' : ''}">
+                                ${this.item.Description ?? 'loading...'}
+                            </span>
+                            <button type="button" class="previewItemReadMoreButton hide">Read more</button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -49,7 +49,7 @@ inPlayerPreviewStyle.textContent = `
     margin-left: 0 !important;
 }
 .previewPopupScroller {
-    max-height: 60vh;aaa
+    max-height: 60vh;
 }
 .previewQuickActionContainer {
     margin-left: auto; 
@@ -64,15 +64,57 @@ inPlayerPreviewStyle.textContent = `
 .previewItemImageCard {
     max-width: 30%;
 }
+.previewItemContentRow {
+    align-items: flex-start;
+}
+.previewItemDescriptionColumn {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
 .previewItemDescription {
     margin-left: 0.5em;
-    margin-top: 1em;
+    margin-top: 0.5em;
     margin-right: 1.5em;
     display: block;
+    overflow: hidden;
+    max-height: 150px;
+}
+.previewItemDescription.expanded {
+    max-height: none;
+}
+.previewItemReadMoreButton {
+    align-self: flex-start;
+    margin-left: 0.5em;
+    margin-top: 0.25em;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9em;
+    opacity: 0.75;
+}
+.previewItemReadMoreButton:hover {
+    opacity: 1;
 }
 .previewItemDetails {
     margin-left: 1em;
     justify-content: start !important;
+}
+
+/* Lock the position of this details, so that no theme can change it */
+.previewListItemContent .itemMiscInfo.previewItemDetails {
+    position: relative !important;
+    top: auto !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    margin-left: 1em !important;
+    margin-top: 0 !important;
 }
 .blur {
     filter: blur(6px);

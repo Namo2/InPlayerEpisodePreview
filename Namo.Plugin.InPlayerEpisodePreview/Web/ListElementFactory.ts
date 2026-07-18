@@ -39,6 +39,26 @@ export class ListElementFactory {
         }
     }
 
+    // Show a "Read more" button if description exceeds max height
+    private applyDescriptionReadMore(itemContainer: Element): void {
+        const description = itemContainer.querySelector<HTMLElement>('.previewItemDescription')
+        const readMoreButton = itemContainer.querySelector<HTMLElement>('.previewItemReadMoreButton')
+        if (!description || !readMoreButton) return
+
+        description.classList.remove('expanded')
+        readMoreButton.textContent = 'Read more'
+
+        const isOverflowing = description.scrollHeight > description.clientHeight
+        readMoreButton.classList.toggle('hide', !isOverflowing)
+        if (!isOverflowing) return
+
+        readMoreButton.onclick = (e: MouseEvent): void => {
+            e.stopPropagation()
+            const expanded = description.classList.toggle('expanded')
+            readMoreButton.textContent = expanded ? 'Read less' : 'Read more'
+        }
+    }
+
     private async renderItem(item: PreviewItem, parentDiv: HTMLElement, positionAfterIndex: number): Promise<void> {
         const itemListElementTemplate = new ListElementTemplate(parentDiv, positionAfterIndex, item, this.playbackHandler, this.programDataStore);
         itemListElementTemplate.render(async (e: MouseEvent) => {
@@ -69,6 +89,7 @@ export class ListElementFactory {
             // show item content for the selected item
             itemContainer.classList.remove('hide');
             itemContainer.classList.add('selectedListItem');
+            this.applyDescriptionReadMore(itemContainer);
 
             // scroll to the selected item
             itemContainer.parentElement.scrollIntoView({ block: "start" });
@@ -93,6 +114,7 @@ export class ListElementFactory {
 
             itemNode.classList.remove('hide');
             itemNode.classList.add('selectedListItem');
+            this.applyDescriptionReadMore(itemNode);
         }
     }
 

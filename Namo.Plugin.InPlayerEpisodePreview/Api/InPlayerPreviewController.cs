@@ -1,5 +1,6 @@
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Library;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,7 @@ namespace Namo.Plugin.InPlayerEpisodePreview.Api;
 /// </summary>
 [ApiController]
 [Route("InPlayerPreview")]
+[Authorize]
 public class InPlayerPreviewController : ControllerBase
 {
     private readonly Assembly _assembly;
@@ -91,6 +93,7 @@ public class InPlayerPreviewController : ControllerBase
     /// <response code="404">File not found.</response>
     /// <returns>The "inPlayerPreview.js" embedded file.</returns>
     [HttpGet("ClientScript")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces("application/javascript")]

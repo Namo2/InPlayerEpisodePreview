@@ -12,6 +12,7 @@ import {ServerSettings} from "./Models/ServerSettings";
 import {Endpoints} from "./Endpoints";
 import {Group} from "./Models/PreviewData/Group";
 import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
+import {activateSpinner, spinnerHtml} from "./Components/Spinner";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -132,6 +133,21 @@ inPlayerPreviewStyle.textContent = `
 }
 .previewItemImageCard:hover .blur {
     filter: blur(0);
+}
+.previewScrollSpinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1em 0;
+}
+.previewScrollSpinner .docspinner {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    margin: 0 !important;
+    width: 1.95em !important;
+    height: 1.95em !important;
+    z-index: auto !important;
 }
 `
 document?.head?.appendChild(inPlayerPreviewStyle)
@@ -302,11 +318,22 @@ function viewShowEventHandler(): void {
             index = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("osdTimeText"))
 
         const previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index)
+        let previewButtonLoading: boolean = false
         previewButton.render(previewButtonClickHandler)
 
         document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.addEventListener('timeupdate', onVideoTimeUpdate)
 
         async function previewButtonClickHandler(): Promise<void> {
+            if (previewButtonLoading) return
+            previewButtonLoading = true
+            try {
+                await doPreviewButtonClick()
+            } finally {
+                previewButtonLoading = false
+            }
+        }
+
+        async function doPreviewButtonClick(): Promise<void> {
             const loadItemPreviewData = async (itemId: string): Promise<{
                 itemType: string, containerName: string | null, groups: Group[], activeGroupId: string, activeItemIndex: number
             }> => {
@@ -359,6 +386,13 @@ function viewShowEventHandler(): void {
                 }
             }
             
+            const dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1)
+            dialogContainer.render()
+
+            const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
+            contentDiv.innerHTML = `<div class="previewScrollSpinner">${spinnerHtml()}</div>`
+            activateSpinner(contentDiv)
+
             const itemId = getLatestUserRatingItemId()
             const { itemType, containerName, groups, activeGroupId, activeItemIndex } = await loadItemPreviewData(itemId)
 
@@ -375,11 +409,7 @@ function viewShowEventHandler(): void {
             programDataStore.type = ItemType[itemType as keyof typeof ItemType]
             programDataStore.boxSetName = containerName ?? ''
 
-            const dialogContainer: DialogContainerTemplate = new DialogContainerTemplate(document.body, document.body.children.length - 1)
-            dialogContainer.render()
-
-            const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
-            contentDiv.innerHTML = '' // remove old content
+            contentDiv.innerHTML = '' // remove the loading spinner
             const viewToken = programDataStore.beginNewView()
             
             const hasSelectableGroups = programDataStore.type !== ItemType.Movie

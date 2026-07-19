@@ -13,5 +13,5 @@ export const DefaultPluginSettings: PluginSettings = {
     BlurDescription: false,
     BlurThumbnail: false,
     EpisodePageSize: 10,
-    ShowWatchedCount: false,
+    ShowWatchedCount: true,
 }

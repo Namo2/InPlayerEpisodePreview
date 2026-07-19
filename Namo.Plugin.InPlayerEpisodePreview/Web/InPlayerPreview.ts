@@ -10,7 +10,7 @@ import {ItemType} from "./Models/ItemType";
 import {PluginSettings} from "./Models/PluginSettings";
 import {ServerSettings} from "./Models/ServerSettings";
 import {Endpoints} from "./Endpoints";
-import {Group} from "./Models/PreviewData/Group";
+import {Group, UNKNOWN_WATCHED_COUNT} from "./Models/PreviewData/Group";
 import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
 import {activateSpinner, spinnerHtml} from "./Components/Spinner";
 
@@ -370,7 +370,7 @@ function viewShowEventHandler(): void {
                 const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
                 const result: GroupItemsResult = { items: raw.Items, totalRecordCount: raw.TotalRecordCount }
 
-                programDataStore.recordLoadedItems(groupId, result.items, startIndex)
+                programDataStore.recordLoadedItems(groupId, result.items, startIndex, result.totalRecordCount)
                 return result
             }
 
@@ -402,7 +402,7 @@ function viewShowEventHandler(): void {
             if (cachedGroup) {
                 activeGroupId = cachedGroup.groupId
                 initialWindowStartIndex = cachedGroup.loadedStartIndex ?? 0
-                initialPage = { items: [...cachedGroup.items], totalRecordCount: cachedGroup.totalItemCount }
+                initialPage = { items: [...cachedGroup.items], totalRecordCount: cachedGroup.loadedTotalRecordCount ?? cachedGroup.items.length }
             } else {
                 contentDiv.innerHTML = `<div class="previewScrollSpinner">${spinnerHtml()}</div>`
                 activateSpinner(contentDiv)
@@ -446,6 +446,10 @@ function viewShowEventHandler(): void {
             await listElementFactory.createLazyItemList(contentDiv, (startIndex) => loadGroupItems(activeGroupId, startIndex), viewToken, initialPage, initialWindowStartIndex)
             popupTitle.setText(programDataStore.activeGroup?.groupName ?? '')
             popupTitle.setWatchedCount(programDataStore.activeGroup?.playedItemCount ?? 0, programDataStore.activeGroup?.totalItemCount ?? 0)
+            if (programDataStore.pluginSettings.ShowWatchedCount && programDataStore.activeGroup?.playedItemCount === UNKNOWN_WATCHED_COUNT) {
+                listElementFactory.ensureGroupWatchedCount(programDataStore.activeGroup)
+                    .then(updated => popupTitle.setWatchedCount(updated.playedItemCount, updated.totalItemCount))
+            }
 
             // scroll to the item that is currently playing
             const activeItem = contentDiv.querySelector('.selectedListItem') 

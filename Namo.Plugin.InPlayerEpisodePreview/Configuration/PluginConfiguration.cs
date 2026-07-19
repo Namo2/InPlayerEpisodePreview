@@ -27,5 +27,5 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Whether to show "played/total watched" counts on groups.
     /// </summary>
-    public bool ShowWatchedCount { get; set; } = false;
+    public bool ShowWatchedCount { get; set; } = true;
 }

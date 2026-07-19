@@ -63,6 +63,8 @@ public class InPlayerPreviewController : ControllerBase
     private static readonly ConcurrentDictionary<(Guid FolderId, Guid UserId), (DateTime CachedAt, List<BaseItem> Children)> FolderChildrenCache = new();
 
     private static readonly TimeSpan FolderChildrenCacheTtl = TimeSpan.FromMinutes(5);
+    
+    private const int UnknownWatchedCount = -1;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InPlayerPreviewController"/> class.
@@ -263,24 +265,18 @@ public class InPlayerPreviewController : ControllerBase
 
         if (item is Episode episode)
         {
+            var seasonId = episode.SeasonId != Guid.Empty ? episode.SeasonId : episode.ParentId;
+
             var seasons = _libraryManager.QueryItems(new InternalItemsQuery(user)
             {
                 ParentId = episode.SeriesId,
                 IncludeItemTypes = [BaseItemKind.Season]
             }).Items;
             
-            List<PreviewGroup> groups = [..seasons.Select(s =>
-            {
-                if (!_config.ShowWatchedCount)
-                    return new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, 0, 0);
+            List<PreviewGroup> groups = [..seasons.Select(s => !_config.ShowWatchedCount
+                ? new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, 0, 0)
+                : new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, UnknownWatchedCount, UnknownWatchedCount))];
 
-                List<Episode> episodesInThisSeason = s is Folder seasonAsFolder
-                    ? [..GetCachedFolderChildren(seasonAsFolder, user).OfType<Episode>()]
-                    : [];
-                return new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, CountPlayed(episodesInThisSeason, user), episodesInThisSeason.Count);
-            })];
-            
-            var seasonId = episode.SeasonId != Guid.Empty ? episode.SeasonId : episode.ParentId;
             List<Episode> episodesInSeason = _libraryManager.GetItemById(seasonId) is Folder seasonFolder
                 ? [
                     ..GetCachedFolderChildren(seasonFolder, user)
@@ -410,6 +406,33 @@ public class InPlayerPreviewController : ControllerBase
 
         var itemDto = _dtoService.GetBaseItemDtos([groupItem], PreviewDtoOptions, user)[0];
         return Ok(new GroupItemsResult([itemDto.ToPreviewItemDto()], 1));
+    }
+
+    /// <summary>
+    /// Returns the watched count for a single group
+    /// </summary>
+    [HttpGet("Users/{userId}/Groups/{groupId}/WatchedCount")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult GetGroupWatchedCount([FromRoute] Guid userId, [FromRoute] Guid groupId)
+    {
+        var user = _userManager.GetUserById(userId);
+        if (user is null)
+            return NotFound();
+
+        var groupItem = _libraryManager.GetItemById(groupId);
+        if (groupItem is null)
+            return NotFound();
+
+        List<BaseItem> children = groupItem switch
+        {
+            Season season => [..GetCachedFolderChildren(season, user).OfType<Episode>()],
+            Playlist or BoxSet => GetCachedFolderChildren((Folder)groupItem, user),
+            Folder folder => [..GetCachedFolderChildren(folder, user).OfType<Video>()],
+            _ => [groupItem]
+        };
+
+        return Ok(new WatchedCountResult(CountPlayed(children, user), children.Count));
     }
 
     /// <summary>

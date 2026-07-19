@@ -109,27 +109,31 @@ export class ProgramDataStore {
             .find(item => item.Id === itemId)
     }
     
-    public recordLoadedItems(groupId: string, items: PreviewItem[], startIndex: number): void {
+    public recordLoadedItems(groupId: string, items: PreviewItem[], startIndex: number, totalRecordCount: number): void {
         this._programData.groups = this._programData.groups.map(group => {
             if (group.groupId !== groupId)
                 return group
 
             if (group.loadedStartIndex === undefined || group.loadedEndIndex === undefined) {
-                return { ...group, items, loadedStartIndex: startIndex, loadedEndIndex: startIndex + items.length }
+                return { ...group, items, loadedStartIndex: startIndex, loadedEndIndex: startIndex + items.length, loadedTotalRecordCount: totalRecordCount }
             }
 
             if (startIndex >= group.loadedEndIndex) {
-                return { ...group, items: [...group.items, ...items], loadedEndIndex: startIndex + items.length }
+                return { ...group, items: [...group.items, ...items], loadedEndIndex: startIndex + items.length, loadedTotalRecordCount: totalRecordCount }
             }
 
             if (startIndex < group.loadedStartIndex) {
-                return { ...group, items: [...items, ...group.items], loadedStartIndex: startIndex }
+                return { ...group, items: [...items, ...group.items], loadedStartIndex: startIndex, loadedTotalRecordCount: totalRecordCount }
             }
-            
+
             return group
         })
     }
     
+    public setGroupWatchedCount(groupId: string, playedItemCount: number, totalItemCount: number): void {
+        this.groups = this.groups.map(g => g.groupId === groupId ? { ...g, playedItemCount, totalItemCount } : g)
+    }
+
     public adjustGroupPlayedCount(itemId: string, delta: number): Group | undefined {
         const group = this.groups.find(g => g.items.some(item => item.Id === itemId))
         if (!group) return undefined

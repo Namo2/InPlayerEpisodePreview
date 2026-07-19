@@ -9,8 +9,13 @@ export type Group = {
     totalItemCount: number
     loadedStartIndex?: number
     loadedEndIndex?: number
+    loadedTotalRecordCount?: number
 }
 
-export const formatWatchedCount = (playedItemCount: number, totalItemCount: number): string => 
-    `${playedItemCount}/${totalItemCount} watched`
+export const UNKNOWN_WATCHED_COUNT = -1
+
+export const formatWatchedCount = (playedItemCount: number, totalItemCount: number): string =>
+    playedItemCount === UNKNOWN_WATCHED_COUNT || totalItemCount === UNKNOWN_WATCHED_COUNT
+        ? '… watched'
+        : `${playedItemCount}/${totalItemCount} watched`
 

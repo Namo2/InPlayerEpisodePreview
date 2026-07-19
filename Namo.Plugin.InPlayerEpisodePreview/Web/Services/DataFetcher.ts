@@ -15,7 +15,7 @@ type WebSocketMessage = {
     Data: any
 }
 
-function updateWatchedCountDom(programDataStore: ProgramDataStore, group: Group): void {
+export function updateWatchedCountDom(programDataStore: ProgramDataStore, group: Group): void {
     const text = formatWatchedCount(group.playedItemCount, group.totalItemCount)
 
     if (group.groupId === programDataStore.activeGroupId) {

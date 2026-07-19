@@ -1,7 +1,7 @@
 import {ListElementTemplate} from "./Components/ListElementTemplate";
 import {PreviewItem} from "./Models/PreviewData/PreviewItem";
 import {ProgramDataStore} from "./Services/ProgramDataStore";
-import {Group} from "./Models/PreviewData/Group";
+import {Group, UNKNOWN_WATCHED_COUNT} from "./Models/PreviewData/Group";
 import {GroupListElementTemplate} from "./Components/GroupListElementTemplate";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
 import {PlaybackHandler} from "./Services/PlaybackHandler";
@@ -9,6 +9,7 @@ import {Endpoints} from "./Endpoints";
 import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
 import {ItemType} from "./Models/ItemType";
 import {activateSpinner, spinnerHtml} from "./Components/Spinner";
+import {updateWatchedCountDom} from "./Services/DataFetcher";
 
 // The backend already returns Playlists/BoxSets and Folders in their own manual item/dissplay order
 // sorting should only apply for season-based (Episode) groups, where it reflects actual episode order.
@@ -215,6 +216,22 @@ export class ListElementFactory {
         this.addScrollSentinelBackward(parentDiv, loadPage, initialOffset, viewToken)
     }
 
+    private async fetchGroupWatchedCount(groupId: string): Promise<{ playedItemCount: number, totalItemCount: number }> {
+        const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.GROUP_WATCHED_COUNT}`
+            .replace('{userId}', ApiClient.getCurrentUserId())
+            .replace('{groupId}', groupId))
+        const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+        return { playedItemCount: raw.PlayedItemCount, totalItemCount: raw.TotalItemCount }
+    }
+    
+    public async ensureGroupWatchedCount(group: Group): Promise<Group> {
+        if (group.playedItemCount !== UNKNOWN_WATCHED_COUNT) return group
+
+        const { playedItemCount, totalItemCount } = await this.fetchGroupWatchedCount(group.groupId)
+        this.programDataStore.setGroupWatchedCount(group.groupId, playedItemCount, totalItemCount)
+        return { ...group, playedItemCount, totalItemCount }
+    }
+
     public createGroupElements(
         groups: Group[],
         parentDiv: HTMLElement,
@@ -234,23 +251,33 @@ export class ListElementFactory {
 
                 this.programDataStore.activeGroupId = groups[i].groupId
                 titleContainer.setText(groups[i].groupName)
-                if (this.programDataStore.pluginSettings.ShowWatchedCount)
+                if (this.programDataStore.pluginSettings.ShowWatchedCount) {
                     titleContainer.setWatchedCount(groups[i].playedItemCount, groups[i].totalItemCount)
+                    if (groups[i].playedItemCount === UNKNOWN_WATCHED_COUNT) {
+                        this.ensureGroupWatchedCount(groups[i])
+                            .then(updated => titleContainer.setWatchedCount(updated.playedItemCount, updated.totalItemCount))
+                    }
+                }
                 titleContainer.setVisible(true)
 
                 parentDiv.innerHTML = ''
                 const viewToken = this.programDataStore.beginNewView()
-                
+
                 const cached = !this.programDataStore.isGroupsCacheExpired
                     ? this.programDataStore.groups.find(g => g.groupId === groups[i].groupId)
                     : undefined
                 const initialPage: GroupItemsResult | undefined = cached?.loadedStartIndex !== undefined
-                    ? { items: [...cached.items], totalRecordCount: cached.totalItemCount }
+                    ? { items: [...cached.items], totalRecordCount: cached.loadedTotalRecordCount ?? cached.items.length }
                     : undefined
                 const initialOffset = cached?.loadedStartIndex ?? 0
 
                 await this.createLazyItemList(parentDiv, (startIndex) => loadItems(groups[i].groupId, startIndex), viewToken, initialPage, initialOffset)
             })
+
+            if (this.programDataStore.pluginSettings.ShowWatchedCount && groups[i].playedItemCount === UNKNOWN_WATCHED_COUNT) {
+                this.ensureGroupWatchedCount(groups[i])
+                    .then(updated => updateWatchedCountDom(this.programDataStore, updated))
+            }
         }
     }
 }

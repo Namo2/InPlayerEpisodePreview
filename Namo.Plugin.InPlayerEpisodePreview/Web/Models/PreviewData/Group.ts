@@ -7,6 +7,8 @@ export type Group = {
     indexNumber: number
     playedItemCount: number
     totalItemCount: number
+    loadedStartIndex?: number
+    loadedEndIndex?: number
 }
 
 export const formatWatchedCount = (playedItemCount: number, totalItemCount: number): string => 

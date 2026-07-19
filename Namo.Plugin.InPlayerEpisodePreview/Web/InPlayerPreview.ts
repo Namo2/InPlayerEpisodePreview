@@ -370,8 +370,7 @@ function viewShowEventHandler(): void {
                 const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
                 const result: GroupItemsResult = { items: raw.Items, totalRecordCount: raw.TotalRecordCount }
 
-                const existing = programDataStore.groups.find(g => g.groupId === groupId)?.items ?? []
-                programDataStore.updateGroupItems(groupId, [...existing, ...result.items])
+                programDataStore.recordLoadedItems(groupId, result.items, startIndex)
                 return result
             }
 
@@ -390,24 +389,41 @@ function viewShowEventHandler(): void {
             dialogContainer.render()
 
             const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
-            contentDiv.innerHTML = `<div class="previewScrollSpinner">${spinnerHtml()}</div>`
-            activateSpinner(contentDiv)
 
             const itemId = getLatestUserRatingItemId()
-            const { itemType, containerName, groups, activeGroupId, activeItemIndex } = await loadItemPreviewData(itemId)
+            const cachedGroup = !programDataStore.isGroupsCacheExpired
+                ? programDataStore.groups.find(g => g.items.some(item => item.Id === itemId))
+                : undefined
 
-            programDataStore.groups = groups
+            let activeGroupId: string
+            let initialPage: GroupItemsResult
+            let initialWindowStartIndex: number
 
-            // Load a 3-page window (page of the active episode, plus one page before and after)
-            const pageOfActiveEpisode = Math.floor(activeItemIndex / PAGE_SIZE)
-            const initialWindowStartIndex = Math.max(0, (pageOfActiveEpisode - 1) * PAGE_SIZE)
-            const initialWindowLimit = (pageOfActiveEpisode + 2) * PAGE_SIZE - initialWindowStartIndex
+            if (cachedGroup) {
+                activeGroupId = cachedGroup.groupId
+                initialWindowStartIndex = cachedGroup.loadedStartIndex ?? 0
+                initialPage = { items: [...cachedGroup.items], totalRecordCount: cachedGroup.totalItemCount }
+            } else {
+                contentDiv.innerHTML = `<div class="previewScrollSpinner">${spinnerHtml()}</div>`
+                activateSpinner(contentDiv)
 
-            const initialPage: GroupItemsResult = await loadGroupItems(activeGroupId, initialWindowStartIndex, initialWindowLimit)
+                const { itemType, containerName, groups, activeGroupId: fetchedActiveGroupId, activeItemIndex } = await loadItemPreviewData(itemId)
+                programDataStore.groups = groups
+                programDataStore.markGroupsFetched()
+                programDataStore.type = ItemType[itemType as keyof typeof ItemType]
+                programDataStore.boxSetName = containerName ?? ''
+                activeGroupId = fetchedActiveGroupId
+
+                // Load a 3-page window (page of the active episode, plus one page before and after)
+                const pageOfActiveEpisode = Math.floor(activeItemIndex / PAGE_SIZE)
+                initialWindowStartIndex = Math.max(0, (pageOfActiveEpisode - 1) * PAGE_SIZE)
+                const initialWindowLimit = (pageOfActiveEpisode + 2) * PAGE_SIZE - initialWindowStartIndex
+
+                initialPage = await loadGroupItems(activeGroupId, initialWindowStartIndex, initialWindowLimit)
+            }
+
             programDataStore.activeMediaSourceId = itemId
             programDataStore.activeGroupId = activeGroupId
-            programDataStore.type = ItemType[itemType as keyof typeof ItemType]
-            programDataStore.boxSetName = containerName ?? ''
 
             contentDiv.innerHTML = '' // remove the loading spinner
             const viewToken = programDataStore.beginNewView()

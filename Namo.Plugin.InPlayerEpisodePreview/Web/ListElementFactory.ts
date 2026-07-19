@@ -239,11 +239,17 @@ export class ListElementFactory {
                 titleContainer.setVisible(true)
 
                 parentDiv.innerHTML = ''
-                // Reset in case this group was already loaded earlier in the same popup session,
-                // so re-fetching page 0 doesn't duplicate items already sitting in the store.
-                this.programDataStore.updateGroupItems(groups[i].groupId, [])
                 const viewToken = this.programDataStore.beginNewView()
-                await this.createLazyItemList(parentDiv, (startIndex) => loadItems(groups[i].groupId, startIndex), viewToken)
+                
+                const cached = !this.programDataStore.isGroupsCacheExpired
+                    ? this.programDataStore.groups.find(g => g.groupId === groups[i].groupId)
+                    : undefined
+                const initialPage: GroupItemsResult | undefined = cached?.loadedStartIndex !== undefined
+                    ? { items: [...cached.items], totalRecordCount: cached.totalItemCount }
+                    : undefined
+                const initialOffset = cached?.loadedStartIndex ?? 0
+
+                await this.createLazyItemList(parentDiv, (startIndex) => loadItems(groups[i].groupId, startIndex), viewToken, initialPage, initialOffset)
             })
         }
     }

@@ -5,9 +5,12 @@ import {ItemType} from "../Models/ItemType";
 import {DefaultPluginSettings, PluginSettings} from "../Models/PluginSettings";
 import {DefaultServerSettings, ServerSettings} from "../Models/ServerSettings";
 
+const GROUPS_CACHE_TTL = 5 * 60 * 1000
+
 export class ProgramDataStore {
     private _programData: ProgramData
     private _viewToken: number = 0
+    private _groupsCachedAt: number | null = null
 
     constructor() {
         this._programData = {
@@ -80,6 +83,14 @@ export class ProgramDataStore {
     public set serverSettings(settings: ServerSettings) {
         this._programData.serverSettings = settings
     }
+    
+    public markGroupsFetched(): void {
+        this._groupsCachedAt = Date.now()
+    }
+
+    public get isGroupsCacheExpired(): boolean {
+        return this._groupsCachedAt === null || Date.now() - this._groupsCachedAt > GROUPS_CACHE_TTL
+    }
 
     public get dataIsAllowedForPreview() {
         if (!this.allowedPreviewTypes.includes(this.type))
@@ -97,11 +108,26 @@ export class ProgramDataStore {
             .flatMap(group => group.items)
             .find(item => item.Id === itemId)
     }
+    
+    public recordLoadedItems(groupId: string, items: PreviewItem[], startIndex: number): void {
+        this._programData.groups = this._programData.groups.map(group => {
+            if (group.groupId !== groupId)
+                return group
 
-    public updateGroupItems(groupId: string, items: PreviewItem[]): void {
-        this._programData.groups = this._programData.groups.map(group =>
-            group.groupId === groupId ? { ...group, items } : group
-        )
+            if (group.loadedStartIndex === undefined || group.loadedEndIndex === undefined) {
+                return { ...group, items, loadedStartIndex: startIndex, loadedEndIndex: startIndex + items.length }
+            }
+
+            if (startIndex >= group.loadedEndIndex) {
+                return { ...group, items: [...group.items, ...items], loadedEndIndex: startIndex + items.length }
+            }
+
+            if (startIndex < group.loadedStartIndex) {
+                return { ...group, items: [...items, ...group.items], loadedStartIndex: startIndex }
+            }
+            
+            return group
+        })
     }
     
     public adjustGroupPlayedCount(itemId: string, delta: number): Group | undefined {
@@ -116,7 +142,7 @@ export class ProgramDataStore {
     public updateItem(itemToUpdate: PreviewItem): void {
         this.groups = this.groups.map(group =>
             group.items.some(item => item.Id === itemToUpdate.Id)
-                ? { ...group, items: [...group.items.filter(item => item.Id !== itemToUpdate.Id), itemToUpdate] }
+                ? { ...group, items: group.items.map(item => item.Id === itemToUpdate.Id ? itemToUpdate : item) }
                 : group
         )
     }

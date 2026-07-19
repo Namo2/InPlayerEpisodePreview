@@ -6,7 +6,7 @@ using Namo.Plugin.InPlayerEpisodePreview.Helpers;
 using Namo.Plugin.InPlayerEpisodePreview.JellyfinVersionSpecific;
 using Newtonsoft.Json.Linq;
 
-namespace Namo.Plugin.InPlayerEpisodePreview.Services;
+namespace Namo.Plugin.InPlayerEpisodePreview.ScheduledTasks;
 
 public class StartupService(ILogger<InPlayerEpisodePreviewPlugin> logger) : IScheduledTask
 {

@@ -1,3 +1,4 @@
+using Namo.Plugin.InPlayerEpisodePreview.ScheduledTasks;
 using Namo.Plugin.InPlayerEpisodePreview.Services;
 
 namespace Namo.Plugin.InPlayerEpisodePreview;
@@ -10,5 +11,6 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
         serviceCollection.AddSingleton<StartupService>();
+        serviceCollection.AddSingleton<FolderPreviewService>();
     }
 }

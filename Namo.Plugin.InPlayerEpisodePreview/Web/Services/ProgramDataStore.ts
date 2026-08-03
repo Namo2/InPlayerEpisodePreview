@@ -159,4 +159,8 @@ export class ProgramDataStore {
     public isCurrentView(token: number): boolean {
         return token === this._viewToken
     }
+    
+    public get currentViewToken(): number {
+        return this._viewToken
+    }
 }

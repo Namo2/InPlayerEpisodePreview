@@ -6,6 +6,7 @@ export type PluginSettings = {
     BlurThumbnail: boolean,
     EpisodePageSize: number,
     ShowWatchedCount: boolean,
+    SearchContainingCollections: boolean,
 }
 
 export const DefaultPluginSettings: PluginSettings = {
@@ -14,4 +15,5 @@ export const DefaultPluginSettings: PluginSettings = {
     BlurThumbnail: false,
     EpisodePageSize: 10,
     ShowWatchedCount: true,
+    SearchContainingCollections: true,
 }

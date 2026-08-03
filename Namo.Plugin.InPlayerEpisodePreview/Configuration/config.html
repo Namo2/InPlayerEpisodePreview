@@ -82,6 +82,14 @@
                     </label>
                     <div class="fieldDescription">Shows a watched count next to each group's name</div>
                 </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="searchContainingCollections" is="emby-checkbox" name="searchContainingCollections"
+                               type="checkbox"/>
+                        <span>Search for other Collections/Playlists containing the played item</span>
+                    </label>
+                    <div class="fieldDescription">Shows any other Collections/Playlists the played item belongs to - both for standalone movies and for items played from a Collection/Playlist</div>
+                </div>
 
 
                 <hr>
@@ -124,6 +132,7 @@
                 document.querySelector('#blurDescription').checked = config.BlurDescription
                 document.querySelector('#blurThumbnail').checked = config.BlurThumbnail
                 document.querySelector('#showWatchedCount').checked = config.ShowWatchedCount
+                document.querySelector('#searchContainingCollections').checked = config.SearchContainingCollections
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
 
                 Dashboard.hideLoadingMsg()
@@ -152,6 +161,7 @@
             config.BlurDescription = document.querySelector('#blurDescription').checked
             config.BlurThumbnail = document.querySelector('#blurThumbnail').checked
             config.ShowWatchedCount = document.querySelector('#showWatchedCount').checked
+            config.SearchContainingCollections = document.querySelector('#searchContainingCollections').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10
 
             try {

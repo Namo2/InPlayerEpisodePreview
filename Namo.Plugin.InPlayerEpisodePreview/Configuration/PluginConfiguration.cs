@@ -28,4 +28,9 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Whether to show "played/total watched" counts on groups.
     /// </summary>
     public bool ShowWatchedCount { get; set; } = true;
+
+    /// <summary>
+    /// Whether to search for other Collections/Playlists containing the item being played
+    /// </summary>
+    public bool SearchContainingCollections { get; set; } = true;
 }

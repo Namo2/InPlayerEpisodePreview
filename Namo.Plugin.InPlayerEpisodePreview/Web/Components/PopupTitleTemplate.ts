@@ -12,11 +12,7 @@ export class PopupTitleTemplate extends BaseTemplate {
     getTemplate(): string {
         return `
             <div id="${this.getElementId()}" class="listItem previewPopupTitle">
-                ${
-                    this.programDataStore.groups.length > 1 ?
-                    '<span class="actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons keyboard_backspace"></span>' : 
-                    ''
-                }
+                <span id="popupTitleSwitchIcon" class="actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons keyboard_backspace ${this.programDataStore.groups.length > 1 ? '' : 'hide'}"></span>
                 <h1 class="actionSheetTitle"></h1>
                 ${this.programDataStore.pluginSettings.ShowWatchedCount ? '<div class="previewGroupWatchedCount"></div>' : ''}
             </div>
@@ -30,6 +26,10 @@ export class PopupTitleTemplate extends BaseTemplate {
 
     public setText(text: string) {
         this.getElement().querySelector('h1').innerText = text
+    }
+
+    public setSwitchable(switchable: boolean) {
+        this.getElement().querySelector<HTMLElement>('#popupTitleSwitchIcon')?.classList.toggle('hide', !switchable)
     }
 
     public setWatchedCount(playedItemCount: number, totalItemCount: number) {

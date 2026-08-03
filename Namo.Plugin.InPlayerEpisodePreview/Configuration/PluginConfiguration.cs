@@ -25,6 +25,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public int EpisodePageSize { get; set; } = 10;
 
     /// <summary>
+    /// Whether the description/thumbnail blur only applies to items the user hasn't watched yet.
+    /// </summary>
+    public bool OnlyBlurUnwatched { get; set; } = false;
+
+    /// <summary>
     /// Whether to show "played/total watched" counts on groups.
     /// </summary>
     public bool ShowWatchedCount { get; set; } = true;

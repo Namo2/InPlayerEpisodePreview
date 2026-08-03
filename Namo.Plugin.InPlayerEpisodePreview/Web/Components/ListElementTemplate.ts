@@ -37,6 +37,8 @@ export class ListElementTemplate extends BaseTemplate {
 
         const backgroundImageStyle: string = `background-image: url('../Items/${this.item.Id}/Images/Primary?tag=${this.item.PrimaryImageTag}')`
 
+        const shouldBlur: boolean = !(this.programDataStore.pluginSettings.OnlyBlurUnwatched && this.item.UserData.Played)
+
         // language=HTML
         return `
             <div id="${this.getElementId()}"
@@ -68,7 +70,7 @@ export class ListElementTemplate extends BaseTemplate {
                                         <span class="cardImageIcon material-icons tv" aria-hidden="true"/>
                                     </div>
                                     <button id="previewItemImageCard-${this.item.Id}"
-                                            class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast ${this.programDataStore.pluginSettings.BlurThumbnail ? 'blur' : ''}"
+                                            class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast ${this.programDataStore.pluginSettings.BlurThumbnail && shouldBlur ? 'blur' : ''}"
                                             data-action="link"
                                             style="${backgroundImageStyle}">
                                     </button>
@@ -95,7 +97,7 @@ export class ListElementTemplate extends BaseTemplate {
                             </div>
                         </div>
                         <div class="previewItemDescriptionColumn">
-                            <span class="previewItemDescription ${this.programDataStore.pluginSettings.BlurDescription ? 'blur' : ''}">
+                            <span class="previewItemDescription ${this.programDataStore.pluginSettings.BlurDescription && shouldBlur ? 'blur' : ''}">
                                 ${this.item.Description ?? 'loading...'}
                             </span>
                             <button type="button" class="previewItemReadMoreButton hide">Read more</button>

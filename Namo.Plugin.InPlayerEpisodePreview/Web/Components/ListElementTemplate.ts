@@ -8,6 +8,11 @@ import {PreviewItem} from "../Models/PreviewData/PreviewItem"
 import {ItemType} from "../Models/ItemType"
 import {togglePlayedStateLocally} from "../Services/DataFetcher"
 
+// Shows/hides the "start playback" overlay for a rendered list item
+export function setItemOverlayActive(itemId: string, isActive: boolean): void {
+    document.getElementById(`cardOverlay-${itemId}`)?.classList.toggle('hide', isActive)
+}
+
 export class ListElementTemplate extends BaseTemplate {
     private readonly quickActionContainer: HTMLElement
     private playStateIcon: PlayStateIconTemplate
@@ -81,18 +86,17 @@ export class ListElementTemplate extends BaseTemplate {
                                             </div>
                                         </div>` : ''
                                     }
-                                    ${this.item.Id !== this.programDataStore.activeMediaSourceId ?
-                                        `<div class="cardOverlayContainer itemAction"
-                                             data-action="link">
-                                            <button id="start-item-${this.item.Id}"
-                                                    is="paper-icon-button-light"
-                                                    class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary"
-                                                    data-action="resume">
-                                                <span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover play_arrow"
-                                                    aria-hidden="true"/>
-                                            </button>
-                                        </div>` : ''
-                                    }
+                                    <div id="cardOverlay-${this.item.Id}"
+                                         class="cardOverlayContainer itemAction ${this.item.Id === this.programDataStore.activeMediaSourceId ? 'hide' : ''}"
+                                         data-action="link">
+                                        <button id="start-item-${this.item.Id}"
+                                                is="paper-icon-button-light"
+                                                class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary"
+                                                data-action="resume">
+                                            <span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover play_arrow"
+                                                aria-hidden="true"/>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -117,11 +121,8 @@ export class ListElementTemplate extends BaseTemplate {
             e.stopPropagation()
             togglePlayedStateLocally(this.programDataStore, this.item.Id)
         })
-
-        if (this.item.Id !== this.programDataStore.activeMediaSourceId) {
-            // add event handler to start the playback of this item
-            const itemImageCard: HTMLElement = document.getElementById(`start-item-${this.item.Id}`)
-            itemImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks))
-        }
+        
+        const itemImageCard: HTMLElement = document.getElementById(`start-item-${this.item.Id}`)
+        itemImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks))
     }
 }

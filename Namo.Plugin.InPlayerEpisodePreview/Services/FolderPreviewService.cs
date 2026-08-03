@@ -3,6 +3,7 @@ using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
 using Namo.Plugin.InPlayerEpisodePreview.Api.DTOs;
 using Namo.Plugin.InPlayerEpisodePreview.Configuration;
 
@@ -115,8 +116,12 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
         var key = (folder.Id, user.Id);
         if (_folderChildrenCache.TryGetValue(key, out var cached) && DateTime.UtcNow - cached.CachedAt < FolderChildrenCacheTtl)
             return cached.Children;
-
-        List<BaseItem> children = [..folder.GetChildren(user, true, new InternalItemsQuery(user))];
+        
+        List<BaseItem> children = [
+            .. folder
+                .GetChildren(user, true, new InternalItemsQuery(user))
+                .Where(c => _config.DisplayMissingEpisodes || c.LocationType != LocationType.Virtual)
+        ];
         _folderChildrenCache[key] = (DateTime.UtcNow, children);
         return children;
     }

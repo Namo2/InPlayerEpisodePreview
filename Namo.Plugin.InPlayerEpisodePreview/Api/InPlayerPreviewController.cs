@@ -268,10 +268,15 @@ public class InPlayerPreviewController : ControllerBase
                 ParentId = episode.SeriesId,
                 IncludeItemTypes = [BaseItemKind.Season]
             }).Items;
-            
-            List<PreviewGroup> groups = [..seasons.Select(s => !_config.ShowWatchedCount
-                ? new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, 0, 0)
-                : new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, UnknownWatchedCount, UnknownWatchedCount))];
+
+            List<PreviewGroup> groups = [
+                .. seasons
+                    .Where(s => _config.DisplayMissingEpisodes || s.LocationType != LocationType.Virtual)
+                    .Select(s => !_config.ShowWatchedCount
+                        ? new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, 0, 0)
+                        : new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, UnknownWatchedCount, UnknownWatchedCount)
+                    )
+            ];
 
             List<Episode> episodesInSeason = _libraryManager.GetItemById(seasonId) is Folder seasonFolder
                 ? [

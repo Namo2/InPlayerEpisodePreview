@@ -381,6 +381,25 @@ public class InPlayerPreviewController : ControllerBase
     }
 
     /// <summary>
+    /// Returns a group for every Collection/Playlist that contains the given item.
+    /// </summary>
+    [HttpGet("Users/{userId}/Items/{itemId}/ContainingCollections")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult GetContainingCollections([FromRoute] Guid userId, [FromRoute] Guid itemId)
+    {
+        var user = _userManager.GetUserById(userId);
+        if (user is null)
+            return NotFound();
+
+        var item = _libraryManager.GetItemById(itemId);
+        if (item is null)
+            return NotFound();
+
+        return Ok(_folderPreviewService.GetContainingCollectionGroups(item, user));
+    }
+
+    /// <summary>
     /// Records which collection/playlist a play action originated from for a user/device.
     /// </summary>
     [HttpGet("Users/{userId}/{deviceId}/SourceCollection/{collectionId}")]

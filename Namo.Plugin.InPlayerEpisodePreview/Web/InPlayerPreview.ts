@@ -158,6 +158,37 @@ const programDataStore: ProgramDataStore = new ProgramDataStore()
 const playbackHandler: PlaybackHandler = new PlaybackHandler(logger)
 const listElementFactory = new ListElementFactory(playbackHandler, programDataStore)
 
+const collectionsByItemId = new Map<string, Promise<Group[]>>()
+
+async function fetchContainingCollections(itemId: string): Promise<Group[]> {
+    const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.CONTAINING_COLLECTIONS}`
+        .replace('{userId}', ApiClient.getCurrentUserId())
+        .replace('{itemId}', itemId))
+    try {
+        const raw: any[] = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+        return raw.map((g: any) => ({
+            groupId: g.GroupId,
+            groupName: g.GroupName,
+            items: [],
+            indexNumber: g.IndexNumber,
+            playedItemCount: g.PlayedItemCount,
+            totalItemCount: g.TotalItemCount
+        }))
+    } catch (ex: unknown) {
+        logger.error("Couldn't load Collections/Playlists containing this movie", ex)
+        return []
+    }
+}
+
+function getContainingCollections(itemId: string): Promise<Group[]> {
+    let promise = collectionsByItemId.get(itemId)
+    if (!promise) {
+        promise = fetchContainingCollections(itemId)
+        collectionsByItemId.set(itemId, promise)
+    }
+    return promise
+}
+
 function initialize() {
     // Ensure ApiClient/Events exist and user is logged in
     if (typeof ApiClient === 'undefined' || typeof Events === 'undefined' || !ApiClient.getCurrentUserId?.()) {
@@ -175,6 +206,8 @@ function initialize() {
         .then((config: ServerSettings) => programDataStore.serverSettings = config)
 }
 initialize()
+
+const SEARCH_COLLECTIONS_GROUP_NAME = 'Search Collections/Playlists'
 
 const videoPaths: string[] = ['/video']
 let previousRoutePath: string = null
@@ -427,21 +460,65 @@ function viewShowEventHandler(): void {
 
             contentDiv.innerHTML = '' // remove the loading spinner
             const viewToken = programDataStore.beginNewView()
-            
-            const hasSelectableGroups = programDataStore.type !== ItemType.Movie
+
+            // A standalone movie has no meaningful group name of its own; an item sourced from a Playlist/BoxSet
+            // already has that collection's real name, so only the standalone-movie case gets relabeled.
+            const isStandaloneMovie = programDataStore.type === ItemType.Movie
+            const isSourcedFromCollection = programDataStore.type === ItemType.Playlist || programDataStore.type === ItemType.BoxSet
+
+            // Label the movie's own group as the collection search up front, even before any results are known.
+            if (isStandaloneMovie && programDataStore.pluginSettings.SearchContainingCollections) {
+                programDataStore.groups = programDataStore.groups.map((g, i) => i === 0 ? { ...g, groupName: SEARCH_COLLECTIONS_GROUP_NAME } : g)
+            }
+
+            // Only search once per fresh group-fetch (not on every popup reopen while cached groups already include the search results).
+            // getContainingCollections itself is memoized per item for the whole page session, so even this can't re-trigger the
+            // expensive backend scan more than once per item, no matter how often the popup is reopened while it's pending.
+            const isSearchingCollections = (isStandaloneMovie || isSourcedFromCollection) && programDataStore.pluginSettings.SearchContainingCollections && programDataStore.groups.length === 1
+            let collectionsSearchDone = !isSearchingCollections
+            const collectionsSearch: Promise<void> = isSearchingCollections
+                ? getContainingCollections(itemId).then(collectionGroups => {
+                    if (!collectionGroups.length || programDataStore.activeMediaSourceId !== itemId) return
+                    const selfGroup = programDataStore.groups[0]
+                    // Exclude the collection/playlist this item was already played from - it's already the active/default group.
+                    const newGroups = collectionGroups.filter(g => g.groupId !== selfGroup.groupId)
+                    if (!newGroups.length) return
+                    programDataStore.groups = [selfGroup, ...newGroups].map((g, i) => ({ ...g, indexNumber: i }))
+                }).finally(() => { collectionsSearchDone = true })
+                : Promise.resolve()
+
+            const canSwitchGroups = (): boolean => programDataStore.type !== ItemType.Movie || programDataStore.pluginSettings.SearchContainingCollections
 
             const popupTitle: PopupTitleTemplate = new PopupTitleTemplate(document.getElementById('popupFocusContainer'), -1, programDataStore)
-            popupTitle.render((e: MouseEvent) => {
+            popupTitle.render(async (e: MouseEvent) => {
                 e.stopPropagation()
-                if (!hasSelectableGroups) return
+                if (!canSwitchGroups()) return
 
                 popupTitle.setVisible(false);
                 const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
                 contentDiv.innerHTML = ''
 
                 listElementFactory.createGroupElements(programDataStore.groups, contentDiv, programDataStore.activeGroup.indexNumber, popupTitle, loadGroupItems)
+                const groupViewToken = programDataStore.currentViewToken
+
+                if (collectionsSearchDone) return
+
+                const spinner = document.createElement('div')
+                spinner.classList.add('previewScrollSpinner')
+                spinner.innerHTML = spinnerHtml()
+                contentDiv.appendChild(spinner)
+                activateSpinner(spinner)
+
+                await collectionsSearch
+                // The view may have moved on (e.g. a group was selected, or the popup closed) while this was loading.
+                if (!programDataStore.isCurrentView(groupViewToken)) return
+
+                spinner.remove()
+                contentDiv.innerHTML = ''
+                listElementFactory.createGroupElements(programDataStore.groups, contentDiv, programDataStore.activeGroup.indexNumber, popupTitle, loadGroupItems)
             })
-            popupTitle.setVisible(hasSelectableGroups)
+            popupTitle.setSwitchable(canSwitchGroups())
+            popupTitle.setVisible(canSwitchGroups())
 
             await listElementFactory.createLazyItemList(contentDiv, (startIndex) => loadGroupItems(activeGroupId, startIndex), viewToken, initialPage, initialWindowStartIndex)
             popupTitle.setText(programDataStore.activeGroup?.groupName ?? '')

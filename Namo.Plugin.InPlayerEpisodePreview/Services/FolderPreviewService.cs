@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -15,6 +16,8 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
     private readonly PluginConfiguration _config = InPlayerEpisodePreviewPlugin.Instance!.Configuration;
 
     private readonly ConcurrentDictionary<(Guid FolderId, Guid UserId), (DateTime CachedAt, List<BaseItem> Children)> _folderChildrenCache = new();
+
+    private readonly ConcurrentDictionary<Guid, (DateTime CachedAt, List<Folder> Collections)> _collectionsCache = new();
 
     private static readonly TimeSpan FolderChildrenCacheTtl = TimeSpan.FromMinutes(5);
 
@@ -66,6 +69,42 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
             groups.Add(new PreviewGroup(looseVideosGroupId, "Videos", groups.Count, CountPlayed(looseVideos, user), looseVideos.Count));
 
         return groups;
+    }
+
+    /// <summary>
+    /// Finds all Collections/Playlists that contain <paramref name="movie"/> and builds a PreviewGroup for each
+    /// </summary>
+    public List<PreviewGroup> GetContainingCollectionGroups(BaseItem movie, User user)
+    {
+        List<PreviewGroup> groups = [];
+        foreach (var collection in GetCachedCollections(user))
+        {
+            var children = GetCachedFolderChildren(collection, user);
+            if (children.All(c => c.Id != movie.Id))
+                continue;
+
+            groups.Add(new PreviewGroup(collection.Id, collection.Name, groups.Count, CountPlayed(children, user), children.Count));
+        }
+
+        return groups;
+    }
+
+    /// <summary>
+    /// Get all BoxSets/Playlists visible to the user from cache or load them
+    /// </summary>
+    private List<Folder> GetCachedCollections(User user)
+    {
+        if (_collectionsCache.TryGetValue(user.Id, out var cached) && DateTime.UtcNow - cached.CachedAt < FolderChildrenCacheTtl)
+            return cached.Collections;
+
+        List<Folder> collections = [..libraryManager.QueryItems(new InternalItemsQuery(user)
+        {
+            IncludeItemTypes = [BaseItemKind.BoxSet, BaseItemKind.Playlist],
+            Recursive = true
+        }).Items.OfType<Folder>()];
+
+        _collectionsCache[user.Id] = (DateTime.UtcNow, collections);
+        return collections;
     }
 
     /// <summary>

@@ -7,6 +7,7 @@ export type PluginSettings = {
     EpisodePageSize: number,
     ShowWatchedCount: boolean,
     SearchContainingCollections: boolean,
+    OnlyBlurUnwatched: boolean,
 }
 
 export const DefaultPluginSettings: PluginSettings = {
@@ -16,4 +17,5 @@ export const DefaultPluginSettings: PluginSettings = {
     EpisodePageSize: 10,
     ShowWatchedCount: true,
     SearchContainingCollections: true,
+    OnlyBlurUnwatched: false,
 }

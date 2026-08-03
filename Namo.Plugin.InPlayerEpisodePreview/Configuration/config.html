@@ -76,6 +76,14 @@
                 </div>
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
+                        <input id="onlyBlurUnwatched" is="emby-checkbox" name="onlyBlurUnwatched"
+                               type="checkbox"/>
+                        <span>Only blur unwatched items</span>
+                    </label>
+                    <div class="fieldDescription">Only blur the description/thumbnail for episodes you haven't watched yet</div>
+                </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
                         <input id="showWatchedCount" is="emby-checkbox" name="showWatchedCount"
                                type="checkbox"/>
                         <span>Show "played/total watched" counts</span>
@@ -131,6 +139,7 @@
 
                 document.querySelector('#blurDescription').checked = config.BlurDescription
                 document.querySelector('#blurThumbnail').checked = config.BlurThumbnail
+                document.querySelector('#onlyBlurUnwatched').checked = config.OnlyBlurUnwatched
                 document.querySelector('#showWatchedCount').checked = config.ShowWatchedCount
                 document.querySelector('#searchContainingCollections').checked = config.SearchContainingCollections
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
@@ -160,6 +169,7 @@
 
             config.BlurDescription = document.querySelector('#blurDescription').checked
             config.BlurThumbnail = document.querySelector('#blurThumbnail').checked
+            config.OnlyBlurUnwatched = document.querySelector('#onlyBlurUnwatched').checked
             config.ShowWatchedCount = document.querySelector('#showWatchedCount').checked
             config.SearchContainingCollections = document.querySelector('#searchContainingCollections').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10

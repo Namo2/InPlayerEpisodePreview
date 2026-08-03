@@ -13,6 +13,7 @@ import {Endpoints} from "./Endpoints";
 import {Group, UNKNOWN_WATCHED_COUNT} from "./Models/PreviewData/Group";
 import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
 import {activateSpinner, spinnerHtml} from "./Components/Spinner";
+import {setItemOverlayActive} from "./Components/ListElementTemplate";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -228,7 +229,13 @@ function onVideoTimeUpdate(this: HTMLVideoElement): void {
 
     const itemId = getLatestUserRatingItemId()
     if (!itemId) return
-    programDataStore.activeMediaSourceId = itemId
+
+    if (itemId !== programDataStore.activeMediaSourceId) {
+        const previousItemId = programDataStore.activeMediaSourceId
+        programDataStore.activeMediaSourceId = itemId
+        setItemOverlayActive(previousItemId, false)
+        setItemOverlayActive(itemId, true)
+    }
 
     const item = programDataStore.getItemById(itemId)
     if (!item || !item.RunTimeTicks) return

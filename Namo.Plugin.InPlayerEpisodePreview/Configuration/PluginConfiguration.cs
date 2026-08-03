@@ -38,4 +38,9 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Whether to search for other Collections/Playlists containing the item being played
     /// </summary>
     public bool SearchContainingCollections { get; set; } = true;
+
+    /// <summary>
+    /// Whether to show Virtual (missing/unaired) items
+    /// </summary>
+    public bool DisplayMissingEpisodes { get; set; } = false;
 }

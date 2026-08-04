@@ -1,5 +1,5 @@
 import {ProgramData} from "../Models/ProgramData";
-import {Group} from "../Models/PreviewData/Group";
+import {Group, UNKNOWN_WATCHED_COUNT} from "../Models/PreviewData/Group";
 import {PreviewItem} from "../Models/PreviewData/PreviewItem";
 import {ItemType} from "../Models/ItemType";
 import {DefaultPluginSettings, PluginSettings} from "../Models/PluginSettings";
@@ -130,15 +130,19 @@ export class ProgramDataStore {
         })
     }
     
-    public setGroupWatchedCount(groupId: string, playedItemCount: number, totalItemCount: number): void {
-        this.groups = this.groups.map(g => g.groupId === groupId ? { ...g, playedItemCount, totalItemCount } : g)
+    public setGroupWatchedCount(groupId: string, playedItemCount: number, totalItemCount: number, playedRuntimeTicks: number, totalRuntimeTicks: number): void {
+        this.groups = this.groups.map(g => g.groupId === groupId ? { ...g, playedItemCount, totalItemCount, playedRuntimeTicks, totalRuntimeTicks } : g)
     }
 
-    public adjustGroupPlayedCount(itemId: string, delta: number): Group | undefined {
+    public adjustGroupWatchStats(itemId: string, deltaPlayedCount: number, deltaPlayedRuntimeTicks: number): Group | undefined {
         const group = this.groups.find(g => g.items.some(item => item.Id === itemId))
         if (!group) return undefined
 
-        const updatedGroup: Group = { ...group, playedItemCount: group.playedItemCount + delta }
+        const updatedGroup: Group = {
+            ...group,
+            playedItemCount: group.playedItemCount + deltaPlayedCount,
+            playedRuntimeTicks: group.playedRuntimeTicks === UNKNOWN_WATCHED_COUNT ? UNKNOWN_WATCHED_COUNT : group.playedRuntimeTicks + deltaPlayedRuntimeTicks
+        }
         this.groups = this.groups.map(g => g.groupId === group.groupId ? updatedGroup : g)
         return updatedGroup
     }

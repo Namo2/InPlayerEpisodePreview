@@ -1,4 +1,5 @@
 import {ItemType} from "./ItemType";
+import {WatchCountDisplayMode} from "./WatchCountDisplayMode";
 
 export type PluginSettings = {
     EnabledItemTypes: ItemType[],
@@ -6,6 +7,7 @@ export type PluginSettings = {
     BlurThumbnail: boolean,
     EpisodePageSize: number,
     ShowWatchedCount: boolean,
+    WatchCountDisplayMode: WatchCountDisplayMode,
     SearchContainingCollections: boolean,
     OnlyBlurUnwatched: boolean,
 }
@@ -16,6 +18,7 @@ export const DefaultPluginSettings: PluginSettings = {
     BlurThumbnail: false,
     EpisodePageSize: 10,
     ShowWatchedCount: true,
+    WatchCountDisplayMode: WatchCountDisplayMode.HoursMinutes,
     SearchContainingCollections: true,
     OnlyBlurUnwatched: false,
 }

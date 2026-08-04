@@ -225,20 +225,25 @@ export class ListElementFactory {
         this.attachScrollPagination(parentDiv, loadPage, viewToken, totalLoaded, firstPage.totalRecordCount, initialOffset)
     }
 
-    private async fetchGroupWatchedCount(groupId: string): Promise<{ playedItemCount: number, totalItemCount: number }> {
+    private async fetchGroupWatchedCount(groupId: string): Promise<{ playedItemCount: number, totalItemCount: number, playedRuntimeTicks: number, totalRuntimeTicks: number }> {
         const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.GROUP_WATCHED_COUNT}`
             .replace('{userId}', ApiClient.getCurrentUserId())
             .replace('{groupId}', groupId))
         const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
-        return { playedItemCount: raw.PlayedItemCount, totalItemCount: raw.TotalItemCount }
+        return {
+            playedItemCount: raw.PlayedItemCount,
+            totalItemCount: raw.TotalItemCount,
+            playedRuntimeTicks: raw.PlayedRuntimeTicks,
+            totalRuntimeTicks: raw.TotalRuntimeTicks
+        }
     }
-    
+
     public async ensureGroupWatchedCount(group: Group): Promise<Group> {
         if (group.playedItemCount !== UNKNOWN_WATCHED_COUNT) return group
 
-        const { playedItemCount, totalItemCount } = await this.fetchGroupWatchedCount(group.groupId)
-        this.programDataStore.setGroupWatchedCount(group.groupId, playedItemCount, totalItemCount)
-        return { ...group, playedItemCount, totalItemCount }
+        const { playedItemCount, totalItemCount, playedRuntimeTicks, totalRuntimeTicks } = await this.fetchGroupWatchedCount(group.groupId)
+        this.programDataStore.setGroupWatchedCount(group.groupId, playedItemCount, totalItemCount, playedRuntimeTicks, totalRuntimeTicks)
+        return { ...group, playedItemCount, totalItemCount, playedRuntimeTicks, totalRuntimeTicks }
     }
 
     public createGroupElements(
@@ -254,17 +259,17 @@ export class ListElementFactory {
         this.programDataStore.beginNewView()
 
         for (let i: number = 0; i < groups.length; i++) {
-            const group = new GroupListElementTemplate(parentDiv, i, groups[i], groups[i].indexNumber === currentGroupIndex, this.programDataStore.pluginSettings.ShowWatchedCount)
+            const group = new GroupListElementTemplate(parentDiv, i, groups[i], groups[i].indexNumber === currentGroupIndex, this.programDataStore.pluginSettings.ShowWatchedCount, this.programDataStore.pluginSettings.WatchCountDisplayMode)
             group.render(async (e: MouseEvent): Promise<void> => {
                 e.stopPropagation()
 
                 this.programDataStore.activeGroupId = groups[i].groupId
                 titleContainer.setText(groups[i].groupName)
                 if (this.programDataStore.pluginSettings.ShowWatchedCount) {
-                    titleContainer.setWatchedCount(groups[i].playedItemCount, groups[i].totalItemCount)
+                    titleContainer.setWatchedCount(groups[i])
                     if (groups[i].playedItemCount === UNKNOWN_WATCHED_COUNT) {
                         this.ensureGroupWatchedCount(groups[i])
-                            .then(updated => titleContainer.setWatchedCount(updated.playedItemCount, updated.totalItemCount))
+                            .then(updated => titleContainer.setWatchedCount(updated))
                     }
                 }
                 titleContainer.setVisible(true)

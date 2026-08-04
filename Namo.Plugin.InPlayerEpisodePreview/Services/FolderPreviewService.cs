@@ -23,14 +23,37 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
     private static readonly TimeSpan FolderChildrenCacheTtl = TimeSpan.FromMinutes(5);
 
     /// <summary>
-    /// Counts how many of the given items are marked played for <paramref name="user"/>.
+    /// Counts how many of the given items are marked played for <paramref name="user"/>
     /// </summary>
-    public int CountPlayed(IEnumerable<BaseItem> items, User user)
+    public WatchStats GetWatchStats(IEnumerable<BaseItem> items, User user)
     {
         if (!_config.ShowWatchedCount)
-            return 0;
+            return new WatchStats(0, 0, 0, 0);
 
-        return items.Count(item => userDataManager.GetUserData(user, item)?.Played ?? false);
+        bool needsRuntime = (WatchCountDisplayMode)_config.WatchCountDisplayMode != WatchCountDisplayMode.Count;
+
+        int totalCount = 0;
+        int playedCount = 0;
+        long totalTicks = 0;
+        long playedTicks = 0;
+
+        foreach (var item in items)
+        {
+            totalCount++;
+            var userData = userDataManager.GetUserData(user, item);
+            bool played = userData?.Played ?? false;
+            if (played)
+                playedCount++;
+
+            if (!needsRuntime)
+                continue;
+
+            long itemTicks = item.RunTimeTicks ?? 0;
+            totalTicks += itemTicks;
+            playedTicks += played ? itemTicks : userData?.PlaybackPositionTicks ?? 0;
+        }
+
+        return new WatchStats(playedCount, totalCount, playedTicks, totalTicks);
     }
 
     /// <summary>
@@ -45,7 +68,8 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
             return BuildFolderGroups(GetCachedFolderChildren(parent, user), parent.Id, user);
 
         List<Video> videosInFolder = [..ownChildren.OfType<Video>()];
-        return [new PreviewGroup(folder.Id, folder.Name, 0, CountPlayed(videosInFolder, user), videosInFolder.Count)];
+        var stats = GetWatchStats(videosInFolder, user);
+        return [new PreviewGroup(folder.Id, folder.Name, 0, stats.PlayedItemCount, stats.TotalItemCount, stats.PlayedRuntimeTicks, stats.TotalRuntimeTicks)];
     }
 
     /// <summary>
@@ -62,12 +86,16 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
             if (videosInSubfolder.Count == 0)
                 continue;
 
-            groups.Add(new PreviewGroup(subfolder.Id, subfolder.Name, groups.Count, CountPlayed(videosInSubfolder, user), videosInSubfolder.Count));
+            var subfolderStats = GetWatchStats(videosInSubfolder, user);
+            groups.Add(new PreviewGroup(subfolder.Id, subfolder.Name, groups.Count, subfolderStats.PlayedItemCount, subfolderStats.TotalItemCount, subfolderStats.PlayedRuntimeTicks, subfolderStats.TotalRuntimeTicks));
         }
 
         List<Video> looseVideos = [..children.OfType<Video>()];
         if (looseVideos.Count > 0)
-            groups.Add(new PreviewGroup(looseVideosGroupId, "Videos", groups.Count, CountPlayed(looseVideos, user), looseVideos.Count));
+        {
+            var looseStats = GetWatchStats(looseVideos, user);
+            groups.Add(new PreviewGroup(looseVideosGroupId, "Videos", groups.Count, looseStats.PlayedItemCount, looseStats.TotalItemCount, looseStats.PlayedRuntimeTicks, looseStats.TotalRuntimeTicks));
+        }
 
         return groups;
     }
@@ -84,7 +112,8 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
             if (children.All(c => c.Id != movie.Id))
                 continue;
 
-            groups.Add(new PreviewGroup(collection.Id, collection.Name, groups.Count, CountPlayed(children, user), children.Count));
+            var stats = GetWatchStats(children, user);
+            groups.Add(new PreviewGroup(collection.Id, collection.Name, groups.Count, stats.PlayedItemCount, stats.TotalItemCount, stats.PlayedRuntimeTicks, stats.TotalRuntimeTicks));
         }
 
         return groups;

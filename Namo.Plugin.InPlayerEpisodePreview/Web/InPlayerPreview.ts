@@ -56,6 +56,8 @@ inPlayerPreviewStyle.textContent = `
     padding-left: 1em;
     white-space: nowrap;
     opacity: 0.7;
+    display: flex;
+    align-items: center;
 }
 .previewPopupScroller {
     max-height: 60vh;
@@ -173,7 +175,9 @@ async function fetchContainingCollections(itemId: string): Promise<Group[]> {
             items: [],
             indexNumber: g.IndexNumber,
             playedItemCount: g.PlayedItemCount,
-            totalItemCount: g.TotalItemCount
+            totalItemCount: g.TotalItemCount,
+            playedRuntimeTicks: g.PlayedRuntimeTicks,
+            totalRuntimeTicks: g.TotalRuntimeTicks
         }))
     } catch (ex: unknown) {
         logger.error("Couldn't load Collections/Playlists containing this movie", ex)
@@ -392,7 +396,9 @@ function viewShowEventHandler(): void {
                         items: [],
                         indexNumber: g.IndexNumber,
                         playedItemCount: g.PlayedItemCount,
-                        totalItemCount: g.TotalItemCount
+                        totalItemCount: g.TotalItemCount,
+                        playedRuntimeTicks: g.PlayedRuntimeTicks,
+                        totalRuntimeTicks: g.TotalRuntimeTicks
                     })),
                     activeGroupId: raw.ActiveGroupId,
                     activeItemIndex: raw.ActiveItemIndex
@@ -529,10 +535,10 @@ function viewShowEventHandler(): void {
 
             await listElementFactory.createLazyItemList(contentDiv, (startIndex) => loadGroupItems(activeGroupId, startIndex), viewToken, initialPage, initialWindowStartIndex)
             popupTitle.setText(programDataStore.activeGroup?.groupName ?? '')
-            popupTitle.setWatchedCount(programDataStore.activeGroup?.playedItemCount ?? 0, programDataStore.activeGroup?.totalItemCount ?? 0)
+            if (programDataStore.activeGroup) popupTitle.setWatchedCount(programDataStore.activeGroup)
             if (programDataStore.pluginSettings.ShowWatchedCount && programDataStore.activeGroup?.playedItemCount === UNKNOWN_WATCHED_COUNT) {
                 listElementFactory.ensureGroupWatchedCount(programDataStore.activeGroup)
-                    .then(updated => popupTitle.setWatchedCount(updated.playedItemCount, updated.totalItemCount))
+                    .then(updated => popupTitle.setWatchedCount(updated))
             }
 
             // scroll to the item that is currently playing

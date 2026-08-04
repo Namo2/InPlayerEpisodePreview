@@ -245,12 +245,14 @@ public class InPlayerPreviewController : ControllerBase
             {
                 case >= 0 when source is Playlist playlist:
                 {
-                    var playlistGroup = new PreviewGroup(playlist.Id, playlist.Name, 0, _folderPreviewService.CountPlayed(children, user), children.Count);
+                    var stats = _folderPreviewService.GetWatchStats(children, user);
+                    var playlistGroup = new PreviewGroup(playlist.Id, playlist.Name, 0, stats.PlayedItemCount, stats.TotalItemCount, stats.PlayedRuntimeTicks, stats.TotalRuntimeTicks);
                     return Ok(new ItemPreviewDataResult(BaseItemKind.Playlist, playlist.Name, [playlistGroup], playlist.Id, memberIndex));
                 }
                 case >= 0 when source is BoxSet boxSet:
                 {
-                    var boxSetGroup = new PreviewGroup(boxSet.Id, boxSet.Name, 0, _folderPreviewService.CountPlayed(children, user), children.Count);
+                    var stats = _folderPreviewService.GetWatchStats(children, user);
+                    var boxSetGroup = new PreviewGroup(boxSet.Id, boxSet.Name, 0, stats.PlayedItemCount, stats.TotalItemCount, stats.PlayedRuntimeTicks, stats.TotalRuntimeTicks);
                     return Ok(new ItemPreviewDataResult(BaseItemKind.BoxSet, boxSet.Name, [boxSetGroup], boxSet.Id, memberIndex));
                 }
                 default:
@@ -274,7 +276,7 @@ public class InPlayerPreviewController : ControllerBase
                     .Where(s => _config.DisplayMissingEpisodes || s.LocationType != LocationType.Virtual)
                     .Select(s => !_config.ShowWatchedCount
                         ? new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, 0, 0)
-                        : new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, UnknownWatchedCount, UnknownWatchedCount)
+                        : new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, UnknownWatchedCount, UnknownWatchedCount, UnknownWatchedCount, UnknownWatchedCount)
                     )
             ];
 
@@ -302,7 +304,8 @@ public class InPlayerPreviewController : ControllerBase
             return Ok(new ItemPreviewDataResult(BaseItemKind.Folder, null, groups, parentFolder.Id, activeVideoIndex));
         }
 
-        var itemGroup = new PreviewGroup(item.Id, null, 0, _folderPreviewService.CountPlayed([item], user), 1);
+        var itemStats = _folderPreviewService.GetWatchStats([item], user);
+        var itemGroup = new PreviewGroup(item.Id, null, 0, itemStats.PlayedItemCount, itemStats.TotalItemCount, itemStats.PlayedRuntimeTicks, itemStats.TotalRuntimeTicks);
         return Ok(new ItemPreviewDataResult(itemDto.Type, null, [itemGroup], item.Id, 0));
     }
 
@@ -382,7 +385,8 @@ public class InPlayerPreviewController : ControllerBase
             _ => [groupItem]
         };
 
-        return Ok(new WatchedCountResult(_folderPreviewService.CountPlayed(children, user), children.Count));
+        var stats = _folderPreviewService.GetWatchStats(children, user);
+        return Ok(new WatchedCountResult(stats.PlayedItemCount, stats.TotalItemCount, stats.PlayedRuntimeTicks, stats.TotalRuntimeTicks));
     }
 
     /// <summary>

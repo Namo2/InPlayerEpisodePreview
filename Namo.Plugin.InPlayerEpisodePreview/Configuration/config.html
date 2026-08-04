@@ -90,6 +90,16 @@
                     </label>
                     <div class="fieldDescription">Shows a watched count next to each group's name</div>
                 </div>
+                <div class="selectContainer">
+                    <label class="selectLabel" for="watchCountDisplayMode">Watched count display</label>
+                    <select is="emby-select" id="watchCountDisplayMode" name="watchCountDisplayMode" class="emby-select-withcolor emby-select">
+                        <option value="0">Watch count (e.g. 3/10 watched)</option>
+                        <option value="1">Watch progress (hours:minutes only, e.g. 36h 12m)</option>
+                        <option value="2">Watch progress (all units, e.g. 1d 12h)</option>
+                        <option value="3">Watch progress (%)</option>
+                    </select>
+                    <div class="fieldDescription">Which format the watched count badge is displayed in</div>
+                </div>
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
                         <input id="searchContainingCollections" is="emby-checkbox" name="searchContainingCollections"
@@ -141,6 +151,7 @@
                 document.querySelector('#blurThumbnail').checked = config.BlurThumbnail
                 document.querySelector('#onlyBlurUnwatched').checked = config.OnlyBlurUnwatched
                 document.querySelector('#showWatchedCount').checked = config.ShowWatchedCount
+                document.querySelector('#watchCountDisplayMode').value = config.WatchCountDisplayMode
                 document.querySelector('#searchContainingCollections').checked = config.SearchContainingCollections
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
 
@@ -171,6 +182,7 @@
             config.BlurThumbnail = document.querySelector('#blurThumbnail').checked
             config.OnlyBlurUnwatched = document.querySelector('#onlyBlurUnwatched').checked
             config.ShowWatchedCount = document.querySelector('#showWatchedCount').checked
+            config.WatchCountDisplayMode = parseInt(document.querySelector('#watchCountDisplayMode').value, 10)
             config.SearchContainingCollections = document.querySelector('#searchContainingCollections').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10
 

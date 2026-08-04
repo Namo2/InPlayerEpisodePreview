@@ -104,7 +104,7 @@ export class ListElementTemplate extends BaseTemplate {
                             <span class="previewItemDescription ${this.programDataStore.pluginSettings.BlurDescription && shouldBlur ? 'blur' : ''}">
                                 ${this.item.Description ?? 'loading...'}
                             </span>
-                            <button type="button" class="previewItemReadMoreButton hide">Read more</button>
+                            <button type="button" class="previewItemReadMoreButton hide">Show more</button>
                         </div>
                     </div>
                 </div>
@@ -122,6 +122,9 @@ export class ListElementTemplate extends BaseTemplate {
             togglePlayedStateLocally(this.programDataStore, this.item.Id)
         })
         
+        renderedElement.querySelector('.previewItemDescription')
+            ?.addEventListener('click', (e: MouseEvent) => e.stopPropagation())
+
         const itemImageCard: HTMLElement = document.getElementById(`start-item-${this.item.Id}`)
         itemImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks))
     }

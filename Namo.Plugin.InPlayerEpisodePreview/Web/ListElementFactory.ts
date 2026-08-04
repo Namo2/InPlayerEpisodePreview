@@ -120,80 +120,92 @@ export class ListElementFactory {
         }
     }
 
-    // Swaps an idle sentinel marker into a visible spinner once it's actually triggered a page load.
-    private showSentinelSpinner(sentinel: HTMLElement): void {
-        sentinel.classList.add('previewScrollSpinner')
-        sentinel.innerHTML = spinnerHtml()
-        activateSpinner(sentinel)
+    private createSpinnerElement(): HTMLElement {
+        const spinner = document.createElement('div')
+        spinner.classList.add('previewScrollSpinner')
+        spinner.innerHTML = spinnerHtml()
+        activateSpinner(spinner)
+        return spinner
     }
-
-    // Appends pages when scrolling to the bottom.
-    private addScrollSentinel(
+    
+    private attachScrollPagination(
         parentDiv: HTMLElement,
         loadPage: (startIndex: number) => Promise<GroupItemsResult>,
-        nextStartIndex: number,
-        totalLoaded: number,
-        viewToken: number
+        viewToken: number,
+        initialTotalLoaded: number,
+        initialTotalRecordCount: number,
+        initialLoadedStartIndex: number
     ): void {
-        const sentinel = document.createElement('div')
-        parentDiv.appendChild(sentinel)
+        const SCROLL_TRIGGER_DISTANCE_PX = 200
 
-        const observer = new IntersectionObserver(async ([entry]) => {
-            if (!entry.isIntersecting) return
-            observer.disconnect()
-            this.showSentinelSpinner(sentinel)
+        let totalLoaded = initialTotalLoaded
+        let totalRecordCount = initialTotalRecordCount
+        let loadedStartIndex = initialLoadedStartIndex
+        let loadingForward = false
+        let loadingBackward = false
 
-            const { items, totalRecordCount } = await loadPage(nextStartIndex)
+        const loadNextPage = async (): Promise<void> => {
+            loadingForward = true
+            const spinner = this.createSpinnerElement()
+            parentDiv.appendChild(spinner)
+
+            const { items, totalRecordCount: newTotalRecordCount } = await loadPage(totalLoaded)
             // The view may have moved on (e.g. back to the group list) while this page was loading.
             if (!this.programDataStore.isCurrentView(viewToken)) return
 
-            sentinel.remove()
+            spinner.remove()
             await this.createItemElements(items, parentDiv, totalLoaded)
+            totalLoaded += items.length
+            totalRecordCount = newTotalRecordCount
+            loadingForward = false
 
-            const newTotalLoaded = totalLoaded + items.length
-            if (newTotalLoaded < totalRecordCount)
-                this.addScrollSentinel(parentDiv, loadPage, newTotalLoaded, newTotalLoaded, viewToken)
-        }, { root: parentDiv, threshold: 0 })
+            // The newly loaded page might still not fill the container, so re-check right away.
+            checkScrollPosition()
+        }
 
-        observer.observe(sentinel)
-    }
-
-    // Prepends pages when scrolling to the top.
-    // currentStartIndex is the absolute index of whatever is currently the first loaded item
-    private addScrollSentinelBackward(
-        parentDiv: HTMLElement,
-        loadPage: (startIndex: number) => Promise<GroupItemsResult>,
-        currentStartIndex: number,
-        viewToken: number
-    ): void {
-        if (currentStartIndex <= 0) return
-
-        const sentinel = document.createElement('div')
-        parentDiv.insertBefore(sentinel, parentDiv.firstChild)
-
-        const observer = new IntersectionObserver(async ([entry]) => {
-            if (!entry.isIntersecting) return
-            observer.disconnect()
-
+        const loadPreviousPage = async (): Promise<void> => {
+            loadingBackward = true
             const scrollHeightBeforeSpinner = parentDiv.scrollHeight
-            this.showSentinelSpinner(sentinel)
+            const spinner = this.createSpinnerElement()
+            parentDiv.insertBefore(spinner, parentDiv.firstChild)
             parentDiv.scrollTop += parentDiv.scrollHeight - scrollHeightBeforeSpinner
 
             const pageSize = this.programDataStore.pluginSettings.EpisodePageSize
-            const newStartIndex = Math.max(0, currentStartIndex - pageSize)
+            const newStartIndex = Math.max(0, loadedStartIndex - pageSize)
             const { items } = await loadPage(newStartIndex)
             // The view may have moved on (e.g. back to the group list) while this page was loading.
             if (!this.programDataStore.isCurrentView(viewToken)) return
 
             const scrollHeightBeforePrepend = parentDiv.scrollHeight
-            sentinel.remove()
+            spinner.remove()
             await this.prependItemElements(items, parentDiv, newStartIndex)
             parentDiv.scrollTop += parentDiv.scrollHeight - scrollHeightBeforePrepend
+            loadedStartIndex = newStartIndex
+            loadingBackward = false
 
-            this.addScrollSentinelBackward(parentDiv, loadPage, newStartIndex, viewToken)
-        }, { root: parentDiv, threshold: 0 })
+            checkScrollPosition()
+        }
 
-        observer.observe(sentinel)
+        const checkScrollPosition = (): void => {
+            if (!this.programDataStore.isCurrentView(viewToken)) {
+                parentDiv.removeEventListener('scroll', checkScrollPosition)
+                return
+            }
+
+            const nearBottom = parentDiv.scrollTop + parentDiv.clientHeight >= parentDiv.scrollHeight - SCROLL_TRIGGER_DISTANCE_PX
+            if (!loadingForward && totalLoaded < totalRecordCount && nearBottom) {
+                loadNextPage()
+                return
+            }
+
+            const nearTop = parentDiv.scrollTop <= SCROLL_TRIGGER_DISTANCE_PX
+            if (!loadingBackward && loadedStartIndex > 0 && nearTop) {
+                loadPreviousPage()
+            }
+        }
+
+        parentDiv.addEventListener('scroll', checkScrollPosition)
+        checkScrollPosition()
     }
 
     public async createLazyItemList(
@@ -210,10 +222,7 @@ export class ListElementFactory {
         await this.createItemElements(firstPage.items, parentDiv, initialOffset)
 
         const totalLoaded = initialOffset + firstPage.items.length
-        if (totalLoaded < firstPage.totalRecordCount)
-            this.addScrollSentinel(parentDiv, loadPage, totalLoaded, totalLoaded, viewToken)
-
-        this.addScrollSentinelBackward(parentDiv, loadPage, initialOffset, viewToken)
+        this.attachScrollPagination(parentDiv, loadPage, viewToken, totalLoaded, firstPage.totalRecordCount, initialOffset)
     }
 
     private async fetchGroupWatchedCount(groupId: string): Promise<{ playedItemCount: number, totalItemCount: number }> {

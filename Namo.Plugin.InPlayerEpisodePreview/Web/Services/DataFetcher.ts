@@ -1,6 +1,7 @@
 import {ProgramDataStore} from "./ProgramDataStore";
 import {PreviewItem} from "../Models/PreviewData/PreviewItem";
-import {formatWatchedCount, Group} from "../Models/PreviewData/Group";
+import {Group} from "../Models/PreviewData/Group";
+import {renderWatchedCountInnerHtml} from "../Models/PreviewData/WatchProgress";
 
 type UserDataChangedEntry = {
     ItemId: string
@@ -16,22 +17,38 @@ type WebSocketMessage = {
 }
 
 export function updateWatchedCountDom(programDataStore: ProgramDataStore, group: Group): void {
-    const text = formatWatchedCount(group.playedItemCount, group.totalItemCount)
+    const html = renderWatchedCountInnerHtml(group, programDataStore.pluginSettings.WatchCountDisplayMode)
 
     if (group.groupId === programDataStore.activeGroupId) {
         const popupWatchedCount = document.getElementById('popupTitleContainer')?.querySelector<HTMLElement>('.previewGroupWatchedCount')
-        if (popupWatchedCount) popupWatchedCount.innerText = text
+        if (popupWatchedCount) popupWatchedCount.innerHTML = html
     }
 
     const groupListWatchedCount = document.getElementById(`group-${group.groupId}`)?.querySelector<HTMLElement>('.previewGroupWatchedCount')
-    if (groupListWatchedCount) groupListWatchedCount.innerText = text
+    if (groupListWatchedCount) groupListWatchedCount.innerHTML = html
 }
 
-function adjustWatchedCount(programDataStore: ProgramDataStore, itemId: string, wasPlayed: boolean, isPlayed: boolean): void {
+function playedRuntimeContribution(item: PreviewItem, played: boolean, playbackPositionTicks: number): number {
+    return played ? (item.RunTimeTicks ?? 0) : playbackPositionTicks
+}
+
+function adjustWatchedCount(
+    programDataStore: ProgramDataStore,
+    item: PreviewItem,
+    wasPlayed: boolean,
+    isPlayed: boolean,
+    oldPlaybackPositionTicks: number,
+    newPlaybackPositionTicks: number
+): void {
     if (!programDataStore.pluginSettings.ShowWatchedCount) return
     if (wasPlayed === isPlayed) return
 
-    const updatedGroup = programDataStore.adjustGroupPlayedCount(itemId, isPlayed ? 1 : -1)
+    const deltaPlayedCount = isPlayed ? 1 : -1
+    const deltaPlayedRuntimeTicks =
+        playedRuntimeContribution(item, isPlayed, newPlaybackPositionTicks) -
+        playedRuntimeContribution(item, wasPlayed, oldPlaybackPositionTicks)
+
+    const updatedGroup = programDataStore.adjustGroupWatchStats(item.Id, deltaPlayedCount, deltaPlayedRuntimeTicks)
     if (updatedGroup) updateWatchedCountDom(programDataStore, updatedGroup)
 }
 
@@ -41,12 +58,14 @@ export function togglePlayedStateLocally(programDataStore: ProgramDataStore, ite
 
     const wasPlayed = item.UserData.Played
     const isPlayed = !wasPlayed
+    const oldPlaybackPositionTicks = item.UserData.PlaybackPositionTicks
+    const newPlaybackPositionTicks = isPlayed ? 0 : oldPlaybackPositionTicks
 
     programDataStore.updateItem({
         ...item,
-        UserData: { ...item.UserData, Played: isPlayed }
+        UserData: { ...item.UserData, Played: isPlayed, PlaybackPositionTicks: newPlaybackPositionTicks }
     })
-    adjustWatchedCount(programDataStore, itemId, wasPlayed, isPlayed)
+    adjustWatchedCount(programDataStore, item, wasPlayed, isPlayed, oldPlaybackPositionTicks, newPlaybackPositionTicks)
 }
 
 export class DataFetcher {
@@ -61,6 +80,7 @@ export class DataFetcher {
                 if (!item) continue
 
                 const wasPlayed = item.UserData.Played
+                const oldPlaybackPositionTicks = item.UserData.PlaybackPositionTicks
                 this.programDataStore.updateItem({
                     ...item,
                     UserData: {
@@ -72,7 +92,7 @@ export class DataFetcher {
                     }
                 })
 
-                adjustWatchedCount(this.programDataStore, userData.ItemId, wasPlayed, userData.Played)
+                adjustWatchedCount(this.programDataStore, item, wasPlayed, userData.Played, oldPlaybackPositionTicks, userData.PlaybackPositionTicks)
             }
         })
     }

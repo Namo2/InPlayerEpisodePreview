@@ -7,6 +7,8 @@ export type Group = {
     indexNumber: number
     playedItemCount: number
     totalItemCount: number
+    playedRuntimeTicks: number
+    totalRuntimeTicks: number
     loadedStartIndex?: number
     loadedEndIndex?: number
     loadedTotalRecordCount?: number

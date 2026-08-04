@@ -35,6 +35,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool ShowWatchedCount { get; set; } = true;
 
     /// <summary>
+    /// Which format the watched-count badge is displayed in.
+    /// </summary>
+    public int WatchCountDisplayMode { get; set; } = (int)Namo.Plugin.InPlayerEpisodePreview.Configuration.WatchCountDisplayMode.HoursMinutes;
+
+    /// <summary>
     /// Whether to search for other Collections/Playlists containing the item being played
     /// </summary>
     public bool SearchContainingCollections { get; set; } = true;

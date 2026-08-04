@@ -1,7 +1,8 @@
 import {BaseTemplate} from "./BaseTemplate";
 import {ProgramDataStore} from "../Services/ProgramDataStore";
 import {ItemType} from "../Models/ItemType";
-import {formatWatchedCount} from "../Models/PreviewData/Group";
+import {Group} from "../Models/PreviewData/Group";
+import {renderWatchedCountInnerHtml} from "../Models/PreviewData/WatchProgress";
 
 export class PopupTitleTemplate extends BaseTemplate {
     constructor(container: HTMLElement, positionAfterIndex: number, private programDataStore: ProgramDataStore) {
@@ -32,9 +33,9 @@ export class PopupTitleTemplate extends BaseTemplate {
         this.getElement().querySelector<HTMLElement>('#popupTitleSwitchIcon')?.classList.toggle('hide', !switchable)
     }
 
-    public setWatchedCount(playedItemCount: number, totalItemCount: number) {
+    public setWatchedCount(group: Group) {
         const watchedCountElement = this.getElement().querySelector<HTMLElement>('.previewGroupWatchedCount')
-        if (watchedCountElement) watchedCountElement.innerText = formatWatchedCount(playedItemCount, totalItemCount)
+        if (watchedCountElement) watchedCountElement.innerHTML = renderWatchedCountInnerHtml(group, this.programDataStore.pluginSettings.WatchCountDisplayMode)
     }
     
     public setVisible(isVisible: boolean) {

@@ -41,14 +41,14 @@ export class ListElementFactory {
         }
     }
 
-    // Show a "Read more" button if description exceeds max height
+    // Show a "Show more" button if description exceeds max height
     private applyDescriptionReadMore(itemContainer: Element): void {
         const description = itemContainer.querySelector<HTMLElement>('.previewItemDescription')
         const readMoreButton = itemContainer.querySelector<HTMLElement>('.previewItemReadMoreButton')
         if (!description || !readMoreButton) return
 
         description.classList.remove('expanded')
-        readMoreButton.textContent = 'Read more'
+        readMoreButton.textContent = 'Show more'
 
         const isOverflowing = description.scrollHeight > description.clientHeight
         readMoreButton.classList.toggle('hide', !isOverflowing)
@@ -57,7 +57,7 @@ export class ListElementFactory {
         readMoreButton.onclick = (e: MouseEvent): void => {
             e.stopPropagation()
             const expanded = description.classList.toggle('expanded')
-            readMoreButton.textContent = expanded ? 'Read less' : 'Read more'
+            readMoreButton.textContent = expanded ? 'Show less' : 'Show more'
         }
     }
 

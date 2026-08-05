@@ -218,6 +218,8 @@ const videoPaths: string[] = ['/video']
 let previousRoutePath: string = null
 let previewContainerLoaded: boolean = false
 document.addEventListener('viewshow', viewShowEventHandler)
+window.addEventListener('popstate', viewShowEventHandler)
+window.addEventListener('popstate', () => document.getElementById('previewPopup')?.remove())
 
 // Sometimes their can be stale rating buttons. thats why we take the last one from the DOM for the itemId
 function getLatestUserRatingItemId(): string | null {

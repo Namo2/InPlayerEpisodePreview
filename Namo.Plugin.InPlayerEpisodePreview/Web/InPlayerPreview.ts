@@ -219,6 +219,11 @@ const SEARCH_COLLECTIONS_GROUP_NAME = 'Search Collections/Playlists'
 const videoPaths: string[] = ['/video']
 let previousRoutePath: string = null
 let previewContainerLoaded: boolean = false
+
+let pendingPreloadItemId: string | null = null
+let pendingPreload: Promise<void> | null = null
+let preloadObserver: MutationObserver | null = null
+
 document.addEventListener('viewshow', viewShowEventHandler)
 window.addEventListener('popstate', viewShowEventHandler)
 window.addEventListener('popstate', () => document.getElementById('previewPopup')?.remove())
@@ -365,11 +370,102 @@ function viewShowEventHandler(): void {
         if (index === -1)
             index = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("osdTimeText"))
 
+        const loadItemPreviewData = async (itemId: string): Promise<{
+            itemType: string, containerName: string | null, groups: Group[], activeGroupId: string, activeItemIndex: number
+        }> => {
+            const userId = ApiClient.getCurrentUserId()
+            const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_PREVIEW_DATA}`
+                .replace('{userId}', userId)
+                .replace('{deviceId}', ApiClient.deviceId())
+                .replace('{itemId}', itemId))
+            const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+            return {
+                itemType: raw.ItemType,
+                containerName: raw.ContainerName,
+                groups: raw.Groups.map((g: any) => ({
+                    groupId: g.GroupId,
+                    groupName: g.GroupName,
+                    items: [],
+                    indexNumber: g.IndexNumber,
+                    playedItemCount: g.PlayedItemCount,
+                    totalItemCount: g.TotalItemCount,
+                    playedRuntimeTicks: g.PlayedRuntimeTicks,
+                    totalRuntimeTicks: g.TotalRuntimeTicks
+                })),
+                activeGroupId: raw.ActiveGroupId,
+                activeItemIndex: raw.ActiveItemIndex
+            }
+        }
+
+        const loadGroupItems = async (groupId: string, startIndex: number = 0, limit: number = programDataStore.pluginSettings.EpisodePageSize): Promise<GroupItemsResult> => {
+            const userId = ApiClient.getCurrentUserId()
+            const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.GROUP_ITEMS}`
+                .replace('{userId}', userId)
+                .replace('{groupId}', groupId),
+                { startIndex, limit })
+            const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+            const result: GroupItemsResult = { items: raw.Items, totalRecordCount: raw.TotalRecordCount }
+
+            programDataStore.recordLoadedItems(groupId, result.items, startIndex, result.totalRecordCount)
+            return result
+        }
+        
+        function preloadPreviewData(itemId: string | null): void {
+            if (!itemId) return
+            if (!programDataStore.isGroupsCacheExpired && programDataStore.groups.some(g => g.items.some(item => item.Id === itemId))) return
+            if (pendingPreloadItemId === itemId) return
+
+            pendingPreloadItemId = itemId
+            pendingPreload = (async (): Promise<void> => {
+                const { itemType, containerName, groups, activeGroupId, activeItemIndex } = await loadItemPreviewData(itemId)
+                programDataStore.groups = groups
+                programDataStore.markGroupsFetched()
+                programDataStore.type = ItemType[itemType as keyof typeof ItemType]
+                programDataStore.boxSetName = containerName ?? ''
+
+                const PAGE_SIZE = programDataStore.pluginSettings.EpisodePageSize
+                const pageOfActiveEpisode = Math.floor(activeItemIndex / PAGE_SIZE)
+                const initialWindowStartIndex = Math.max(0, (pageOfActiveEpisode - 1) * PAGE_SIZE)
+                const initialWindowLimit = (pageOfActiveEpisode + 2) * PAGE_SIZE - initialWindowStartIndex
+
+                await loadGroupItems(activeGroupId, initialWindowStartIndex, initialWindowLimit)
+            })().catch((ex: unknown) => {
+                logger.error("Couldn't preload preview data", ex)
+            }).finally(() => {
+                if (pendingPreloadItemId === itemId) pendingPreloadItemId = null
+            })
+        }
+
+        // Wait that data-id gets populated by Jellyfin
+        function schedulePreload(): void {
+            const itemId = getLatestUserRatingItemId()
+            if (itemId) {
+                preloadPreviewData(itemId)
+                return
+            }
+
+            const ratingButtons = document.querySelectorAll('.btnUserRating.autoSize.paper-icon-button-light')
+            const target = ratingButtons[ratingButtons.length - 1]
+            if (!target) return
+
+            preloadObserver?.disconnect()
+            preloadObserver = new MutationObserver(() => {
+                const id = target.getAttribute('data-id')
+                if (!id) return
+                preloadObserver?.disconnect()
+                preloadObserver = null
+                preloadPreviewData(id)
+            })
+            preloadObserver.observe(target, { attributes: true, attributeFilter: ['data-id'] })
+        }
+
         const previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index)
         let previewButtonLoading: boolean = false
         previewButton.render(previewButtonClickHandler)
 
         document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.addEventListener('timeupdate', onVideoTimeUpdate)
+
+        schedulePreload()
 
         async function previewButtonClickHandler(): Promise<void> {
             if (previewButtonLoading) return
@@ -382,48 +478,6 @@ function viewShowEventHandler(): void {
         }
 
         async function doPreviewButtonClick(): Promise<void> {
-            const loadItemPreviewData = async (itemId: string): Promise<{
-                itemType: string, containerName: string | null, groups: Group[], activeGroupId: string, activeItemIndex: number
-            }> => {
-                const userId = ApiClient.getCurrentUserId()
-                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_PREVIEW_DATA}`
-                    .replace('{userId}', userId)
-                    .replace('{deviceId}', ApiClient.deviceId())
-                    .replace('{itemId}', itemId))
-                const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
-                return {
-                    itemType: raw.ItemType,
-                    containerName: raw.ContainerName,
-                    groups: raw.Groups.map((g: any) => ({
-                        groupId: g.GroupId,
-                        groupName: g.GroupName,
-                        items: [],
-                        indexNumber: g.IndexNumber,
-                        playedItemCount: g.PlayedItemCount,
-                        totalItemCount: g.TotalItemCount,
-                        playedRuntimeTicks: g.PlayedRuntimeTicks,
-                        totalRuntimeTicks: g.TotalRuntimeTicks
-                    })),
-                    activeGroupId: raw.ActiveGroupId,
-                    activeItemIndex: raw.ActiveItemIndex
-                }
-            }
-
-            const PAGE_SIZE = programDataStore.pluginSettings.EpisodePageSize
-
-            const loadGroupItems = async (groupId: string, startIndex: number = 0, limit: number = PAGE_SIZE): Promise<GroupItemsResult> => {
-                const userId = ApiClient.getCurrentUserId()
-                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.GROUP_ITEMS}`
-                    .replace('{userId}', userId)
-                    .replace('{groupId}', groupId),
-                    { startIndex, limit })
-                const raw = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
-                const result: GroupItemsResult = { items: raw.Items, totalRecordCount: raw.TotalRecordCount }
-
-                programDataStore.recordLoadedItems(groupId, result.items, startIndex, result.totalRecordCount)
-                return result
-            }
-
             // This is experimental and will maybe be used in future releases
             const getNowPlayingItemIdFromSession = async (): Promise<string | null> => {
                 const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.NOW_PLAYING_ITEM}`)
@@ -441,6 +495,14 @@ function viewShowEventHandler(): void {
             const contentDiv: HTMLElement = document.getElementById('popupContentContainer')
 
             const itemId = getLatestUserRatingItemId()
+
+            // If there is no response of the OSD's preload of this same item, wait for it instead of firing a duplicate fetch.
+            if (pendingPreloadItemId === itemId && pendingPreload) {
+                contentDiv.innerHTML = `<div class="previewScrollSpinner">${spinnerHtml()}</div>`
+                activateSpinner(contentDiv)
+                await pendingPreload
+            }
+
             const cachedGroup = !programDataStore.isGroupsCacheExpired
                 ? programDataStore.groups.find(g => g.items.some(item => item.Id === itemId))
                 : undefined
@@ -465,6 +527,7 @@ function viewShowEventHandler(): void {
                 activeGroupId = fetchedActiveGroupId
 
                 // Load a 3-page window (page of the active episode, plus one page before and after)
+                const PAGE_SIZE = programDataStore.pluginSettings.EpisodePageSize
                 const pageOfActiveEpisode = Math.floor(activeItemIndex / PAGE_SIZE)
                 initialWindowStartIndex = Math.max(0, (pageOfActiveEpisode - 1) * PAGE_SIZE)
                 const initialWindowLimit = (pageOfActiveEpisode + 2) * PAGE_SIZE - initialWindowStartIndex
@@ -557,7 +620,12 @@ function viewShowEventHandler(): void {
         // Clear old data and reset previewContainerLoaded flag
         document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.removeEventListener('timeupdate', onVideoTimeUpdate)
         lastTrackedPositionSecond = -1
-        
+
+        preloadObserver?.disconnect()
+        preloadObserver = null
+        pendingPreloadItemId = null
+        pendingPreload = null
+
         document.getElementById('previewPopup')?.remove()
 
         previewContainerLoaded = false // Reset flag when unloading

@@ -4,6 +4,7 @@ export enum Endpoints {
     PLAY_MEDIA = "/Items/{itemId}/Play/{ticks}",
     NOW_PLAYING_ITEM = "/NowPlayingItem",
     SERVER_SETTINGS = "/ServerSettings",
+    ITEM_PREVIEW_TYPE = "/Users/{userId}/{deviceId}/Items/{itemId}/PreviewItemType",
     ITEM_PREVIEW_DATA = "/Users/{userId}/{deviceId}/Items/{itemId}/PreviewData",
     GROUP_ITEMS = "/Users/{userId}/Groups/{groupId}/Items",
     GROUP_WATCHED_COUNT = "/Users/{userId}/Groups/{groupId}/WatchedCount",

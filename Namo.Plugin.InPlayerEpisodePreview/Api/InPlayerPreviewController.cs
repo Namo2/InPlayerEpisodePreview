@@ -220,6 +220,42 @@ public class InPlayerPreviewController : ControllerBase
     }
 
     /// <summary>
+    /// Returns just the item's type (Episode/BoxSet/Playlist/Folder/etc.)
+    /// </summary>
+    [HttpGet("Users/{userId}/{deviceId}/Items/{itemId}/PreviewItemType")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult GetItemPreviewType([FromRoute] Guid userId, [FromRoute] string deviceId, [FromRoute] Guid itemId)
+    {
+        var user = _userManager.GetUserById(userId);
+        if (user is null)
+            return NotFound();
+
+        var item = _libraryManager.GetItemById(itemId);
+        if (item is null)
+            return NotFound();
+
+        // If this item was navigated into from a Playlist/BoxSet details page,
+        // GetItemPreviewData reports it as Playlist/BoxSet rather than e.g. Movie
+        if (SourceCollectionByDevice.TryGetValue($"{userId}:{deviceId}", out var sourceId)
+            && _libraryManager.GetItemById(sourceId) is Folder source and (Playlist or BoxSet))
+        {
+            if (source.LinkedChildren.Any(c => c.ItemId == itemId))
+                return Ok(source is Playlist ? BaseItemKind.Playlist : BaseItemKind.BoxSet);
+
+            SourceCollectionByDevice.TryRemove($"{userId}:{deviceId}", out _);
+        }
+
+        if (item is Episode)
+            return Ok(BaseItemKind.Episode);
+
+        if (item.GetBaseItemKind() == BaseItemKind.Video && _libraryManager.GetItemById(item.ParentId) is Folder)
+            return Ok(BaseItemKind.Folder);
+
+        return Ok(item.GetBaseItemKind());
+    }
+
+    /// <summary>
     /// Returns preview data for the given item
     /// </summary>
     [HttpGet("Users/{userId}/{deviceId}/Items/{itemId}/PreviewData")]

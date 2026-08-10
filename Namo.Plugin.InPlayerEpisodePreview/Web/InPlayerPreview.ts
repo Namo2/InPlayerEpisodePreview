@@ -340,21 +340,13 @@ function viewShowEventHandler(): void {
     captureSourceCollection(currentRoutePath)
     attemptLoadVideoView()
     previousRoutePath = currentRoutePath
-
-    // Attempts to load the video view, retrying up to 3 times if necessary.
-    function attemptLoadVideoView(retryCount = 0): void {
+    
+    function attemptLoadVideoView(): void {
         if (videoPaths.includes(currentRoutePath)) {
-            // if (programDataStore.dataIsAllowedForPreview) {
-                // Check if the preview container is already loaded before loading
-                if (!previewContainerLoaded && !isPreviewButtonCreated()) {
-                    loadVideoView()
-                    previewContainerLoaded = true // Set flag to true after loading
-                // }
-            } else if (retryCount < 3) { // Retry up to 3 times
-                setTimeout((): void => {
-                    logger.debug(`Retry #${retryCount + 1}`)
-                    attemptLoadVideoView(retryCount + 1)
-                }, 10000) // Wait 10 seconds for each retry
+            // Check if the preview container is already loaded before loading
+            if (!previewContainerLoaded && !isPreviewButtonCreated()) {
+                loadVideoView()
+                previewContainerLoaded = true // Set flag to true after loading
             }
         } else if (videoPaths.includes(previousRoutePath)) {
             unloadVideoView()
@@ -369,6 +361,27 @@ function viewShowEventHandler(): void {
         // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
         if (index === -1)
             index = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("osdTimeText"))
+
+        let previewButton: PreviewButtonTemplate | null = null
+        let previewButtonLoading: boolean = false
+
+        // Only actually inserted into the OSD once the item's type is confirmed enabled - see preloadPreviewData.
+        function insertPreviewButton(): void {
+            if (previewButton) return
+            previewButton = new PreviewButtonTemplate(parent, index)
+            previewButton.render(previewButtonClickHandler)
+            document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.addEventListener('timeupdate', onVideoTimeUpdate)
+        }
+
+        const fetchPreviewItemType = async (itemId: string): Promise<ItemType> => {
+            const userId = ApiClient.getCurrentUserId()
+            const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_PREVIEW_TYPE}`
+                .replace('{userId}', userId)
+                .replace('{deviceId}', ApiClient.deviceId())
+                .replace('{itemId}', itemId))
+            const rawType: string = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+            return ItemType[rawType as keyof typeof ItemType]
+        }
 
         const loadItemPreviewData = async (itemId: string): Promise<{
             itemType: string, containerName: string | null, groups: Group[], activeGroupId: string, activeItemIndex: number
@@ -412,11 +425,20 @@ function viewShowEventHandler(): void {
         
         function preloadPreviewData(itemId: string | null): void {
             if (!itemId) return
-            if (!programDataStore.isGroupsCacheExpired && programDataStore.groups.some(g => g.items.some(item => item.Id === itemId))) return
+            if (!programDataStore.isGroupsCacheExpired && programDataStore.groups.some(g => g.items.some(item => item.Id === itemId))) {
+                // Already fetched (and therefore already known-allowed) earlier this session - just show the button.
+                insertPreviewButton()
+                return
+            }
             if (pendingPreloadItemId === itemId) return
 
             pendingPreloadItemId = itemId
             pendingPreload = (async (): Promise<void> => {
+                const previewType = await fetchPreviewItemType(itemId)
+                if (!programDataStore.isTypeAllowedForPreview(previewType)) return
+
+                insertPreviewButton()
+
                 const { itemType, containerName, groups, activeGroupId, activeItemIndex } = await loadItemPreviewData(itemId)
                 programDataStore.groups = groups
                 programDataStore.markGroupsFetched()
@@ -458,12 +480,6 @@ function viewShowEventHandler(): void {
             })
             preloadObserver.observe(target, { attributes: true, attributeFilter: ['data-id'] })
         }
-
-        const previewButton: PreviewButtonTemplate = new PreviewButtonTemplate(parent, index)
-        let previewButtonLoading: boolean = false
-        previewButton.render(previewButtonClickHandler)
-
-        document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.addEventListener('timeupdate', onVideoTimeUpdate)
 
         schedulePreload()
 

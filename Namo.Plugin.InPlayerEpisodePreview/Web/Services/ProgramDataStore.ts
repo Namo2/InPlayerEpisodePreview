@@ -7,6 +7,13 @@ import {DefaultServerSettings, ServerSettings} from "../Models/ServerSettings";
 
 const GROUPS_CACHE_TTL = 5 * 60 * 1000
 
+// Item Type mappings for the Types selectable in the Plugin Configuration
+const PREVIEW_TYPE_GROUPS: Partial<Record<ItemType, ItemType[]>> = {
+    [ItemType.Series]: [ItemType.Series, ItemType.Season, ItemType.Episode],
+    [ItemType.BoxSet]: [ItemType.BoxSet, ItemType.Playlist],
+    [ItemType.Video]: [ItemType.Video, ItemType.Folder]
+}
+
 export class ProgramDataStore {
     private _programData: ProgramData
     private _viewToken: number = 0
@@ -92,11 +99,8 @@ export class ProgramDataStore {
         return this._groupsCachedAt === null || Date.now() - this._groupsCachedAt > GROUPS_CACHE_TTL
     }
 
-    public get dataIsAllowedForPreview() {
-        if (!this.allowedPreviewTypes.includes(this.type))
-            return false
-
-        return this.groups.some(group => group.items.length >= 1)
+    public isTypeAllowedForPreview(type: ItemType): boolean {
+        return this.allowedPreviewTypes.some(configuredType => (PREVIEW_TYPE_GROUPS[configuredType] ?? [configuredType]).includes(type))
     }
 
     public get allowedPreviewTypes() {

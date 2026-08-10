@@ -13,7 +13,7 @@ export type PluginSettings = {
 }
 
 export const DefaultPluginSettings: PluginSettings = {
-    EnabledItemTypes: [ItemType.Series, ItemType.BoxSet, ItemType.Movie, ItemType.Folder, ItemType.Video],
+    EnabledItemTypes: [ItemType.Series, ItemType.BoxSet, ItemType.Movie, ItemType.Video],
     BlurDescription: false,
     BlurThumbnail: false,
     EpisodePageSize: 10,

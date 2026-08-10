@@ -16,8 +16,7 @@ public class PluginConfiguration : BasePluginConfiguration
         (int)AvailablePreviewItemTypes.Series,
         (int)AvailablePreviewItemTypes.Movie,
         (int)AvailablePreviewItemTypes.Video,
-        (int)AvailablePreviewItemTypes.BoxSet,
-        (int)AvailablePreviewItemTypes.Folder
+        (int)AvailablePreviewItemTypes.BoxSet
     ];
 
     public bool BlurDescription { get; set; } = false;

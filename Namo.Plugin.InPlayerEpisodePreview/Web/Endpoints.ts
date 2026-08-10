@@ -3,5 +3,6 @@ export enum Endpoints {
     EPISODE_INFO = "/Users/{userId}/Items/{episodeId}",
     EPISODE_DESCRIPTION = "/Items/{episodeId}",
     PLAY_MEDIA = "/Users/{userId}/{deviceId}/Items/{episodeId}/Play/{ticks}",
-    SERVER_SETTINGS = "/ServerSettings"
+    SERVER_SETTINGS = "/ServerSettings",
+    PLUGIN_SETTINGS = "/PluginSettings"
 }

@@ -202,9 +202,11 @@ function initialize() {
     }
 
     new DataFetcher(programDataStore)
-
-    ApiClient.getPluginConfiguration('73833d5f-0bcb-45dc-ab8b-7ce668f4345d')
+    
+    const pluginSettingsUrl = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLUGIN_SETTINGS}`)
+    ApiClient.ajax({ type: 'GET', url: pluginSettingsUrl, dataType: 'json' })
         .then((config: PluginSettings) => programDataStore.pluginSettings = config)
+        .catch((ex: unknown) => logger.error("Couldn't load plugin settings, falling back to defaults", ex))
 
     const serverSettingsUrl = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.SERVER_SETTINGS}`)
     ApiClient.ajax({ type: 'GET', url: serverSettingsUrl, dataType: 'json' })

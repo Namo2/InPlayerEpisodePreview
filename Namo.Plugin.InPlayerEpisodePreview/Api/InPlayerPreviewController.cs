@@ -432,4 +432,17 @@ public class InPlayerPreviewController : ControllerBase
 
         return NotFound();
     }
+
+    /// <summary>
+    /// This controller returns the plugin configuration which is needed in the frontend.
+    /// Jellyfin's own /Plugins endpoints require elevation, so reading the configuration through
+    /// them fails with 403 for every non-admin user, leaving them on the frontend defaults.
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("PluginSettings")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult GetPluginSettings()
+    {
+        return new OkObjectResult(_config);
+    }
 }

@@ -3,11 +3,11 @@
     "fs": false
   },
   "devDependencies": {
-    "webpack": "^5.101.3",
-    "webpack-cli": "^6.0.1"
+    "@jellyfin/sdk": "^0.13.0",
+    "webpack": "^5.108.4",
+    "webpack-cli": "^7.2.1"
   },
   "dependencies": {
-    "@jellyfin/sdk": "^0.13.0",
-    "ts-loader": "^9.5.4"
+    "ts-loader": "^9.6.2"
   }
 }

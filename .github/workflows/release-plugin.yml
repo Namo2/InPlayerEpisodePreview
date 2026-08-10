@@ -1,0 +1,365 @@
+name: Release plugin
+
+# Builds the plugin DLL for one or more Jellyfin ABIs, packages each build the same way
+# upstream does (a zip containing only Namo.Plugin.InPlayerEpisodePreview.dll), publishes
+# them as release assets and adds the matching entries to manifest.json.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Base plugin version, exactly 3 parts (e.g. 2.0.0). The ABI digit is appended per artifact: .1=10.10.7, .2=10.11.x, .3=12.x"
+        required: true
+      ref:
+        description: "Branch to build and commit manifest.json to. Defaults to the branch this workflow is started from"
+        required: false
+        default: ""
+      jellyfin_versions:
+        description: "Comma separated Jellyfin NuGet versions. Use pkg:targetAbi to set a different manifest targetAbi (e.g. 10.11.11:10.11.0)"
+        required: true
+        default: "10.10.7,10.11.0"
+      changelog:
+        description: 'Changelog for manifest.json and the release notes. Use \n for line breaks'
+        required: false
+        default: ""
+      tag:
+        description: "Release tag. Defaults to v<version>"
+        required: false
+        default: ""
+      dry_run:
+        description: "Build and verify only: no manifest commit, no tag, no release"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-plugin
+  cancel-in-progress: false
+
+env:
+  PROJECT_DIR: Namo.Plugin.InPlayerEpisodePreview
+  ASSEMBLY_NAME: Namo.Plugin.InPlayerEpisodePreview
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      tag: ${{ steps.plan.outputs.tag }}
+      ref: ${{ steps.plan.outputs.ref }}
+    steps:
+      - name: Validate inputs and build matrix
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_VERSION: ${{ inputs.version }}
+          TARGET_REF: ${{ inputs.ref }}
+          JELLYFIN_VERSIONS: ${{ inputs.jellyfin_versions }}
+          TAG_INPUT: ${{ inputs.tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$BASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::version must be exactly three numeric parts (X.Y.Z), got '$BASE_VERSION'"
+            exit 1
+          fi
+
+          TAG="$TAG_INPUT"
+          [[ -n "$TAG" ]] || TAG="v$BASE_VERSION"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          # Default to the branch the workflow was started from, so the file does not
+          # have to be duplicated onto every release branch to build one.
+          [[ -n "$TARGET_REF" ]] || TARGET_REF="$GITHUB_REF_NAME"
+          echo "ref=$TARGET_REF" >> "$GITHUB_OUTPUT"
+
+          if [[ "$DRY_RUN" != "true" ]]; then
+            if ! gh api "repos/$GITHUB_REPOSITORY/branches/$TARGET_REF" --silent 2>/dev/null; then
+              echo "::error::'$TARGET_REF' is not a branch in $GITHUB_REPOSITORY. manifest.json can only be committed to a branch."
+              exit 1
+            fi
+            if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --silent 2>/dev/null; then
+              echo "::error::tag '$TAG' already exists"
+              exit 1
+            fi
+          fi
+
+          entries='[]'
+          IFS=',' read -ra SPECS <<< "$JELLYFIN_VERSIONS"
+          for spec in "${SPECS[@]}"; do
+            spec="${spec//[[:space:]]/}"
+            [[ -n "$spec" ]] || continue
+
+            pkg="${spec%%:*}"
+            abi="${spec#*:}"
+            # No colon in the spec: derive the ABI from the package version, minus any prerelease suffix.
+            [[ "$abi" != "$spec" ]] || abi="${pkg%%-*}"
+
+            case "$pkg" in
+              10.10.*) tfm=net8.0;  sdk=8.0.x;  digit=1 ;;
+              10.11.*) tfm=net9.0;  sdk=9.0.x;  digit=2 ;;
+              12.*)    tfm=net10.0; sdk=10.0.x; digit=3 ;;
+              *)
+                echo "::error::unsupported Jellyfin version '$pkg' (expected 10.10.*, 10.11.* or 12.*)"
+                exit 1
+                ;;
+            esac
+
+            version="$BASE_VERSION.$digit"
+            entries=$(jq -c \
+              --arg pkg "$pkg" --arg abi "$abi" --arg tfm "$tfm" --arg sdk "$sdk" \
+              --arg version "$version" --argjson digit "$digit" \
+              --arg zip "InPlayerEpisodePreview_${version}-${abi}.zip" \
+              '. + [{
+                 jellyfinVersion: $pkg,
+                 targetAbi: $abi,
+                 tfm: $tfm,
+                 sdk: $sdk,
+                 version: $version,
+                 digit: $digit,
+                 zip: $zip
+               }]' <<< "$entries")
+          done
+
+          if [[ "$(jq 'length' <<< "$entries")" -eq 0 ]]; then
+            echo "::error::jellyfin_versions did not contain any version"
+            exit 1
+          fi
+          if [[ "$(jq '[.[].digit] | unique | length' <<< "$entries")" -ne "$(jq 'length' <<< "$entries")" ]]; then
+            echo "::error::two requested Jellyfin versions map to the same ABI digit, which would produce duplicate plugin versions"
+            exit 1
+          fi
+
+          echo "matrix={\"include\":$entries}" >> "$GITHUB_OUTPUT"
+          jq -r '.[] | "\(.jellyfinVersion) -> version \(.version), targetAbi \(.targetAbi), \(.tfm), \(.zip)"' <<< "$entries" \
+            >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ env.PROJECT_DIR }}/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: npm ci
+
+      # ts-loader type checks on every build, so a webpack failure here is the TypeScript test.
+      - name: Build web bundle
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          set -euo pipefail
+          cp Web/InPlayerPreview.js /tmp/committed-bundle.js
+          npx webpack
+          test -s Web/InPlayerPreview.js
+          if cmp -s /tmp/committed-bundle.js Web/InPlayerPreview.js; then
+            echo "Rebuilt bundle is identical to the committed Web/InPlayerPreview.js"
+          else
+            echo "::warning::Rebuilt Web/InPlayerPreview.js differs from the committed one; the release uses the freshly built bundle"
+          fi
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ matrix.sdk }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ matrix.jellyfinVersion }}-${{ hashFiles(format('{0}/*.csproj', env.PROJECT_DIR)) }}
+          restore-keys: nuget-${{ matrix.jellyfinVersion }}-
+
+      - name: Restore
+        run: >-
+          dotnet restore ${{ env.PROJECT_DIR }}/${{ env.ASSEMBLY_NAME }}.csproj
+          -p:JellyfinVersion=${{ matrix.jellyfinVersion }}
+
+      - name: Build
+        run: >-
+          dotnet build ${{ env.PROJECT_DIR }}/${{ env.ASSEMBLY_NAME }}.csproj
+          --configuration Release --no-restore --nologo
+          -p:JellyfinVersion=${{ matrix.jellyfinVersion }}
+          -p:PluginVersion=${{ inputs.version }}
+          -p:Version=${{ matrix.version }}
+          -p:AssemblyVersion=${{ matrix.version }}
+          -p:FileVersion=${{ matrix.version }}
+          -p:ContinuousIntegrationBuild=true
+
+      - name: Verify compiled assembly version
+        env:
+          EXPECTED: ${{ matrix.version }}
+          TFM: ${{ matrix.tfm }}
+        run: |
+          set -euo pipefail
+          info=$(find "$PROJECT_DIR/obj/Release/$TFM" -name "*.AssemblyInfo.cs" | head -1)
+          if [[ -z "$info" ]]; then
+            echo "::error::no generated AssemblyInfo.cs found under $PROJECT_DIR/obj/Release/$TFM"
+            exit 1
+          fi
+          actual=$(sed -n 's/.*Reflection\.AssemblyVersionAttribute("\([^"]*\)").*/\1/p' "$info")
+          echo "AssemblyVersion: $actual"
+          if [[ "$actual" != "$EXPECTED" ]]; then
+            echo "::error::expected AssemblyVersion $EXPECTED but the build produced $actual"
+            exit 1
+          fi
+
+      # Upstream ships a zip containing nothing but the plugin DLL: no meta.json and no
+      # dependencies (Jellyfin provides Newtonsoft.Json itself).
+      - name: Package
+        env:
+          TFM: ${{ matrix.tfm }}
+          ZIP_NAME: ${{ matrix.zip }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist meta
+          cp "$PROJECT_DIR/bin/Release/$TFM/$ASSEMBLY_NAME.dll" "dist/$ASSEMBLY_NAME.dll"
+          (cd dist && zip -X -j "$ZIP_NAME" "$ASSEMBLY_NAME.dll" && rm "$ASSEMBLY_NAME.dll")
+
+          contents=$(unzip -Z1 "dist/$ZIP_NAME")
+          if [[ "$contents" != "$ASSEMBLY_NAME.dll" ]]; then
+            echo "::error::zip must contain exactly $ASSEMBLY_NAME.dll, got: $contents"
+            exit 1
+          fi
+
+          checksum=$(md5sum "dist/$ZIP_NAME" | cut -d' ' -f1)
+          echo "$ZIP_NAME  md5 $checksum  $(stat -c%s "dist/$ZIP_NAME") bytes" >> "$GITHUB_STEP_SUMMARY"
+          jq -n \
+            --arg version '${{ matrix.version }}' \
+            --arg targetAbi '${{ matrix.targetAbi }}' \
+            --arg zip "$ZIP_NAME" \
+            --arg checksum "$checksum" \
+            --argjson digit ${{ matrix.digit }} \
+            '{version: $version, targetAbi: $targetAbi, zip: $zip, checksum: $checksum, digit: $digit}' \
+            > "meta/${{ matrix.targetAbi }}.json"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: plugin-${{ matrix.targetAbi }}
+          path: |
+            dist/${{ matrix.zip }}
+            meta/*.json
+          if-no-files-found: error
+
+  release:
+    needs: [prepare, build]
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: plugin-*
+          merge-multiple: true
+          path: artifacts
+
+      - name: Add versions to manifest.json
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          CHANGELOG_RAW: ${{ inputs.changelog }}
+        run: |
+          set -euo pipefail
+          changelog="${CHANGELOG_RAW//\\n/$'\n'}"
+          timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          new=$(jq -s \
+            --arg tag "$TAG" --arg cl "$changelog" \
+            --arg repo "$GITHUB_REPOSITORY" --arg ts "$timestamp" \
+            'sort_by(.digit) | reverse | map({
+               version: .version,
+               changelog: $cl,
+               targetAbi: .targetAbi,
+               sourceUrl: ("https://github.com/" + $repo + "/releases/download/" + $tag + "/" + .zip),
+               checksum: .checksum,
+               timestamp: $ts
+             })' artifacts/meta/*.json)
+
+          clashes=$(jq --argjson new "$new" -r '
+            [.[0].versions[] as $existing
+             | $new[]
+             | select(.version == $existing.version and .targetAbi == $existing.targetAbi)
+             | "\(.version) (targetAbi \(.targetAbi))"] | unique | join(", ")' manifest.json)
+          if [[ -n "$clashes" ]]; then
+            echo "::error::manifest.json already contains: $clashes"
+            exit 1
+          fi
+
+          jq --argjson new "$new" '.[0].versions |= ($new + .)' manifest.json > manifest.tmp
+          mv manifest.tmp manifest.json
+          jq -r '.[] | "- \(.version) (targetAbi \(.targetAbi)) checksum \(.checksum)"' <<< "$new" \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      # The build overrides the version via -p:, so without this the project file would keep
+      # claiming the previous version and a local build would produce a stale AssemblyVersion.
+      - name: Bump PluginVersion in the project file
+        env:
+          BASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          csproj="$PROJECT_DIR/$ASSEMBLY_NAME.csproj"
+          sed -i "s|<PluginVersion>[^<]*</PluginVersion>|<PluginVersion>$BASE_VERSION</PluginVersion>|" "$csproj"
+          actual=$(sed -n 's|.*<PluginVersion>\([^<]*\)</PluginVersion>.*|\1|p' "$csproj")
+          if [[ "$actual" != "$BASE_VERSION" ]]; then
+            echo "::error::could not set PluginVersion to $BASE_VERSION in $csproj (found '$actual')"
+            exit 1
+          fi
+
+      - name: Commit, tag and push
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          TARGET_REF: ${{ needs.prepare.outputs.ref }}
+          BASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json "$PROJECT_DIR/$ASSEMBLY_NAME.csproj"
+          git commit -m "chore: release $BASE_VERSION"
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "HEAD:refs/heads/$TARGET_REF"
+          git push origin "refs/tags/$TAG"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          CHANGELOG_RAW: ${{ inputs.changelog }}
+        run: |
+          set -euo pipefail
+          changelog="${CHANGELOG_RAW//\\n/$'\n'}"
+          {
+            if [[ -n "$changelog" ]]; then
+              printf '## What'\''s Changed\n%s\n\n' "$changelog"
+            fi
+            printf '## Assets\n'
+            jq -rs 'sort_by(.digit) | reverse | .[] | "- `\(.zip)` — Jellyfin \(.targetAbi), plugin version \(.version), md5 `\(.checksum)`"' \
+              artifacts/meta/*.json
+
+            # GitHub's own release notes, for the merged PR list and the Full Changelog link.
+            generated=$(gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+              -f "tag_name=$TAG" --jq '.body' 2>/dev/null || true)
+            if [[ -n "$generated" ]]; then
+              printf '\n%s\n' "$generated"
+            fi
+          } > notes.md
+
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file notes.md \
+            artifacts/dist/*.zip

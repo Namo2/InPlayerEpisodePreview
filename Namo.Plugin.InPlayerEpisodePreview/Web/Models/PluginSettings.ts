@@ -10,6 +10,7 @@ export type PluginSettings = {
     WatchCountDisplayMode: WatchCountDisplayMode,
     SearchContainingCollections: boolean,
     OnlyBlurUnwatched: boolean,
+    ShowWatchProgress: boolean,
 }
 
 export const DefaultPluginSettings: PluginSettings = {
@@ -21,4 +22,5 @@ export const DefaultPluginSettings: PluginSettings = {
     WatchCountDisplayMode: WatchCountDisplayMode.HoursMinutes,
     SearchContainingCollections: true,
     OnlyBlurUnwatched: false,
+    ShowWatchProgress: true,
 }

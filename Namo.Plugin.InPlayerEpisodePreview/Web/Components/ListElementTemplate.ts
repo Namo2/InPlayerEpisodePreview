@@ -79,7 +79,7 @@ export class ListElementTemplate extends BaseTemplate {
                                             data-action="link"
                                             style="${backgroundImageStyle}">
                                     </button>
-                                    ${this.item.UserData.PlayedPercentage ?
+                                    ${this.programDataStore.pluginSettings.ShowWatchProgress && this.item.UserData.PlayedPercentage ?
                                         `<div class="innerCardFooter fullInnerCardFooter innerCardFooterClear itemProgressBar">
                                             <div class="itemProgressBarForeground"
                                                 style="width:${this.item.UserData.PlayedPercentage}%;">

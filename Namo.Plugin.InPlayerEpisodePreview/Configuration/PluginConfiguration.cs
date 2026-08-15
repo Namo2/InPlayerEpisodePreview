@@ -47,4 +47,9 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Whether to show Virtual (missing/unaired) items
     /// </summary>
     public bool DisplayMissingEpisodes { get; set; } = false;
+
+    /// <summary>
+    /// Whether to show the watch progress bar on an item's image card in the preview
+    /// </summary>
+    public bool ShowWatchProgress { get; set; } = true;
 }

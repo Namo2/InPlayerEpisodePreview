@@ -14,7 +14,7 @@ namespace Namo.Plugin.InPlayerEpisodePreview.Services;
 /// </summary>
 public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManager userDataManager)
 {
-    private readonly PluginConfiguration _config = InPlayerEpisodePreviewPlugin.Instance!.Configuration;
+    private static PluginConfiguration Config => InPlayerEpisodePreviewPlugin.Instance!.Configuration;
 
     private readonly ConcurrentDictionary<(Guid FolderId, Guid UserId), (DateTime CachedAt, List<BaseItem> Children)> _folderChildrenCache = new();
 
@@ -27,10 +27,10 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
     /// </summary>
     public WatchStats GetWatchStats(IEnumerable<BaseItem> items, User user)
     {
-        if (!_config.ShowWatchedCount)
+        if (!Config.ShowWatchedCount)
             return new WatchStats(0, 0, 0, 0);
 
-        bool needsRuntime = (WatchCountDisplayMode)_config.WatchCountDisplayMode != WatchCountDisplayMode.Count;
+        bool needsRuntime = (WatchCountDisplayMode)Config.WatchCountDisplayMode != WatchCountDisplayMode.Count;
 
         int totalCount = 0;
         int playedCount = 0;
@@ -149,7 +149,7 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
         List<BaseItem> children = [
             .. folder
                 .GetChildren(user, true, new InternalItemsQuery(user))
-                .Where(c => _config.DisplayMissingEpisodes || c.LocationType != LocationType.Virtual)
+                .Where(c => Config.DisplayMissingEpisodes || c.LocationType != LocationType.Virtual)
         ];
         _folderChildrenCache[key] = (DateTime.UtcNow, children);
         return children;

@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "2.0.0.3",
+        "changelog": "- Lazy loaded data.\n- Search for related Collections/Playlists.\n- Show watch count for Seasons and Collection/Playlist groups.\n- Option to only spoiler protect unwatched episodes.\n- Limit description height and allow expanding.\n- Fixed playback sometimes starting in the wrong browser tab or device.\n- Fixed preview UI remaining visible after navigating away from playback.\n- Fixed plugin settings not applying to non-admin users.\n- Bumped frontend dependencies to their latest versions.",
+        "targetAbi": "12.0.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.0.0/InPlayerEpisodePreview_2.0.0.3-12.0.0.zip",
+        "checksum": "c147566119677243e4af7fb8f3e75e9f",
+        "timestamp": "2026-08-17T19:35:23Z"
+      },
+      {
+        "version": "2.0.0.2",
+        "changelog": "- Lazy loaded data.\n- Search for related Collections/Playlists.\n- Show watch count for Seasons and Collection/Playlist groups.\n- Option to only spoiler protect unwatched episodes.\n- Limit description height and allow expanding.\n- Fixed playback sometimes starting in the wrong browser tab or device.\n- Fixed preview UI remaining visible after navigating away from playback.\n- Fixed plugin settings not applying to non-admin users.\n- Bumped frontend dependencies to their latest versions.",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.0.0/InPlayerEpisodePreview_2.0.0.2-10.11.0.zip",
+        "checksum": "6e759ef77538df56bfc7d01ca03be5a3",
+        "timestamp": "2026-08-17T19:35:23Z"
+      },
+      {
+        "version": "2.0.0.1",
+        "changelog": "- Lazy loaded data.\n- Search for related Collections/Playlists.\n- Show watch count for Seasons and Collection/Playlist groups.\n- Option to only spoiler protect unwatched episodes.\n- Limit description height and allow expanding.\n- Fixed playback sometimes starting in the wrong browser tab or device.\n- Fixed preview UI remaining visible after navigating away from playback.\n- Fixed plugin settings not applying to non-admin users.\n- Bumped frontend dependencies to their latest versions.",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.0.0/InPlayerEpisodePreview_2.0.0.1-10.10.7.zip",
+        "checksum": "34a2011bf57b5be56e37b876063d1ba6",
+        "timestamp": "2026-08-17T19:35:23Z"
+      },
+      {
         "version": "1.6.1.2",
         "changelog": "- Fixed a bug where movies with multiple versions were treated as collections",
         "targetAbi": "10.11.0",

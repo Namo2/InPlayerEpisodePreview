@@ -1,7 +1,8 @@
 ﻿{
     "compilerOptions": {
         "module": "CommonJS",
-        "target": "ES2022",
+        "target": "ES2017",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "sourceMap": true,
         "outDir": "./Web/",
     },

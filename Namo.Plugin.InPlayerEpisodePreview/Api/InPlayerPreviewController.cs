@@ -106,7 +106,10 @@ public class InPlayerPreviewController : ControllerBase
     {
         var scriptStream = _assembly.GetManifestResourceStream(_playerPreviewScriptPath);
         if (scriptStream == null)
+        {
+            _logger.LogError("Embedded client script not found at resource path {0}", _playerPreviewScriptPath);
             return NotFound();
+        }
 
         return File(scriptStream, "application/javascript");
     }
@@ -229,11 +232,17 @@ public class InPlayerPreviewController : ControllerBase
     {
         var user = _userManager.GetUserById(userId);
         if (user is null)
+        {
+            _logger.LogInformation("GetItemPreviewType: user {0} not found", userId);
             return NotFound();
+        }
 
         var item = _libraryManager.GetItemById(itemId);
         if (item is null)
+        {
+            _logger.LogInformation("GetItemPreviewType: item {0} not found", itemId);
             return NotFound();
+        }
 
         // If this item was navigated into from a Playlist/BoxSet details page,
         // GetItemPreviewData reports it as Playlist/BoxSet rather than e.g. Movie
@@ -265,11 +274,17 @@ public class InPlayerPreviewController : ControllerBase
     {
         var user = _userManager.GetUserById(userId);
         if (user is null)
+        {
+            _logger.LogInformation("GetItemPreviewData: user {0} not found", userId);
             return NotFound();
+        }
 
         var item = _libraryManager.GetItemById(itemId);
         if (item is null)
+        {
+            _logger.LogInformation("GetItemPreviewData: item {0} not found", itemId);
             return NotFound();
+        }
 
         if (SourceCollectionByDevice.TryGetValue($"{userId}:{deviceId}", out var sourceId)
             && _libraryManager.GetItemById(sourceId) is Folder source and (Playlist or BoxSet))
@@ -356,11 +371,17 @@ public class InPlayerPreviewController : ControllerBase
     {
         var user = _userManager.GetUserById(userId);
         if (user is null)
+        {
+            _logger.LogInformation("GetGroupItems: user {0} not found", userId);
             return NotFound();
+        }
 
         var groupItem = _libraryManager.GetItemById(groupId);
         if (groupItem is null)
+        {
+            _logger.LogInformation("GetGroupItems: group {0} not found", groupId);
             return NotFound();
+        }
 
         if (groupItem is Season seasonGroup)
         {
@@ -407,11 +428,17 @@ public class InPlayerPreviewController : ControllerBase
     {
         var user = _userManager.GetUserById(userId);
         if (user is null)
+        {
+            _logger.LogInformation("GetGroupWatchedCount: user {0} not found", userId);
             return NotFound();
+        }
 
         var groupItem = _libraryManager.GetItemById(groupId);
         if (groupItem is null)
+        {
+            _logger.LogInformation("GetGroupWatchedCount: group {0} not found", groupId);
             return NotFound();
+        }
 
         List<BaseItem> children = groupItem switch
         {
@@ -435,11 +462,17 @@ public class InPlayerPreviewController : ControllerBase
     {
         var user = _userManager.GetUserById(userId);
         if (user is null)
+        {
+            _logger.LogInformation("GetContainingCollections: user {0} not found", userId);
             return NotFound();
+        }
 
         var item = _libraryManager.GetItemById(itemId);
         if (item is null)
+        {
+            _logger.LogInformation("GetContainingCollections: item {0} not found", itemId);
             return NotFound();
+        }
 
         return Ok(_folderPreviewService.GetContainingCollectionGroups(item, user));
     }

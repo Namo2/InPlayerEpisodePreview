@@ -52,4 +52,9 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Whether to show the watch progress bar on an item's image card in the preview
     /// </summary>
     public bool ShowWatchProgress { get; set; } = true;
+
+    /// <summary>
+    /// The minimum level of logs the frontend writes to the browser console
+    /// </summary>
+    public int LogLevel { get; set; } = (int)FrontendLogLevel.Information;
 }

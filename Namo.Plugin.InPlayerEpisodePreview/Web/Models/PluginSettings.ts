@@ -1,5 +1,6 @@
 import {ItemType} from "./ItemType";
 import {WatchCountDisplayMode} from "./WatchCountDisplayMode";
+import {LogLevel} from "./LogLevel";
 
 export type PluginSettings = {
     EnabledItemTypes: ItemType[],
@@ -11,6 +12,7 @@ export type PluginSettings = {
     SearchContainingCollections: boolean,
     OnlyBlurUnwatched: boolean,
     ShowWatchProgress: boolean,
+    LogLevel: LogLevel,
 }
 
 export const DefaultPluginSettings: PluginSettings = {
@@ -23,4 +25,5 @@ export const DefaultPluginSettings: PluginSettings = {
     SearchContainingCollections: true,
     OnlyBlurUnwatched: false,
     ShowWatchProgress: true,
+    LogLevel: LogLevel.Information,
 }

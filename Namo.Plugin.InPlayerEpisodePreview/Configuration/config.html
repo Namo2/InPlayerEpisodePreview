@@ -118,6 +118,18 @@
                     <div class="fieldDescription">Number of episodes loaded at a time when scrolling (default: 10)</div>
                 </div>
 
+                <hr>
+                <div class="selectContainer">
+                    <label class="selectLabel" for="logLevel">Frontend log level</label>
+                    <select is="emby-select" id="logLevel" name="logLevel" class="emby-select-withcolor emby-select">
+                        <option value="0">None</option>
+                        <option value="1">Error</option>
+                        <option value="2">Information</option>
+                        <option value="3">Debug</option>
+                    </select>
+                    <div class="fieldDescription">How much InPlayerEpisodePreview logs to the browser console, prefixed with "[InPlayerEpisodePreview]". "Debug" is useful for troubleshooting.</div>
+                </div>
+
                 <div style="background-color: rgba(255, 255, 255, 0.05); border-left: 4px solid #00a4dc; border-radius: 4px; padding: 1em 1.5em; margin: 1.5em 0; display: flex; align-items: center; gap: 1em;">
                     <i class="material-icons" style="color: #00a4dc; font-size: 24px;">info</i>
                     <div>
@@ -155,6 +167,7 @@
                 document.querySelector('#watchCountDisplayMode').value = config.WatchCountDisplayMode
                 document.querySelector('#searchContainingCollections').checked = config.SearchContainingCollections
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
+                document.querySelector('#logLevel').value = config.LogLevel
 
                 Dashboard.hideLoadingMsg()
             });
@@ -185,6 +198,7 @@
             config.WatchCountDisplayMode = parseInt(document.querySelector('#watchCountDisplayMode').value, 10)
             config.SearchContainingCollections = document.querySelector('#searchContainingCollections').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10
+            config.LogLevel = parseInt(document.querySelector('#logLevel').value, 10)
 
             try {
                 const result = await ApiClient.updatePluginConfiguration(pluginId, config)

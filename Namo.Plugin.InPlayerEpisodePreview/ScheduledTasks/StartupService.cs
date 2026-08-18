@@ -51,9 +51,28 @@ public class StartupService(ILogger<InPlayerEpisodePreviewPlugin> logger) : ISch
         }
        
         logger.LogInformation("Register InPlayerEpisodePreview for FileTransformation plugin.");
-        foreach (JObject payload in payloads)
+
+        MethodInfo? registerTransformation = pluginInterfaceType.GetMethod("RegisterTransformation");
+        if (registerTransformation == null)
         {
-            pluginInterfaceType.GetMethod("RegisterTransformation")?.Invoke(null, [payload]);
+            logger.LogInformation("Error using FileTransformation plugin. RegisterTransformation method not found. Fallback to direct injection.");
+            IndexHtmlInjector.Direct();
+            return Task.CompletedTask;
+        }
+
+        try
+        {
+            foreach (JObject payload in payloads)
+            {
+                registerTransformation.Invoke(null, [payload]);
+            }
+
+            logger.LogInformation("Successfully registered index.html transformation with FileTransformation plugin.");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to register transformation with FileTransformation plugin. Falling back to direct injection.");
+            IndexHtmlInjector.Direct();
         }
 
         return Task.CompletedTask;

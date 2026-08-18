@@ -159,7 +159,7 @@ document?.head?.appendChild(inPlayerPreviewStyle)
 const logger: Logger = new Logger()
 const programDataStore: ProgramDataStore = new ProgramDataStore()
 const playbackHandler: PlaybackHandler = new PlaybackHandler(logger)
-const listElementFactory = new ListElementFactory(playbackHandler, programDataStore)
+const listElementFactory = new ListElementFactory(playbackHandler, programDataStore, logger)
 
 const collectionsByItemId = new Map<string, Promise<Group[]>>()
 
@@ -197,20 +197,26 @@ function getContainingCollections(itemId: string): Promise<Group[]> {
 function initialize() {
     // Ensure ApiClient/Events exist and user is logged in
     if (typeof ApiClient === 'undefined' || typeof Events === 'undefined' || !ApiClient.getCurrentUserId?.()) {
-        setTimeout(initialize, 300) // Increased retry delay slightly
+        setTimeout(initialize, 300)
         return
     }
 
     new DataFetcher(programDataStore)
-    
+
     const pluginSettingsUrl = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.PLUGIN_SETTINGS}`)
     ApiClient.ajax({ type: 'GET', url: pluginSettingsUrl, dataType: 'json' })
-        .then((config: PluginSettings) => programDataStore.pluginSettings = config)
+        .then((config: PluginSettings) => {
+            programDataStore.pluginSettings = config
+            logger.setLogLevel(config.LogLevel)
+        })
         .catch((ex: unknown) => logger.error("Couldn't load plugin settings, falling back to defaults", ex))
 
     const serverSettingsUrl = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.SERVER_SETTINGS}`)
     ApiClient.ajax({ type: 'GET', url: serverSettingsUrl, dataType: 'json' })
         .then((config: ServerSettings) => programDataStore.serverSettings = config)
+        .catch((ex: unknown) => logger.error("Couldn't load server settings, falling back to defaults", ex))
+
+    logger.info("InPlayerEpisodePreview initialized")
 }
 initialize()
 
@@ -354,6 +360,8 @@ function viewShowEventHandler(): void {
     }
     
     function loadVideoView(): void {
+        logger.debug("Loading video view")
+
         // add preview button to the page
         const parent: HTMLElement = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
         
@@ -435,7 +443,10 @@ function viewShowEventHandler(): void {
             pendingPreloadItemId = itemId
             pendingPreload = (async (): Promise<void> => {
                 const previewType = await fetchPreviewItemType(itemId)
-                if (!programDataStore.isTypeAllowedForPreview(previewType)) return
+                if (!programDataStore.isTypeAllowedForPreview(previewType)) {
+                    logger.debug(`Preview not enabled for item type '${previewType}', skipping button for item ${itemId}`)
+                    return
+                }
 
                 insertPreviewButton()
 
@@ -451,6 +462,7 @@ function viewShowEventHandler(): void {
                 const initialWindowLimit = (pageOfActiveEpisode + 2) * PAGE_SIZE - initialWindowStartIndex
 
                 await loadGroupItems(activeGroupId, initialWindowStartIndex, initialWindowLimit)
+                logger.debug(`Preloaded ${groups.length} group(s) for item ${itemId}`)
             })().catch((ex: unknown) => {
                 logger.error("Couldn't preload preview data", ex)
             }).finally(() => {
@@ -488,6 +500,9 @@ function viewShowEventHandler(): void {
             previewButtonLoading = true
             try {
                 await doPreviewButtonClick()
+            } catch (ex: unknown) {
+                logger.error("Couldn't open preview popup", ex)
+                document.getElementById('previewPopup')?.remove()
             } finally {
                 previewButtonLoading = false
             }
@@ -528,10 +543,12 @@ function viewShowEventHandler(): void {
             let initialWindowStartIndex: number
 
             if (cachedGroup) {
+                logger.debug(`Opening preview popup for item ${itemId} using cached group data`)
                 activeGroupId = cachedGroup.groupId
                 initialWindowStartIndex = cachedGroup.loadedStartIndex ?? 0
                 initialPage = { items: [...cachedGroup.items], totalRecordCount: cachedGroup.loadedTotalRecordCount ?? cachedGroup.items.length }
             } else {
+                logger.debug(`Opening preview popup for item ${itemId}, fetching group data`)
                 contentDiv.innerHTML = `<div class="previewScrollSpinner">${spinnerHtml()}</div>`
                 activateSpinner(contentDiv)
 
@@ -622,6 +639,7 @@ function viewShowEventHandler(): void {
             if (programDataStore.pluginSettings.ShowWatchedCount && programDataStore.activeGroup?.playedItemCount === UNKNOWN_WATCHED_COUNT) {
                 listElementFactory.ensureGroupWatchedCount(programDataStore.activeGroup)
                     .then(updated => popupTitle.setWatchedCount(updated))
+                    .catch((ex: unknown) => logger.error(`Couldn't load watched count for group ${programDataStore.activeGroup?.groupId}`, ex))
             }
 
             // scroll to the item that is currently playing
@@ -633,6 +651,8 @@ function viewShowEventHandler(): void {
         }
     }
     function unloadVideoView(): void {
+        logger.debug("Unloading video view")
+
         // Clear old data and reset previewContainerLoaded flag
         document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.removeEventListener('timeupdate', onVideoTimeUpdate)
         lastTrackedPositionSecond = -1

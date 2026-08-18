@@ -10,13 +10,14 @@ import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
 import {ItemType} from "./Models/ItemType";
 import {activateSpinner, spinnerHtml} from "./Components/Spinner";
 import {updateWatchedCountDom} from "./Services/DataFetcher";
+import {Logger} from "./Services/Logger";
 
 // The backend already returns Playlists/BoxSets and Folders in their own manual item/dissplay order
 // sorting should only apply for season-based (Episode) groups, where it reflects actual episode order.
 const preserveBackendOrderTypes: Set<ItemType> = new Set([ItemType.Playlist, ItemType.BoxSet, ItemType.Folder])
 
 export class ListElementFactory {
-    constructor(private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) { }
+    constructor(private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore, private logger: Logger) { }
 
     public async createItemElements(items: PreviewItem[], parentDiv: HTMLElement, offset: number = 0): Promise<void> {
         const preserveOrder = preserveBackendOrderTypes.has(this.programDataStore.type)
@@ -76,16 +77,20 @@ export class ListElementFactory {
 
             // load item description
             if (!item.Description) {
-                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_DESCRIPTION}`
-                    .replace('{itemId}', item.Id));
-                const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
-                const newDescription: string = result?.Description
+                try {
+                    const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_DESCRIPTION}`
+                        .replace('{itemId}', item.Id));
+                    const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+                    const newDescription: string = result?.Description
 
-                this.programDataStore.updateItem({
-                    ...item,
-                    Description: newDescription
-                })
-                itemContainer.querySelector('.previewItemDescription').textContent = newDescription
+                    this.programDataStore.updateItem({
+                        ...item,
+                        Description: newDescription
+                    })
+                    itemContainer.querySelector('.previewItemDescription').textContent = newDescription
+                } catch (ex: unknown) {
+                    this.logger.error(`Couldn't load description for item ${item.Id}`, ex)
+                }
             }
 
             // show item content for the selected item
@@ -102,16 +107,20 @@ export class ListElementFactory {
 
             // preload description for the currently playing item
             if (!item.Description) {
-                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_DESCRIPTION}`
-                    .replace('{itemId}', item.Id));
-                const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
-                const newDescription: string = result?.Description
+                try {
+                    const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_DESCRIPTION}`
+                        .replace('{itemId}', item.Id));
+                    const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+                    const newDescription: string = result?.Description
 
-                this.programDataStore.updateItem({
-                    ...item,
-                    Description: newDescription
-                })
-                itemNode.querySelector('.previewItemDescription').textContent = newDescription
+                    this.programDataStore.updateItem({
+                        ...item,
+                        Description: newDescription
+                    })
+                    itemNode.querySelector('.previewItemDescription').textContent = newDescription
+                } catch (ex: unknown) {
+                    this.logger.error(`Couldn't load description for item ${item.Id}`, ex)
+                }
             }
 
             itemNode.classList.remove('hide');
@@ -149,18 +158,24 @@ export class ListElementFactory {
             const spinner = this.createSpinnerElement()
             parentDiv.appendChild(spinner)
 
-            const { items, totalRecordCount: newTotalRecordCount } = await loadPage(totalLoaded)
-            // The view may have moved on (e.g. back to the group list) while this page was loading.
-            if (!this.programDataStore.isCurrentView(viewToken)) return
+            try {
+                const { items, totalRecordCount: newTotalRecordCount } = await loadPage(totalLoaded)
+                // The view may have moved on (e.g. back to the group list) while this page was loading.
+                if (!this.programDataStore.isCurrentView(viewToken)) return
 
-            spinner.remove()
-            await this.createItemElements(items, parentDiv, totalLoaded)
-            totalLoaded += items.length
-            totalRecordCount = newTotalRecordCount
-            loadingForward = false
+                spinner.remove()
+                await this.createItemElements(items, parentDiv, totalLoaded)
+                totalLoaded += items.length
+                totalRecordCount = newTotalRecordCount
 
-            // The newly loaded page might still not fill the container, so re-check right away.
-            checkScrollPosition()
+                // The newly loaded page might still not fill the container, so re-check right away.
+                checkScrollPosition()
+            } catch (ex: unknown) {
+                this.logger.error(`Couldn't load next page of items (startIndex ${totalLoaded})`, ex)
+                spinner.remove()
+            } finally {
+                loadingForward = false
+            }
         }
 
         const loadPreviousPage = async (): Promise<void> => {
@@ -172,18 +187,25 @@ export class ListElementFactory {
 
             const pageSize = this.programDataStore.pluginSettings.EpisodePageSize
             const newStartIndex = Math.max(0, loadedStartIndex - pageSize)
-            const { items } = await loadPage(newStartIndex)
-            // The view may have moved on (e.g. back to the group list) while this page was loading.
-            if (!this.programDataStore.isCurrentView(viewToken)) return
 
-            const scrollHeightBeforePrepend = parentDiv.scrollHeight
-            spinner.remove()
-            await this.prependItemElements(items, parentDiv, newStartIndex)
-            parentDiv.scrollTop += parentDiv.scrollHeight - scrollHeightBeforePrepend
-            loadedStartIndex = newStartIndex
-            loadingBackward = false
+            try {
+                const { items } = await loadPage(newStartIndex)
+                // The view may have moved on (e.g. back to the group list) while this page was loading.
+                if (!this.programDataStore.isCurrentView(viewToken)) return
 
-            checkScrollPosition()
+                const scrollHeightBeforePrepend = parentDiv.scrollHeight
+                spinner.remove()
+                await this.prependItemElements(items, parentDiv, newStartIndex)
+                parentDiv.scrollTop += parentDiv.scrollHeight - scrollHeightBeforePrepend
+                loadedStartIndex = newStartIndex
+
+                checkScrollPosition()
+            } catch (ex: unknown) {
+                this.logger.error(`Couldn't load previous page of items (startIndex ${newStartIndex})`, ex)
+                spinner.remove()
+            } finally {
+                loadingBackward = false
+            }
         }
 
         const checkScrollPosition = (): void => {
@@ -270,6 +292,7 @@ export class ListElementFactory {
                     if (groups[i].playedItemCount === UNKNOWN_WATCHED_COUNT) {
                         this.ensureGroupWatchedCount(groups[i])
                             .then(updated => titleContainer.setWatchedCount(updated))
+                            .catch((ex: unknown) => this.logger.error(`Couldn't load watched count for group ${groups[i].groupId}`, ex))
                     }
                 }
                 titleContainer.setVisible(true)
@@ -285,12 +308,17 @@ export class ListElementFactory {
                     : undefined
                 const initialOffset = cached?.loadedStartIndex ?? 0
 
-                await this.createLazyItemList(parentDiv, (startIndex) => loadItems(groups[i].groupId, startIndex), viewToken, initialPage, initialOffset)
+                try {
+                    await this.createLazyItemList(parentDiv, (startIndex) => loadItems(groups[i].groupId, startIndex), viewToken, initialPage, initialOffset)
+                } catch (ex: unknown) {
+                    this.logger.error(`Couldn't load items for group ${groups[i].groupId}`, ex)
+                }
             })
 
             if (this.programDataStore.pluginSettings.ShowWatchedCount && groups[i].playedItemCount === UNKNOWN_WATCHED_COUNT) {
                 this.ensureGroupWatchedCount(groups[i])
                     .then(updated => updateWatchedCountDom(this.programDataStore, updated))
+                    .catch((ex: unknown) => this.logger.error(`Couldn't load watched count for group ${groups[i].groupId}`, ex))
             }
         }
     }

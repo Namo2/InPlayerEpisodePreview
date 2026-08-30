@@ -14,6 +14,7 @@ import {Group, UNKNOWN_WATCHED_COUNT} from "./Models/PreviewData/Group";
 import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
 import {activateSpinner, spinnerHtml} from "./Components/Spinner";
 import {setItemOverlayActive} from "./Components/ListElementTemplate";
+import {updateEndTimeDisplay} from "./Components/ItemDetails";
 
 // load and inject inPlayerPreview.css into the page
 /*
@@ -273,6 +274,13 @@ function onVideoTimeUpdate(this: HTMLVideoElement): void {
     })
 }
 
+function onVideoRateChange(): void {
+    document.querySelectorAll<HTMLElement>('.endsAt[data-item-id]').forEach(element => {
+        const item = programDataStore.getItemById(element.dataset.itemId)
+        if (item) updateEndTimeDisplay(item)
+    })
+}
+
 // Tracks which BoxSet/Playlist details page (if any) was visited immediately before navigating into playback
 const DETAILS_ROUTE_PATH: string = '/details'
 const collectionLikeItemTypes: Set<ItemType> = new Set([ItemType.BoxSet, ItemType.Playlist])
@@ -378,7 +386,9 @@ function viewShowEventHandler(): void {
             if (previewButton) return
             previewButton = new PreviewButtonTemplate(parent, index)
             previewButton.render(previewButtonClickHandler)
-            document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.addEventListener('timeupdate', onVideoTimeUpdate)
+            const videoElement = document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')
+            videoElement?.addEventListener('timeupdate', onVideoTimeUpdate)
+            videoElement?.addEventListener('ratechange', onVideoRateChange)
         }
 
         const fetchPreviewItemType = async (itemId: string): Promise<ItemType> => {
@@ -654,7 +664,9 @@ function viewShowEventHandler(): void {
         logger.debug("Unloading video view")
 
         // Clear old data and reset previewContainerLoaded flag
-        document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.removeEventListener('timeupdate', onVideoTimeUpdate)
+        const videoElement = document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')
+        videoElement?.removeEventListener('timeupdate', onVideoTimeUpdate)
+        videoElement?.removeEventListener('ratechange', onVideoRateChange)
         lastTrackedPositionSecond = -1
 
         preloadObserver?.disconnect()

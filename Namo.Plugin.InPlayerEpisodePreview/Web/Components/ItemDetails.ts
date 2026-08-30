@@ -1,6 +1,37 @@
 import {BaseTemplate} from "./BaseTemplate";
 import {PreviewItem} from "../Models/PreviewData/PreviewItem";
 
+function getCurrentPlaybackRate(): number {
+    return document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')?.playbackRate || 1;
+}
+
+function zeroPad(num: number, places: number = 2): string {
+    return String(num).padStart(places, '0');
+}
+
+export function formatEndTime(runtimeTicks: number, playbackPositionTicks: number): string {
+    // convert from ticks (100ns units) to milliseconds
+    runtimeTicks /= 10000;
+    playbackPositionTicks /= 10000;
+
+    const remainingMs: number = (runtimeTicks - playbackPositionTicks) / getCurrentPlaybackRate();
+
+    let ticks: number = Date.now() + remainingMs;
+    ticks -= (new Date()).getTimezoneOffset() * 60 * 1000; // adjust for timezone
+
+    let hours: string = zeroPad(Math.floor((ticks / 1000 / 3600) % 24));
+    let minutes: string = zeroPad(Math.floor((ticks / 1000 / 60) % 60));
+
+    return `Ends at ${hours}:${minutes}`;
+}
+
+export function updateEndTimeDisplay(item: PreviewItem): void {
+    const element = document.querySelector(`.endsAt[data-item-id="${item.Id}"]`)
+    if (!element || !item.RunTimeTicks) return
+
+    element.textContent = formatEndTime(item.RunTimeTicks, item.UserData.PlaybackPositionTicks)
+}
+
 export class ItemDetailsTemplate extends BaseTemplate {
     constructor(container: HTMLElement, positionAfterIndex: number, private item: PreviewItem) {
         super(container, positionAfterIndex);
@@ -22,7 +53,7 @@ export class ItemDetailsTemplate extends BaseTemplate {
                 ${this.item.CriticRating ? `<div class="mediaInfoItem mediaInfoCriticRating ${this.item.CriticRating >= 60 ? 'mediaInfoCriticRatingFresh' : 'mediaInfoCriticRatingRotten'}">
                     ${this.item.CriticRating}
                 </div>` : ''}
-                <div class="endsAt mediaInfoItem">${this.formatEndTime(this.item.RunTimeTicks, this.item.UserData.PlaybackPositionTicks)}</div>
+                <div class="endsAt mediaInfoItem" data-item-id="${this.item.Id}">${formatEndTime(this.item.RunTimeTicks, this.item.UserData.PlaybackPositionTicks)}</div>
             </div>
         `;
     }
@@ -44,24 +75,5 @@ export class ItemDetailsTemplate extends BaseTemplate {
         let minutes: number = Math.floor((ticks / 1000 / 60) % 60);
         let hoursString: string = hours > 0 ? `${hours}h ` : '';
         return `${hoursString}${minutes}m`;
-    }
-
-    private formatEndTime(runtimeTicks: number, playbackPositionTicks: number): string {
-        // convert from microseconds to milliseconds
-        runtimeTicks /= 10000;
-        playbackPositionTicks /= 10000;
-
-        let ticks: number = Date.now() + (runtimeTicks);
-        ticks -= (new Date()).getTimezoneOffset() * 60 * 1000; // adjust for timezone
-        ticks -= playbackPositionTicks; // subtract the playback position
-
-        let hours: string = this.zeroPad(Math.floor((ticks / 1000 / 3600) % 24));
-        let minutes: string = this.zeroPad(Math.floor((ticks / 1000 / 60) % 60));
-
-        return `Ends at ${hours}:${minutes}`;
-    }
-
-    private zeroPad(num: number, places: number = 2): string {
-        return String(num).padStart(places, '0');
     }
 }

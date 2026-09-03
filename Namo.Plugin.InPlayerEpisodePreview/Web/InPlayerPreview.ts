@@ -283,10 +283,14 @@ function onVideoRateChange(): void {
 
 // Tracks which BoxSet/Playlist details page (if any) was visited immediately before navigating into playback
 const DETAILS_ROUTE_PATH: string = '/details'
+const DASHBOARD_ROUTE_PATH: string = '/home'
 const collectionLikeItemTypes: Set<ItemType> = new Set([ItemType.BoxSet, ItemType.Playlist])
 let pendingSourceCollectionId: string = null
+const EMPTY_GUID = '00000000-0000-0000-0000-000000000000'
 
 function recordSourceCollection(collectionId: string): void {
+    programDataStore.invalidateGroupsCache()
+
     const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.SET_SOURCE_COLLECTION}`
         .replace('{userId}', ApiClient.getCurrentUserId())
         .replace('{deviceId}', ApiClient.deviceId())
@@ -294,9 +298,19 @@ function recordSourceCollection(collectionId: string): void {
     ApiClient.ajax({type: 'GET', url}).catch((ex: unknown) => logger.error("Couldn't record source collection for playback session", ex))
 }
 
+function clearSourceCollection(): void {
+    recordSourceCollection(EMPTY_GUID)
+}
+
 function captureSourceCollection(currentRoutePath: string): void {
     const [currentPath, currentQuery] = currentRoutePath.split('?')
     const previousPath = previousRoutePath?.split('?')[0]
+
+    if (currentPath === DASHBOARD_ROUTE_PATH) {
+        pendingSourceCollectionId = null
+        clearSourceCollection()
+        return
+    }
 
     if (currentPath === DETAILS_ROUTE_PATH) {
         const detailsId = new URLSearchParams(currentQuery ?? '').get('id')
@@ -310,14 +324,17 @@ function captureSourceCollection(currentRoutePath: string): void {
         return
     }
 
-    if (videoPaths.includes(currentPath) && previousPath === DETAILS_ROUTE_PATH && pendingSourceCollectionId) {
-        recordSourceCollection(pendingSourceCollectionId)
+    if (videoPaths.includes(currentPath) && previousPath === DETAILS_ROUTE_PATH) {
+        if (pendingSourceCollectionId)
+            recordSourceCollection(pendingSourceCollectionId)
+        else
+            clearSourceCollection()
     }
 
     pendingSourceCollectionId = null
 }
 
-// Retrieve the current colloection/playlist id thorugh a play action on a card the same way as hellyfin does it itself
+// Retrieve the current colloection/playlist id through a play action on a card the same way as hellyfin does it itself
 // https://github.com/jellyfin/jellyfin-web/blob/release-10.11.z/src/components/shortcuts.js#L216
 const PLAYBACK_TRIGGER_ACTIONS: Set<string> = new Set(['play', 'resume', 'playallfromhere'])
 function onDocumentClickCapture(event: MouseEvent): void {
@@ -337,7 +354,10 @@ function onDocumentClickCapture(event: MouseEvent): void {
     const cardId = card.getAttribute('data-id')
     if (cardId && collectionLikeItemTypes.has(cardItemType)) {
         recordSourceCollection(cardId)
+        return
     }
+    
+    clearSourceCollection()
 }
 document.addEventListener('click', onDocumentClickCapture, true)
 

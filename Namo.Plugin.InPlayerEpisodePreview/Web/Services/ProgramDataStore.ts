@@ -95,6 +95,10 @@ export class ProgramDataStore {
         this._groupsCachedAt = Date.now()
     }
 
+    public invalidateGroupsCache(): void {
+        this._groupsCachedAt = null
+    }
+
     public get isGroupsCacheExpired(): boolean {
         return this._groupsCachedAt === null || Date.now() - this._groupsCachedAt > GROUPS_CACHE_TTL
     }

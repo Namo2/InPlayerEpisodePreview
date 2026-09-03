@@ -484,7 +484,11 @@ public class InPlayerPreviewController : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public ActionResult SetSourceCollection([FromRoute] Guid userId, [FromRoute] string deviceId, [FromRoute] Guid collectionId)
     {
-        SourceCollectionByDevice[$"{userId}:{deviceId}"] = collectionId;
+        if (collectionId == Guid.Empty)
+            SourceCollectionByDevice.TryRemove($"{userId}:{deviceId}", out _);
+        else
+            SourceCollectionByDevice[$"{userId}:{deviceId}"] = collectionId;
+
         return NoContent();
     }
 

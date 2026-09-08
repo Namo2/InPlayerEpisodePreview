@@ -334,10 +334,13 @@ function captureSourceCollection(currentRoutePath: string): void {
     pendingSourceCollectionId = null
 }
 
-// Retrieve the current colloection/playlist id through a play action on a card the same way as hellyfin does it itself
+// Retrieve the current collection/playlist id through a play action on a card the same way as hellyfin does it itself
 // https://github.com/jellyfin/jellyfin-web/blob/release-10.11.z/src/components/shortcuts.js#L216
 const PLAYBACK_TRIGGER_ACTIONS: Set<string> = new Set(['play', 'resume', 'playallfromhere'])
 function onDocumentClickCapture(event: MouseEvent): void {
+    // Only capture native events and ignore any from the Preview List
+    if ((event.target as HTMLElement)?.closest?.('#previewPopup')) return
+
     const actionElement = (event.target as HTMLElement)?.closest?.('[data-action]') as HTMLElement | null
     if (!actionElement || !PLAYBACK_TRIGGER_ACTIONS.has(actionElement.getAttribute('data-action'))) return
 

@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "2.1.0.3",
+        "changelog": "### Official Jellyfin V12.0 Support\n\n### Changelog\n- Support for older WebOS TVs\n- Increased logging with a selectable frontend log level\n- \"Ends at\" will now correctly take playback speed into account\n- Current Collection/Playlist will now be reset when going to the dashboard",
+        "targetAbi": "12.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.0/InPlayerEpisodePreview_2.1.0.3-12.0.zip",
+        "checksum": "35c12f622756008342ec7418b6f259b9",
+        "timestamp": "2026-09-08T15:16:36Z"
+      },
+      {
+        "version": "2.1.0.2",
+        "changelog": "### Official Jellyfin V12.0 Support\n\n### Changelog\n- Support for older WebOS TVs\n- Increased logging with a selectable frontend log level\n- \"Ends at\" will now correctly take playback speed into account\n- Current Collection/Playlist will now be reset when going to the dashboard",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.0/InPlayerEpisodePreview_2.1.0.2-10.11.0.zip",
+        "checksum": "e2a5e2ffaee810814495bb4d01500376",
+        "timestamp": "2026-09-08T15:16:36Z"
+      },
+      {
+        "version": "2.1.0.1",
+        "changelog": "### Official Jellyfin V12.0 Support\n\n### Changelog\n- Support for older WebOS TVs\n- Increased logging with a selectable frontend log level\n- \"Ends at\" will now correctly take playback speed into account\n- Current Collection/Playlist will now be reset when going to the dashboard",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.0/InPlayerEpisodePreview_2.1.0.1-10.10.7.zip",
+        "checksum": "3af676da7bd890e9a4c1168d27aab2a4",
+        "timestamp": "2026-09-08T15:16:36Z"
+      },
+      {
         "version": "2.0.0.3",
         "changelog": "- Lazy loaded data.\n- Search for related Collections/Playlists.\n- Show watch count for Seasons and Collection/Playlist groups.\n- Option to only spoiler protect unwatched episodes.\n- Limit description height and allow expanding.\n- Fixed playback sometimes starting in the wrong browser tab or device.\n- Fixed preview UI remaining visible after navigating away from playback.\n- Fixed plugin settings not applying to non-admin users.\n- Bumped frontend dependencies to their latest versions.",
         "targetAbi": "12.0.0",

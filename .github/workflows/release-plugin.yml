@@ -17,7 +17,7 @@ on:
       jellyfin_versions:
         description: "Comma separated Jellyfin NuGet versions. Use pkg:targetAbi to set a different manifest targetAbi (e.g. 10.11.11:10.11.0)"
         required: true
-        default: "10.10.7,10.11.0"
+        default: "10.10.7,10.11.0,12.0"
       changelog:
         description: 'Changelog for manifest.json and the release notes. Use \n for line breaks'
         required: false
@@ -30,6 +30,16 @@ on:
         description: "Build and verify only: no manifest commit, no tag, no release"
         type: boolean
         default: false
+      release_type:
+        description: "GitHub Release type. 'No Label' publishes a normal release with no --latest/--prerelease/--draft flag. 'None' skips creating a release entirely (manifest/commit/tag still happen)"
+        type: choice
+        options:
+          - Latest
+          - Pre-Release
+          - Draft
+          - No Label
+          - None
+        default: Latest
 
 concurrency:
   group: release-plugin
@@ -336,13 +346,25 @@ jobs:
           git push origin "refs/tags/$TAG"
 
       - name: Create release
+        if: ${{ inputs.release_type != 'None' }}
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_GH_TOKEN: ${{ secrets.RELEASE_PAT }}
           TAG: ${{ needs.prepare.outputs.tag }}
           CHANGELOG_RAW: ${{ inputs.changelog }}
+          RELEASE_TYPE: ${{ inputs.release_type }}
         run: |
           set -euo pipefail
           changelog="${CHANGELOG_RAW//\\n/$'\n'}"
+
+          release_flags=()
+          case "$RELEASE_TYPE" in
+            Latest) release_flags=(--latest) ;;
+            Pre-Release) release_flags=(--prerelease) ;;
+            Draft) release_flags=(--draft) ;;
+            "No Label") release_flags=() ;;
+            *) echo "::error::unknown release_type '$RELEASE_TYPE'"; exit 1 ;;
+          esac
           {
             if [[ -n "$changelog" ]]; then
               printf '## What'\''s Changed\n%s\n\n' "$changelog"
@@ -359,7 +381,8 @@ jobs:
             fi
           } > notes.md
 
-          gh release create "$TAG" \
+          GH_TOKEN="${RELEASE_GH_TOKEN:-$GH_TOKEN}" gh release create "$TAG" \
             --title "$TAG" \
             --notes-file notes.md \
+            "${release_flags[@]}" \
             artifacts/dist/*.zip

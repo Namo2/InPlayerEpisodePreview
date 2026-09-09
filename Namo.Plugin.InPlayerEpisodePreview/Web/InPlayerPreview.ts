@@ -230,15 +230,39 @@ let previewContainerLoaded: boolean = false
 let pendingPreloadItemId: string | null = null
 let pendingPreload: Promise<void> | null = null
 let preloadObserver: MutationObserver | null = null
+let buttonsContainerObserver: MutationObserver | null = null
+
+function getActiveButtonsBar(): HTMLElement | null {
+    return document.querySelector<HTMLElement>('[data-type="video-osd"]:not(.hide) .buttons')
+}
+
+// Wait for the OSD's `.buttons` container to exist
+function waitForButtonsContainer(onReady: () => void): void {
+    if (getActiveButtonsBar()) {
+        onReady()
+        return
+    }
+
+    buttonsContainerObserver?.disconnect()
+    buttonsContainerObserver = new MutationObserver(() => {
+        if (!getActiveButtonsBar()) return
+        buttonsContainerObserver?.disconnect()
+        buttonsContainerObserver = null
+        onReady()
+    })
+    buttonsContainerObserver.observe(document.body, { childList: true, subtree: true })
+}
 
 document.addEventListener('viewshow', viewShowEventHandler)
 window.addEventListener('popstate', viewShowEventHandler)
 window.addEventListener('popstate', () => document.getElementById('previewPopup')?.remove())
 
-// Sometimes their can be stale rating buttons. thats why we take the last one from the DOM for the itemId
+function getActiveRatingButton(): Element | null {
+    return getActiveButtonsBar()?.querySelector('.btnUserRating.autoSize.paper-icon-button-light') ?? null
+}
+
 function getLatestUserRatingItemId(): string | null {
-    const elements = document.querySelectorAll('.btnUserRating.autoSize.paper-icon-button-light')
-    return elements[elements.length - 1]?.getAttribute('data-id') ?? null
+    return getActiveRatingButton()?.getAttribute('data-id') ?? null
 }
 
 let lastTrackedPositionSecond: number = -1
@@ -381,10 +405,15 @@ function viewShowEventHandler(): void {
     function attemptLoadVideoView(): void {
         if (videoPaths.includes(currentRoutePath)) {
             // Check if the preview container is already loaded before loading
-            if (!previewContainerLoaded && !isPreviewButtonCreated()) {
+            if (previewContainerLoaded || isPreviewButtonCreated()) return
+
+            // Reserve immediately so a second viewshow doesn't queue another wait
+            previewContainerLoaded = true
+            waitForButtonsContainer(() => {
+                // The view may have moved on (e.g. navigated back out of the player) while we were waiting
+                if (!videoPaths.includes(getLocationPath()) || isPreviewButtonCreated()) return
                 loadVideoView()
-                previewContainerLoaded = true // Set flag to true after loading
-            }
+            })
         } else if (videoPaths.includes(previousRoutePath)) {
             unloadVideoView()
         }
@@ -393,20 +422,28 @@ function viewShowEventHandler(): void {
     function loadVideoView(): void {
         logger.debug("Loading video view")
 
-        // add preview button to the page
-        const parent: HTMLElement = document.querySelector('.buttons').lastElementChild.parentElement; // lastElementChild.parentElement is used for casting from Element to HTMLElement
-        
-        let index: number = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("btnUserRating"));
-        // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
-        if (index === -1)
-            index = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("osdTimeText"))
-
         let previewButton: PreviewButtonTemplate | null = null
         let previewButtonLoading: boolean = false
 
         // Only actually inserted into the OSD once the item's type is confirmed enabled - see preloadPreviewData.
         function insertPreviewButton(): void {
             if (previewButton) return
+            if (!videoPaths.includes(getLocationPath())) return
+
+            const buttonsBar = getActiveButtonsBar()
+            if (!buttonsBar) {
+                waitForButtonsContainer(insertPreviewButton)
+                return
+            }
+
+            // lastElementChild.parentElement is used for casting from Element to HTMLElement
+            const parent: HTMLElement = buttonsBar.lastElementChild.parentElement as HTMLElement;
+
+            let index: number = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("btnUserRating"));
+            // if index is invalid try to use the old position (used in Jellyfin 10.8.12)
+            if (index === -1)
+                index = Array.from(parent.children).findIndex((child: Element): boolean => child.classList.contains("osdTimeText"))
+
             previewButton = new PreviewButtonTemplate(parent, index)
             previewButton.render(previewButtonClickHandler)
             const videoElement = document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')
@@ -511,9 +548,19 @@ function viewShowEventHandler(): void {
                 return
             }
 
-            const ratingButtons = document.querySelectorAll('.btnUserRating.autoSize.paper-icon-button-light')
-            const target = ratingButtons[ratingButtons.length - 1]
-            if (!target) return
+            const target = getActiveRatingButton()
+            if (!target) {
+                // The rating button itself hasn't been created yet - wait for the OSD to finish building it, then retry.
+                preloadObserver?.disconnect()
+                preloadObserver = new MutationObserver(() => {
+                    if (!getActiveRatingButton()) return
+                    preloadObserver?.disconnect()
+                    preloadObserver = null
+                    schedulePreload()
+                })
+                preloadObserver.observe(document.body, { childList: true, subtree: true })
+                return
+            }
 
             preloadObserver?.disconnect()
             preloadObserver = new MutationObserver(() => {
@@ -697,12 +744,16 @@ function viewShowEventHandler(): void {
         pendingPreloadItemId = null
         pendingPreload = null
 
+        buttonsContainerObserver?.disconnect()
+        buttonsContainerObserver = null
+
         document.getElementById('previewPopup')?.remove()
+        document.querySelectorAll('#popupPreviewButton').forEach(element => element.remove())
 
         previewContainerLoaded = false // Reset flag when unloading
     }
-    
+
     function isPreviewButtonCreated(): boolean {
-        return document.querySelector('.buttons').querySelector('#popupPreviewButton') !== null
+        return getActiveButtonsBar()?.querySelector('#popupPreviewButton') != null
     }
 }

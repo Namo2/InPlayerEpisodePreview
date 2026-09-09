@@ -62,25 +62,8 @@ export class ListElementFactory {
         }
     }
 
-    // Loads an item's description (if not already loaded) and reveals its content
-    private async expandItem(item: PreviewItem, itemContainer: Element, markSelected: boolean): Promise<void> {
-        if (!item.Description) {
-            try {
-                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_DESCRIPTION}`
-                    .replace('{itemId}', item.Id));
-                const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
-                const newDescription: string = result?.Description
-
-                this.programDataStore.updateItem({
-                    ...item,
-                    Description: newDescription
-                })
-                itemContainer.querySelector('.previewItemDescription').textContent = newDescription
-            } catch (ex: unknown) {
-                this.logger.error(`Couldn't load description for item ${item.Id}`, ex)
-            }
-        }
-
+    // Reveals an item's content
+    private expandItem(itemContainer: Element, markSelected: boolean): void {
         itemContainer.classList.remove('hide');
         if (markSelected) itemContainer.classList.add('selectedListItem');
         this.applyDescriptionReadMore(itemContainer);
@@ -88,7 +71,7 @@ export class ListElementFactory {
 
     private async renderItem(item: PreviewItem, parentDiv: HTMLElement, positionAfterIndex: number): Promise<void> {
         const itemListElementTemplate = new ListElementTemplate(parentDiv, positionAfterIndex, item, this.playbackHandler, this.programDataStore);
-        itemListElementTemplate.render(async (e: MouseEvent) => {
+        itemListElementTemplate.render((e: MouseEvent) => {
             e.stopPropagation();
 
             // when every item is already expanded, there's nothing left to toggle
@@ -101,7 +84,7 @@ export class ListElementFactory {
             });
 
             const itemContainer: Element = document.getElementById(`item-${item.Id}`).querySelector('.previewListItemContent');
-            await this.expandItem(item, itemContainer, true);
+            this.expandItem(itemContainer, true);
 
             // scroll to the selected item
             itemContainer.parentElement.scrollIntoView({ block: "start" });
@@ -109,9 +92,9 @@ export class ListElementFactory {
 
         const itemNode: Element = document.getElementById(`item-${item.Id}`).querySelector('.previewListItemContent');
         if (this.programDataStore.pluginSettings.ExpandAllItems) {
-            await this.expandItem(item, itemNode, item.Id === this.programDataStore.activeMediaSourceId);
+            this.expandItem(itemNode, item.Id === this.programDataStore.activeMediaSourceId);
         } else if (item.Id === this.programDataStore.activeMediaSourceId) {
-            await this.expandItem(item, itemNode, true);
+            this.expandItem(itemNode, true);
         }
     }
 

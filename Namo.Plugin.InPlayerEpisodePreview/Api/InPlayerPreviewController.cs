@@ -186,10 +186,10 @@ public class InPlayerPreviewController : ControllerBase
 
     /// <summary>
     /// This controller returns the description of the given item.
-    /// Could be replaced by /Users/{userId}/Items/{itemId}, if frontend loads whole data
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
+    [Obsolete("Unused since GroupItems now includes each item's description directly (see PreviewDtoOptions). Kept only until the next major release.")]
     [HttpGet("Items/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

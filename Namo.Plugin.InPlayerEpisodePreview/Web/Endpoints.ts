@@ -1,6 +1,5 @@
 export enum Endpoints {
     BASE = "InPlayerPreview",
-    ITEM_DESCRIPTION = "/Items/{itemId}",
     PLAY_MEDIA = "/Items/{itemId}/Play/{ticks}",
     NOW_PLAYING_ITEM = "/NowPlayingItem",
     SERVER_SETTINGS = "/ServerSettings",

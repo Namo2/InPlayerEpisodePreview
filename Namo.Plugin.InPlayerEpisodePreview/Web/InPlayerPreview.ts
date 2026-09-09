@@ -31,11 +31,23 @@ inPlayerPreviewStyle.textContent = `
     align-items: flex-start;
 }
 .previewListItemContent {
-    width: 100%; 
-    min-height: 15.5vh; 
-    position: relative; 
-    display: flex; 
+    width: 100%;
+    min-height: 15.5vh;
+    position: relative;
+    display: flex;
     flex-direction: column;
+}
+.previewListItem-sideBySide {
+    margin-bottom: 1em;
+}
+.previewListItem-sideBySide .previewItemTitle .actionSheetItemText {
+    font-size: 1.3em;
+}
+.previewListItem-sideBySide .previewItemDescription {
+    margin-top: 1em;
+}
+.previewListItem-sideBySide .previewListItemContent .itemMiscInfo.previewItemDetails {
+    margin-left: 0.5em !important;
 }
 .previewPopup {
     animation: 140ms ease-out 0s 1 normal both running scaleup; 

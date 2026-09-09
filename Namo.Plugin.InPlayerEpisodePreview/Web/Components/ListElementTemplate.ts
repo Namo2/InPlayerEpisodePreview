@@ -7,6 +7,7 @@ import {ProgramDataStore} from "../Services/ProgramDataStore"
 import {PreviewItem} from "../Models/PreviewData/PreviewItem"
 import {ItemType} from "../Models/ItemType"
 import {togglePlayedStateLocally} from "../Services/DataFetcher"
+import {ExpandedItemLayout} from "../Models/ExpandedItemLayout"
 
 // Shows/hides the "start playback" overlay for a rendered list item
 export function setItemOverlayActive(itemId: string, isActive: boolean): void {
@@ -44,69 +45,101 @@ export class ListElementTemplate extends BaseTemplate {
 
         const shouldBlur: boolean = !(this.programDataStore.pluginSettings.OnlyBlurUnwatched && this.item.UserData.Played)
 
+        // Only takes effect while every item is force-expanded
+        const useSideBySideLayout: boolean = this.programDataStore.pluginSettings.ExpandAllItems
+            && this.programDataStore.pluginSettings.ExpandedItemLayout === ExpandedItemLayout.SideBySide
+
+        // language=HTML
+        const titleRow: string = `
+            <div class="previewItemContainer flex">
+                <button class="listItem previewItemTitle" type="button">
+                    ${(
+                            this.item.IndexNumber &&
+                            this.programDataStore.type !== ItemType.Movie
+                    ) ? `<span>${this.item.IndexNumber}</span>` : ''}
+                    <div class="listItemBody actionsheetListItemBody">
+                        <span class="actionSheetItemText">${this.item.Name}</span>
+                    </div>
+                </button>
+                <div class="previewQuickActionContainer flex">
+                    ${this.quickActionContainer.innerHTML}
+                </div>
+            </div>
+        `
+
+        // language=HTML
+        const imageCard: string = `
+            <div class="card overflowBackdropCard card-hoverable card-withuserdata previewItemImageCard">
+                <div class="cardBox">
+                    <div class="cardScalable">
+                        <div class="cardPadder cardPadder-overflowBackdrop lazy-hidden-children">
+                            <span class="cardImageIcon material-icons tv" aria-hidden="true"/>
+                        </div>
+                        <button id="previewItemImageCard-${this.item.Id}"
+                                class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast ${this.programDataStore.pluginSettings.BlurThumbnail && shouldBlur ? 'blur' : ''}"
+                                data-action="link"
+                                style="${backgroundImageStyle}">
+                        </button>
+                        ${this.programDataStore.pluginSettings.ShowWatchProgress && this.item.UserData.PlayedPercentage ?
+                            `<div class="innerCardFooter fullInnerCardFooter innerCardFooterClear itemProgressBar">
+                                <div class="itemProgressBarForeground"
+                                    style="width:${this.item.UserData.PlayedPercentage}%;">
+                                </div>
+                            </div>` : ''
+                        }
+                        <div id="cardOverlay-${this.item.Id}"
+                             class="cardOverlayContainer itemAction ${this.item.Id === this.programDataStore.activeMediaSourceId ? 'hide' : ''}"
+                             data-action="link">
+                            <button id="start-item-${this.item.Id}"
+                                    is="paper-icon-button-light"
+                                    class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary"
+                                    data-action="resume">
+                                <span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover play_arrow"
+                                    aria-hidden="true"/>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `
+
+        // language=HTML
+        const descriptionBlock: string = `
+            <span class="previewItemDescription ${this.programDataStore.pluginSettings.BlurDescription && shouldBlur ? 'blur' : ''}">
+                ${this.item.Description ?? 'loading...'}
+            </span>
+            <button type="button" class="previewItemReadMoreButton hide">Show more</button>
+        `
+
+        // language=HTML
+        const contentRow: string = useSideBySideLayout ? `
+            <div class="flex previewItemContentRow">
+                ${imageCard}
+                <div class="previewItemDescriptionColumn">
+                    ${titleRow}
+                    ${detailsContainer.innerHTML}
+                    ${descriptionBlock}
+                </div>
+            </div>
+        ` : `
+            ${detailsContainer.innerHTML}
+            <div class="flex previewItemContentRow">
+                ${imageCard}
+                <div class="previewItemDescriptionColumn">
+                    ${descriptionBlock}
+                </div>
+            </div>
+        `
+
         // language=HTML
         return `
             <div id="${this.getElementId()}"
-                 class="listItem listItem-button actionSheetMenuItem emby-button previewListItem"
+                 class="listItem listItem-button actionSheetMenuItem emby-button previewListItem${useSideBySideLayout ? ' previewListItem-sideBySide' : ''}"
                  is="emby-button"
                  data-id="${this.item.Id}">
-                <div class="previewItemContainer flex">
-                    <button class="listItem previewItemTitle" type="button">
-                        ${(
-                                this.item.IndexNumber &&
-                                this.programDataStore.type !== ItemType.Movie
-                        ) ? `<span>${this.item.IndexNumber}</span>` : ''}
-                        <div class="listItemBody actionsheetListItemBody">
-                            <span class="actionSheetItemText">${this.item.Name}</span>
-                        </div>
-                    </button>
-                    <div class="previewQuickActionContainer flex">
-                        ${this.quickActionContainer.innerHTML}
-                    </div>
-                </div>
-
+                ${useSideBySideLayout ? '' : titleRow}
                 <div class="previewListItemContent hide">
-                    ${detailsContainer.innerHTML}
-                    <div class="flex previewItemContentRow">
-                        <div class="card overflowBackdropCard card-hoverable card-withuserdata previewItemImageCard">
-                            <div class="cardBox">
-                                <div class="cardScalable">
-                                    <div class="cardPadder cardPadder-overflowBackdrop lazy-hidden-children">
-                                        <span class="cardImageIcon material-icons tv" aria-hidden="true"/>
-                                    </div>
-                                    <button id="previewItemImageCard-${this.item.Id}"
-                                            class="cardImageContainer cardContent itemAction lazy blurhashed lazy-image-fadein-fast ${this.programDataStore.pluginSettings.BlurThumbnail && shouldBlur ? 'blur' : ''}"
-                                            data-action="link"
-                                            style="${backgroundImageStyle}">
-                                    </button>
-                                    ${this.programDataStore.pluginSettings.ShowWatchProgress && this.item.UserData.PlayedPercentage ?
-                                        `<div class="innerCardFooter fullInnerCardFooter innerCardFooterClear itemProgressBar">
-                                            <div class="itemProgressBarForeground"
-                                                style="width:${this.item.UserData.PlayedPercentage}%;">
-                                            </div>
-                                        </div>` : ''
-                                    }
-                                    <div id="cardOverlay-${this.item.Id}"
-                                         class="cardOverlayContainer itemAction ${this.item.Id === this.programDataStore.activeMediaSourceId ? 'hide' : ''}"
-                                         data-action="link">
-                                        <button id="start-item-${this.item.Id}"
-                                                is="paper-icon-button-light"
-                                                class="cardOverlayButton cardOverlayButton-hover itemAction paper-icon-button-light cardOverlayFab-primary"
-                                                data-action="resume">
-                                            <span class="material-icons cardOverlayButtonIcon cardOverlayButtonIcon-hover play_arrow"
-                                                aria-hidden="true"/>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="previewItemDescriptionColumn">
-                            <span class="previewItemDescription ${this.programDataStore.pluginSettings.BlurDescription && shouldBlur ? 'blur' : ''}">
-                                ${this.item.Description ?? 'loading...'}
-                            </span>
-                            <button type="button" class="previewItemReadMoreButton hide">Show more</button>
-                        </div>
-                    </div>
+                    ${contentRow}
                 </div>
             </div>
         `

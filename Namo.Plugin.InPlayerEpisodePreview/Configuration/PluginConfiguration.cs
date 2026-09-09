@@ -54,6 +54,17 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool ShowWatchProgress { get; set; } = true;
 
     /// <summary>
+    /// Whether to show every list item's details expanded by default, instead of requiring a click to reveal them.
+    /// </summary>
+    public bool ExpandAllItems { get; set; } = false;
+
+    /// <summary>
+    /// How an item's title, details and description are arranged when expanded.
+    /// Only takes effect while <see cref="ExpandAllItems"/> is on.
+    /// </summary>
+    public int ExpandedItemLayout { get; set; } = (int)Namo.Plugin.InPlayerEpisodePreview.Configuration.ExpandedItemLayout.SideBySide;
+
+    /// <summary>
     /// The minimum level of logs the frontend writes to the browser console
     /// </summary>
     public int LogLevel { get; set; } = (int)FrontendLogLevel.Information;

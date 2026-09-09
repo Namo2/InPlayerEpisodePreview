@@ -91,6 +91,22 @@
                     </label>
                     <div class="fieldDescription">Shows a progress bar on an episode's image card</div>
                 </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="expandAllItems" is="emby-checkbox" name="expandAllItems"
+                               type="checkbox"/>
+                        <span>Show all entries expanded</span>
+                    </label>
+                    <div class="fieldDescription">Shows every item's details right away, instead of requiring a click to reveal them</div>
+                </div>
+                <div class="selectContainer hide" id="expandedItemLayoutContainer">
+                    <label class="selectLabel" for="expandedItemLayout">Expanded item layout</label>
+                    <select is="emby-select" id="expandedItemLayout" name="expandedItemLayout" class="emby-select-withcolor emby-select">
+                        <option value="0">Default (title above image and description)</option>
+                        <option value="1">Side-by-side (title and description next to image)</option>
+                    </select>
+                    <div class="fieldDescription">How each item's title, details and description are arranged</div>
+                </div>
                 <div class="selectContainer">
                     <label class="selectLabel" for="watchCountDisplayMode">Watched count display</label>
                     <select is="emby-select" id="watchCountDisplayMode" name="watchCountDisplayMode" class="emby-select-withcolor emby-select">
@@ -164,6 +180,9 @@
                 document.querySelector('#onlyBlurUnwatched').checked = config.OnlyBlurUnwatched
                 document.querySelector('#showWatchedCount').checked = config.ShowWatchedCount
                 document.querySelector('#showWatchProgress').checked = config.ShowWatchProgress
+                document.querySelector('#expandAllItems').checked = config.ExpandAllItems
+                document.querySelector('#expandedItemLayout').value = config.ExpandedItemLayout
+                document.querySelector('#expandedItemLayoutContainer').classList.toggle('hide', !config.ExpandAllItems)
                 document.querySelector('#watchCountDisplayMode').value = config.WatchCountDisplayMode
                 document.querySelector('#searchContainingCollections').checked = config.SearchContainingCollections
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
@@ -195,6 +214,8 @@
             config.OnlyBlurUnwatched = document.querySelector('#onlyBlurUnwatched').checked
             config.ShowWatchedCount = document.querySelector('#showWatchedCount').checked
             config.ShowWatchProgress = document.querySelector('#showWatchProgress').checked
+            config.ExpandAllItems = document.querySelector('#expandAllItems').checked
+            config.ExpandedItemLayout = parseInt(document.querySelector('#expandedItemLayout').value, 10)
             config.WatchCountDisplayMode = parseInt(document.querySelector('#watchCountDisplayMode').value, 10)
             config.SearchContainingCollections = document.querySelector('#searchContainingCollections').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10
@@ -212,6 +233,9 @@
 
         page.addEventListener('pageshow', loadConfig)
         form.addEventListener('submit', saveConfig)
+        document.querySelector('#expandAllItems').addEventListener('change', (e) => {
+            document.querySelector('#expandedItemLayoutContainer').classList.toggle('hide', !e.target.checked)
+        })
     </script>
 </div>
 </body>

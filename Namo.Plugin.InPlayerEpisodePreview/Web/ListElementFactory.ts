@@ -62,10 +62,37 @@ export class ListElementFactory {
         }
     }
 
+    // Loads an item's description (if not already loaded) and reveals its content
+    private async expandItem(item: PreviewItem, itemContainer: Element, markSelected: boolean): Promise<void> {
+        if (!item.Description) {
+            try {
+                const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_DESCRIPTION}`
+                    .replace('{itemId}', item.Id));
+                const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
+                const newDescription: string = result?.Description
+
+                this.programDataStore.updateItem({
+                    ...item,
+                    Description: newDescription
+                })
+                itemContainer.querySelector('.previewItemDescription').textContent = newDescription
+            } catch (ex: unknown) {
+                this.logger.error(`Couldn't load description for item ${item.Id}`, ex)
+            }
+        }
+
+        itemContainer.classList.remove('hide');
+        if (markSelected) itemContainer.classList.add('selectedListItem');
+        this.applyDescriptionReadMore(itemContainer);
+    }
+
     private async renderItem(item: PreviewItem, parentDiv: HTMLElement, positionAfterIndex: number): Promise<void> {
         const itemListElementTemplate = new ListElementTemplate(parentDiv, positionAfterIndex, item, this.playbackHandler, this.programDataStore);
         itemListElementTemplate.render(async (e: MouseEvent) => {
             e.stopPropagation();
+
+            // when every item is already expanded, there's nothing left to toggle
+            if (this.programDataStore.pluginSettings.ExpandAllItems) return;
 
             // hide item content for all existing items in the preview list
             document.querySelectorAll(".previewListItemContent").forEach((element: Element): void => {
@@ -74,58 +101,17 @@ export class ListElementFactory {
             });
 
             const itemContainer: Element = document.getElementById(`item-${item.Id}`).querySelector('.previewListItemContent');
-
-            // load item description
-            if (!item.Description) {
-                try {
-                    const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_DESCRIPTION}`
-                        .replace('{itemId}', item.Id));
-                    const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
-                    const newDescription: string = result?.Description
-
-                    this.programDataStore.updateItem({
-                        ...item,
-                        Description: newDescription
-                    })
-                    itemContainer.querySelector('.previewItemDescription').textContent = newDescription
-                } catch (ex: unknown) {
-                    this.logger.error(`Couldn't load description for item ${item.Id}`, ex)
-                }
-            }
-
-            // show item content for the selected item
-            itemContainer.classList.remove('hide');
-            itemContainer.classList.add('selectedListItem');
-            this.applyDescriptionReadMore(itemContainer);
+            await this.expandItem(item, itemContainer, true);
 
             // scroll to the selected item
             itemContainer.parentElement.scrollIntoView({ block: "start" });
         });
 
-        if (item.Id === this.programDataStore.activeMediaSourceId) {
-            const itemNode: Element = document.getElementById(`item-${item.Id}`).querySelector('.previewListItemContent');
-
-            // preload description for the currently playing item
-            if (!item.Description) {
-                try {
-                    const url = ApiClient.getUrl(`/${Endpoints.BASE}${Endpoints.ITEM_DESCRIPTION}`
-                        .replace('{itemId}', item.Id));
-                    const result = await ApiClient.ajax({ type: 'GET', url, dataType: 'json' })
-                    const newDescription: string = result?.Description
-
-                    this.programDataStore.updateItem({
-                        ...item,
-                        Description: newDescription
-                    })
-                    itemNode.querySelector('.previewItemDescription').textContent = newDescription
-                } catch (ex: unknown) {
-                    this.logger.error(`Couldn't load description for item ${item.Id}`, ex)
-                }
-            }
-
-            itemNode.classList.remove('hide');
-            itemNode.classList.add('selectedListItem');
-            this.applyDescriptionReadMore(itemNode);
+        const itemNode: Element = document.getElementById(`item-${item.Id}`).querySelector('.previewListItemContent');
+        if (this.programDataStore.pluginSettings.ExpandAllItems) {
+            await this.expandItem(item, itemNode, item.Id === this.programDataStore.activeMediaSourceId);
+        } else if (item.Id === this.programDataStore.activeMediaSourceId) {
+            await this.expandItem(item, itemNode, true);
         }
     }
 

@@ -47,10 +47,11 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Web\InPlayerPreview.js" />
-    <TypeScriptSourceFiles Include="Web\**\*.ts" />
+    <WebpackSourceFiles Include="Web\**\*.ts" />
+    <WebpackSourceFiles Include="Web\**\*.css" />
   </ItemGroup>
 
-  <Target Name="BuildWebpack" BeforeTargets="BeforeBuild" Inputs="@(TypeScriptSourceFiles);webpack.config.js;tsconfig.json" Outputs="Web\InPlayerPreview.js">
+  <Target Name="BuildWebpack" BeforeTargets="BeforeBuild" Inputs="@(WebpackSourceFiles);webpack.config.js;tsconfig.json" Outputs="Web\InPlayerPreview.js">
     <Exec Command="npx webpack --config webpack.config.js" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 </Project>

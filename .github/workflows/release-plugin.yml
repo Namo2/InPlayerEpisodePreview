@@ -286,6 +286,9 @@ jobs:
         run: |
           set -euo pipefail
           changelog="${CHANGELOG_RAW//\\n/$'\n'}"
+          if [[ -n "$changelog" ]]; then
+            changelog=$(printf '## Changelog\n%s' "$changelog")
+          fi
           timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
           new=$(jq -s \
@@ -369,9 +372,6 @@ jobs:
             if [[ -n "$changelog" ]]; then
               printf '## What'\''s Changed\n%s\n\n' "$changelog"
             fi
-            printf '## Assets\n'
-            jq -rs 'sort_by(.digit) | reverse | .[] | "- `\(.zip)` — Jellyfin \(.targetAbi), plugin version \(.version), md5 `\(.checksum)`"' \
-              artifacts/meta/*.json
 
             # GitHub's own release notes, for the merged PR list and the Full Changelog link.
             generated=$(gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \

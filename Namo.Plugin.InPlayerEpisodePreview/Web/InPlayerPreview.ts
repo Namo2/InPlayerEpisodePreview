@@ -147,6 +147,9 @@ inPlayerPreviewStyle.textContent = `
 .blur:hover {
     filter: blur(0);
 }
+.previewItemImageCard .blur {
+    filter: blur(32px);
+}
 .previewItemImageCard:hover .blur {
     filter: blur(0);
 }

@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "2.1.1.3",
+        "changelog": "- Fixed a bug where the preview button did not appear consistently\n- Fixed a bug where the preview sometimes showed data for a previously watched item instead of the current one",
+        "targetAbi": "12.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.1/InPlayerEpisodePreview_2.1.1.3-12.0.zip",
+        "checksum": "3dc18390a81c382ff3ac2e19741cbe3a",
+        "timestamp": "2026-09-09T11:51:29Z"
+      },
+      {
+        "version": "2.1.1.2",
+        "changelog": "- Fixed a bug where the preview button did not appear consistently\n- Fixed a bug where the preview sometimes showed data for a previously watched item instead of the current one",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.1/InPlayerEpisodePreview_2.1.1.2-10.11.0.zip",
+        "checksum": "8ddb6e89e2919e43106918d7dde4a4bb",
+        "timestamp": "2026-09-09T11:51:29Z"
+      },
+      {
+        "version": "2.1.1.1",
+        "changelog": "- Fixed a bug where the preview button did not appear consistently\n- Fixed a bug where the preview sometimes showed data for a previously watched item instead of the current one",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.1.1/InPlayerEpisodePreview_2.1.1.1-10.10.7.zip",
+        "checksum": "bf8651999bc19c92b614a5c6b939a444",
+        "timestamp": "2026-09-09T11:51:29Z"
+      },
+      {
         "version": "2.1.0.3",
         "changelog": "### Official Jellyfin V12.0 Support\n\n### Changelog\n- Support for older WebOS TVs\n- Increased logging with a selectable frontend log level\n- \"Ends at\" will now correctly take playback speed into account\n- Current Collection/Playlist will now be reset when going to the dashboard",
         "targetAbi": "12.0",

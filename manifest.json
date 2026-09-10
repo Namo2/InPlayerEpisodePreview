@@ -10,7 +10,7 @@
     "versions": [
       {
         "version": "2.2.0.3",
-        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\\\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\\\" style=\\\"max-width: 100%; height: auto;\\\"/>",
+        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\" style=\"max-width: 100%; height: auto;\"/>",
         "targetAbi": "12.0",
         "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.2.0/InPlayerEpisodePreview_2.2.0.3-12.0.zip",
         "checksum": "260a60d51ffa15bc197798da52eadba4",
@@ -18,7 +18,7 @@
       },
       {
         "version": "2.2.0.2",
-        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\\\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\\\" style=\\\"max-width: 100%; height: auto;\\\"/>",
+        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\" style=\"max-width: 100%; height: auto;\"/>",
         "targetAbi": "10.11.0",
         "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.2.0/InPlayerEpisodePreview_2.2.0.2-10.11.0.zip",
         "checksum": "8f241c96e2d10fcdc35296cd1c9b96dd",
@@ -26,7 +26,7 @@
       },
       {
         "version": "2.2.0.1",
-        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\\\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\\\" style=\\\"max-width: 100%; height: auto;\\\"/>",
+        "changelog": "## Changelog\n- An always expanded mode is now available, coming with two designs\n- Spoiler blur for images has been increased\n- The scrollbar will now be visible, ignoring default theme hiding rules\n## Expanded mode showcase (side by side setting)\n<img src=\"https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/expanded-view-side-by-side.png\" style=\"max-width: 100%; height: auto;\"/>",
         "targetAbi": "10.10.7",
         "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.2.0/InPlayerEpisodePreview_2.2.0.1-10.10.7.zip",
         "checksum": "91f7d4dcbc393d550427e7112be986ed",

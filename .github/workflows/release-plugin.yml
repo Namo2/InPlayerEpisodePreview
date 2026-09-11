@@ -40,6 +40,10 @@ on:
           - No Label
           - None
         default: Latest
+      closes_issues:
+        description: "Comma separated issue numbers this release closes, e.g. 41,42 or #41,#42. Adds 'Closes #N' to the release commit so GitHub auto-closes them once it lands on the default branch."
+        required: false
+        default: ""
 
 concurrency:
   group: release-plugin
@@ -56,6 +60,7 @@ jobs:
       matrix: ${{ steps.plan.outputs.matrix }}
       tag: ${{ steps.plan.outputs.tag }}
       ref: ${{ steps.plan.outputs.ref }}
+      closes: ${{ steps.plan.outputs.closes }}
     steps:
       - name: Validate inputs and build matrix
         id: plan
@@ -66,6 +71,7 @@ jobs:
           JELLYFIN_VERSIONS: ${{ inputs.jellyfin_versions }}
           TAG_INPUT: ${{ inputs.tag }}
           DRY_RUN: ${{ inputs.dry_run }}
+          CLOSES_ISSUES_INPUT: ${{ inputs.closes_issues }}
         run: |
           set -euo pipefail
 
@@ -82,6 +88,23 @@ jobs:
           # have to be duplicated onto every release branch to build one.
           [[ -n "$TARGET_REF" ]] || TARGET_REF="$GITHUB_REF_NAME"
           echo "ref=$TARGET_REF" >> "$GITHUB_OUTPUT"
+
+          closes=""
+          IFS=',' read -ra ISSUES <<< "$CLOSES_ISSUES_INPUT"
+          for issue in "${ISSUES[@]}"; do
+            issue="${issue//[[:space:]]/}"
+            [[ -n "$issue" ]] || continue
+            issue="${issue#\#}"
+            if [[ ! "$issue" =~ ^[0-9]+$ ]]; then
+              echo "::error::closes_issues must be a comma separated list of issue numbers (optionally prefixed with #), got '$issue'"
+              exit 1
+            fi
+            closes+="Closes #$issue"$'\n'
+          done
+          closes="${closes%$'\n'}"
+          echo "closes<<CLOSES_EOF" >> "$GITHUB_OUTPUT"
+          echo "$closes" >> "$GITHUB_OUTPUT"
+          echo "CLOSES_EOF" >> "$GITHUB_OUTPUT"
 
           if [[ "$DRY_RUN" != "true" ]]; then
             if ! gh api "repos/$GITHUB_REPOSITORY/branches/$TARGET_REF" --silent 2>/dev/null; then
@@ -338,12 +361,17 @@ jobs:
           TAG: ${{ needs.prepare.outputs.tag }}
           TARGET_REF: ${{ needs.prepare.outputs.ref }}
           BASE_VERSION: ${{ inputs.version }}
+          CLOSES: ${{ needs.prepare.outputs.closes }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add manifest.json "$PROJECT_DIR/$ASSEMBLY_NAME.csproj"
-          git commit -m "chore: release $BASE_VERSION"
+          if [[ -n "$CLOSES" ]]; then
+            git commit -m "chore: release $BASE_VERSION" -m "$CLOSES"
+          else
+            git commit -m "chore: release $BASE_VERSION"
+          fi
           git tag -a "$TAG" -m "$TAG"
           git push origin "HEAD:refs/heads/$TARGET_REF"
           git push origin "refs/tags/$TAG"

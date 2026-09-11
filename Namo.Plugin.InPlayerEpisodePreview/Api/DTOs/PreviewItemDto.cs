@@ -8,6 +8,7 @@ public record PreviewItemDto(
     string? Name,
     string? ServerId,
     int? IndexNumber,
+    int? IndexNumberEnd,
     long? RunTimeTicks,
     DateTime? PremiereDate,
     float? CommunityRating,

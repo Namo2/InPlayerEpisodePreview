@@ -26,7 +26,7 @@ export class ListElementFactory {
 
         for (let i: number = 0; i < items.length; i++) {
             // For Playlists/BoxSets, show the actual list position instead of the IndexNumber from their season/episode.
-            const item = preserveOrder ? { ...items[i], IndexNumber: offset + i + 1 } : items[i]
+            const item = preserveOrder ? { ...items[i], IndexNumber: offset + i + 1, IndexNumberEnd: undefined } : items[i]
             await this.renderItem(item, parentDiv, offset + i)
         }
     }
@@ -37,7 +37,7 @@ export class ListElementFactory {
             items.sort((a, b) => a.IndexNumber - b.IndexNumber)
 
         for (let i: number = items.length - 1; i >= 0; i--) {
-            const item = preserveOrder ? { ...items[i], IndexNumber: offset + i + 1 } : items[i]
+            const item = preserveOrder ? { ...items[i], IndexNumber: offset + i + 1, IndexNumberEnd: undefined } : items[i]
             await this.renderItem(item, parentDiv, -1)
         }
     }

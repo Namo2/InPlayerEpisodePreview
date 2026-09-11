@@ -5,6 +5,7 @@ export type PreviewItem = {
     Name: string
     ServerId: string
     IndexNumber: number
+    IndexNumberEnd?: number
     RunTimeTicks: number
     PremiereDate: string
     CommunityRating?: number

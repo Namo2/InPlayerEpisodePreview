@@ -23,6 +23,7 @@ public static class PreviewItemDtoMapper
             dto.Name,
             dto.ServerId,
             dto.IndexNumber,
+            dto.IndexNumberEnd,
             dto.RunTimeTicks,
             dto.PremiereDate,
             dto.CommunityRating,

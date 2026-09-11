@@ -10,8 +10,19 @@ import {togglePlayedStateLocally} from "../Services/DataFetcher"
 import {ExpandedItemLayout} from "../Models/ExpandedItemLayout"
 
 // Shows/hides the "start playback" overlay for a rendered list item
-export function setItemOverlayActive(itemId: string, isActive: boolean): void {
+export const setItemOverlayActive = (itemId: string, isActive: boolean) =>
     document.getElementById(`cardOverlay-${itemId}`)?.classList.toggle('hide', isActive)
+
+// Index number span for the title row, e.g. "<span>1</span>" or "<span>1-2</span>" for a multi-episode file.
+// Empty for Movies, or items without an IndexNumber.
+const indexNumberHtml = (item: PreviewItem, groupType: ItemType): string => {
+    if (!item.IndexNumber || groupType === ItemType.Movie) return ''
+    
+    if (item.IndexNumberEnd && item.IndexNumberEnd !== item.IndexNumber) {
+        return `<span>${item.IndexNumber}-${item.IndexNumberEnd}</span>`
+    }
+
+    return `<span>${item.IndexNumber}</span>`
 }
 
 export class ListElementTemplate extends BaseTemplate {
@@ -53,10 +64,7 @@ export class ListElementTemplate extends BaseTemplate {
         const titleRow: string = `
             <div class="previewItemContainer flex">
                 <button class="listItem previewItemTitle" type="button">
-                    ${(
-                            this.item.IndexNumber &&
-                            this.programDataStore.type !== ItemType.Movie
-                    ) ? `<span>${this.item.IndexNumber}</span>` : ''}
+                    ${indexNumberHtml(this.item, this.programDataStore.type)}
                     <div class="listItemBody actionsheetListItemBody">
                         <span class="actionSheetItemText">${this.item.Name}</span>
                     </div>

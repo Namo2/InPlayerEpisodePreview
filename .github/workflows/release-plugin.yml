@@ -99,7 +99,7 @@ jobs:
               echo "::error::closes_issues must be a comma separated list of issue numbers (optionally prefixed with #), got '$issue'"
               exit 1
             fi
-            closes+="Closes #$issue"$'\n'
+            closes+="closes #$issue"$'\n'
           done
           closes="${closes%$'\n'}"
           echo "closes<<CLOSES_EOF" >> "$GITHUB_OUTPUT"
@@ -295,6 +295,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.ref }}
+          token: ${{ secrets.RELEASE_PAT || github.token }}
 
       - uses: actions/download-artifact@v8
         with:

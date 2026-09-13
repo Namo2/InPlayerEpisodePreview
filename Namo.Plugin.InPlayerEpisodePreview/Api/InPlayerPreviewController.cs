@@ -324,7 +324,7 @@ public class InPlayerPreviewController : ControllerBase
 
             List<PreviewGroup> groups = [
                 .. seasons
-                    .Where(s => _config.DisplayMissingEpisodes || s.LocationType != LocationType.Virtual)
+                    .Where(s => _config.DisplayMissingEpisodes || !s.IsVirtualItem || s.Id == seasonId)
                     .Select(s => !_config.ShowWatchedCount
                         ? new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, 0, 0)
                         : new PreviewGroup(s.Id, s.Name, s.IndexNumber ?? 0, UnknownWatchedCount, UnknownWatchedCount, UnknownWatchedCount, UnknownWatchedCount)

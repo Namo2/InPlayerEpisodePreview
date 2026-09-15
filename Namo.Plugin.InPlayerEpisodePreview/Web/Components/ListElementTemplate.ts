@@ -114,7 +114,7 @@ export class ListElementTemplate extends BaseTemplate {
         // language=HTML
         const descriptionBlock: string = `
             <span class="previewItemDescription ${this.programDataStore.pluginSettings.BlurDescription && shouldBlur ? 'blur' : ''}">
-                ${this.item.Description ?? 'loading...'}
+                ${this.item.Description ?? ''}
             </span>
             <button type="button" class="previewItemReadMoreButton hide">Show more</button>
         `

@@ -125,6 +125,14 @@
                     </label>
                     <div class="fieldDescription">Shows any other Collections/Playlists the played item belongs to - both for standalone movies and for items played from a Collection/Playlist</div>
                 </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="displayAdditionalVideoParts" is="emby-checkbox" name="displayAdditionalVideoParts"
+                               type="checkbox"/>
+                        <span>List video parts individually</span>
+                    </label>
+                    <div class="fieldDescription">Shows each part of a stacked video (e.g. files named "Part 1"/"Part 2") in folders as its own entry in the list</div>
+                </div>
 
 
                 <hr>
@@ -185,6 +193,7 @@
                 document.querySelector('#expandedItemLayoutContainer').classList.toggle('hide', !config.ExpandAllItems)
                 document.querySelector('#watchCountDisplayMode').value = config.WatchCountDisplayMode
                 document.querySelector('#searchContainingCollections').checked = config.SearchContainingCollections
+                document.querySelector('#displayAdditionalVideoParts').checked = config.DisplayAdditionalVideoParts
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
                 document.querySelector('#logLevel').value = config.LogLevel
 
@@ -218,6 +227,7 @@
             config.ExpandedItemLayout = parseInt(document.querySelector('#expandedItemLayout').value, 10)
             config.WatchCountDisplayMode = parseInt(document.querySelector('#watchCountDisplayMode').value, 10)
             config.SearchContainingCollections = document.querySelector('#searchContainingCollections').checked
+            config.DisplayAdditionalVideoParts = document.querySelector('#displayAdditionalVideoParts').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10
             config.LogLevel = parseInt(document.querySelector('#logLevel').value, 10)
 

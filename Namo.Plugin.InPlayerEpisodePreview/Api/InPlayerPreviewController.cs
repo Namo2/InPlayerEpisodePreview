@@ -349,8 +349,9 @@ public class InPlayerPreviewController : ControllerBase
         {
             var groups = _folderPreviewService.GetFolderGroups(parentFolder, user);
 
-            List<Video> videosInFolder = [.._folderPreviewService.GetCachedFolderChildren(parentFolder, user).OfType<Video>().OrderBy(v => v.SortName)];
-            var activeVideoIndex = Math.Max(0, videosInFolder.FindIndex(v => v.Id == item.Id));
+            var videosInFolder = _folderPreviewService.ExpandAdditionalParts(
+                _folderPreviewService.GetCachedFolderChildren(parentFolder, user).OfType<Video>().OrderBy(v => v.SortName), user);
+            var activeVideoIndex = Math.Max(0, videosInFolder.FindIndex(v => v.Item.Id == item.Id));
 
             return Ok(new ItemPreviewDataResult(BaseItemKind.Folder, null, groups, parentFolder.Id, activeVideoIndex));
         }
@@ -404,10 +405,13 @@ public class InPlayerPreviewController : ControllerBase
 
         if (groupItem is Folder folderGroup)
         {
-            List<Video> videosInFolder = [.._folderPreviewService.GetCachedFolderChildren(folderGroup, user).OfType<Video>().OrderBy(v => v.SortName)];
-            List<Video> page = [..videosInFolder.Skip(startIndex).Take(limit)];
+            var videosInFolder = _folderPreviewService.ExpandAdditionalParts(
+                _folderPreviewService.GetCachedFolderChildren(folderGroup, user).OfType<Video>().OrderBy(v => v.SortName), user);
+            var page = videosInFolder.Skip(startIndex).Take(limit);
 
-            var videoDtos = _dtoService.GetBaseItemDtos([..page], PreviewDtoOptions, user);
+            // A part's DTO needs its own stack's primary video as "owner" (e.g. to inherit its image),
+            // so unlike other item kinds above this can't share one GetBaseItemDtos call for the whole page.
+            var videoDtos = page.Select(p => _dtoService.GetBaseItemDto(p.Item, PreviewDtoOptions, user, p.Owner));
             return Ok(new GroupItemsResult([..videoDtos.Select(d => d.ToPreviewItemDto())], videosInFolder.Count));
         }
 

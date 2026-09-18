@@ -137,6 +137,32 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
     }
 
     /// <summary>
+    /// If configured, expands each stacked video into itself plus its "additional parts" -
+    /// sibling files (e.g. named "Part 1"/"Part 2") that Jellyfin's naming resolver merges into one
+    /// library item instead of listing them as separate children - so each part can be listed and
+    /// played as its own entry. A part's DTO needs its stack's primary video passed as "owner" to
+    /// inherit fields (e.g. image) the part itself was never given its own metadata for.
+    /// </summary>
+    /// <remarks>
+    /// Video.GetAdditionalParts() takes no arguments on 10.10.7/10.11.0, but gained an optional
+    /// User parameter on 12.0 to filter out parts the user isn't allowed to see. Since that overload
+    /// isn't available everywhere, access is checked here instead via BaseItem.IsVisible(User), which
+    /// has the same public signature on all three targeted versions.
+    /// </remarks>
+    public List<(Video Item, Video? Owner)> ExpandAdditionalParts(IEnumerable<Video> videos, User user)
+    {
+        List<(Video, Video?)> result = [];
+        foreach (var video in videos)
+        {
+            result.Add((video, null));
+            if (Config.DisplayAdditionalVideoParts && video.IsStacked)
+                result.AddRange(video.GetAdditionalParts().Where(part => part.IsVisible(user)).Select(part => (part, (Video?)video)));
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Get a Playlist/BoxSet's children from cache or load it,
     /// </summary>
     public List<BaseItem> GetCachedFolderChildren(Folder folder, User user)

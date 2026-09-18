@@ -49,6 +49,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool DisplayMissingEpisodes { get; set; } = false;
 
     /// <summary>
+    /// Whether to list a stacked video's additional parts (e.g. files named "Part 1"/"Part 2" that
+    /// Jellyfin's naming resolver merges into one library item) as separate, individually playable entries.
+    /// </summary>
+    public bool DisplayAdditionalVideoParts { get; set; } = true;
+
+    /// <summary>
     /// Whether to show the watch progress bar on an item's image card in the preview
     /// </summary>
     public bool ShowWatchProgress { get; set; } = true;

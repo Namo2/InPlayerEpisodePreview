@@ -155,7 +155,7 @@ function onVideoTimeUpdate(this: HTMLVideoElement): void {
             ...item.UserData,
             PlaybackPositionTicks: positionTicks,
             PlayedPercentage: playedPercentage,
-            Played: playedPercentage >= programDataStore.serverSettings.MaxResumePct
+            Played: item.UserData.Played || playedPercentage >= programDataStore.serverSettings.MaxResumePct
         }
     })
 }

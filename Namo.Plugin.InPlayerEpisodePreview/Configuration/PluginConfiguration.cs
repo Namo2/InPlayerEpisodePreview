@@ -49,6 +49,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool DisplayMissingEpisodes { get; set; } = false;
 
     /// <summary>
+    /// Whether the preview closes when an item is started from it.
+    /// </summary>
+    public bool AutoClosePreview { get; set; } = true;
+
+    /// <summary>
     /// Whether to list a stacked video's additional parts (e.g. files named "Part 1"/"Part 2" that
     /// Jellyfin's naming resolver merges into one library item) as separate, individually playable entries.
     /// </summary>

@@ -127,6 +127,14 @@
                 </div>
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
+                        <input id="autoClosePreview" is="emby-checkbox" name="autoClosePreview"
+                               type="checkbox"/>
+                        <span>Close preview when starting an item</span>
+                    </label>
+                    <div class="fieldDescription">Automatically closes the preview popup after an item is started from it</div>
+                </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
                         <input id="displayAdditionalVideoParts" is="emby-checkbox" name="displayAdditionalVideoParts"
                                type="checkbox"/>
                         <span>List video parts individually</span>
@@ -194,6 +202,7 @@
                 document.querySelector('#watchCountDisplayMode').value = config.WatchCountDisplayMode
                 document.querySelector('#searchContainingCollections').checked = config.SearchContainingCollections
                 document.querySelector('#displayAdditionalVideoParts').checked = config.DisplayAdditionalVideoParts
+                document.querySelector('#autoClosePreview').checked = config.AutoClosePreview
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
                 document.querySelector('#logLevel').value = config.LogLevel
 
@@ -228,6 +237,7 @@
             config.WatchCountDisplayMode = parseInt(document.querySelector('#watchCountDisplayMode').value, 10)
             config.SearchContainingCollections = document.querySelector('#searchContainingCollections').checked
             config.DisplayAdditionalVideoParts = document.querySelector('#displayAdditionalVideoParts').checked
+            config.AutoClosePreview = document.querySelector('#autoClosePreview').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10
             config.LogLevel = parseInt(document.querySelector('#logLevel').value, 10)
 

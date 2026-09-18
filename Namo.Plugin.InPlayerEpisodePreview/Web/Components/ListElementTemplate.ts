@@ -167,6 +167,11 @@ export class ListElementTemplate extends BaseTemplate {
             ?.addEventListener('click', (e: MouseEvent) => e.stopPropagation())
 
         const itemImageCard: HTMLElement = document.getElementById(`start-item-${this.item.Id}`)
-        itemImageCard.addEventListener('click', () => this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks))
+        itemImageCard.addEventListener('click', (e: MouseEvent) => {
+            e.stopPropagation()
+            this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks)
+            if (this.programDataStore.pluginSettings.AutoClosePreview)
+                document.getElementById('previewPopup')?.remove()
+        })
     }
 }

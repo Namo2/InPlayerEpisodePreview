@@ -15,6 +15,7 @@ export type PluginSettings = {
     ShowWatchProgress: boolean,
     ExpandAllItems: boolean,
     ExpandedItemLayout: ExpandedItemLayout,
+    AutoClosePreview: boolean,
     LogLevel: LogLevel,
 }
 
@@ -30,5 +31,6 @@ export const DefaultPluginSettings: PluginSettings = {
     ShowWatchProgress: true,
     ExpandAllItems: false,
     ExpandedItemLayout: ExpandedItemLayout.Default,
+    AutoClosePreview: true,
     LogLevel: LogLevel.Information,
 }

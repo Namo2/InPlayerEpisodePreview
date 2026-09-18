@@ -28,6 +28,13 @@ export function updateWatchedCountDom(programDataStore: ProgramDataStore, group:
     if (groupListWatchedCount) groupListWatchedCount.innerHTML = html
 }
 
+export function updateBlurDom(programDataStore: ProgramDataStore, itemId: string, played: boolean): void {
+    const settings = programDataStore.pluginSettings
+    const shouldBlur = !(settings.OnlyBlurUnwatched && played)
+    document.getElementById(`previewItemImageCard-${itemId}`)?.classList.toggle('blur', settings.BlurThumbnail && shouldBlur)
+    document.getElementById(`item-${itemId}`)?.querySelector('.previewItemDescription')?.classList.toggle('blur', settings.BlurDescription && shouldBlur)
+}
+
 function playedRuntimeContribution(item: PreviewItem, played: boolean, playbackPositionTicks: number): number {
     return played ? (item.RunTimeTicks ?? 0) : playbackPositionTicks
 }
@@ -65,6 +72,7 @@ export function togglePlayedStateLocally(programDataStore: ProgramDataStore, ite
         ...item,
         UserData: { ...item.UserData, Played: isPlayed, PlaybackPositionTicks: newPlaybackPositionTicks }
     })
+    updateBlurDom(programDataStore, itemId, isPlayed)
     adjustWatchedCount(programDataStore, item, wasPlayed, isPlayed, oldPlaybackPositionTicks, newPlaybackPositionTicks)
 }
 
@@ -92,6 +100,7 @@ export class DataFetcher {
                     }
                 })
 
+                updateBlurDom(this.programDataStore, userData.ItemId, userData.Played)
                 adjustWatchedCount(this.programDataStore, item, wasPlayed, userData.Played, oldPlaybackPositionTicks, userData.PlaybackPositionTicks)
             }
         })

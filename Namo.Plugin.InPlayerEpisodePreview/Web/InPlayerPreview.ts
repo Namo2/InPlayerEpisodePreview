@@ -5,15 +5,16 @@ import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
 import {PlaybackHandler} from "./Services/PlaybackHandler";
 import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
-import {DataFetcher} from "./Services/DataFetcher";
+import {adjustWatchedCount, DataFetcher, updateBlurDom} from "./Services/DataFetcher";
 import {ItemType} from "./Models/ItemType";
 import {PluginSettings} from "./Models/PluginSettings";
 import {ServerSettings} from "./Models/ServerSettings";
 import {Endpoints} from "./Endpoints";
 import {Group, UNKNOWN_WATCHED_COUNT} from "./Models/PreviewData/Group";
 import {GroupItemsResult} from "./Models/PreviewData/GroupItemsResult";
+import {PreviewItem} from "./Models/PreviewData/PreviewItem";
 import {activateSpinner, spinnerHtml} from "./Components/Spinner";
-import {setItemOverlayActive} from "./Components/ListElementTemplate";
+import {setItemOverlayActive, updateItemProgressDom} from "./Components/ListElementTemplate";
 import {updateEndTimeDisplay} from "./Components/ItemDetails";
 
 import './Styles/Styles.css'
@@ -149,15 +150,22 @@ function onVideoTimeUpdate(this: HTMLVideoElement): void {
     const positionTicks = this.currentTime * 10_000_000
     const playedPercentage = (positionTicks / item.RunTimeTicks) * 100
 
-    programDataStore.updateItem({
+    const played = item.UserData.Played || playedPercentage >= programDataStore.serverSettings.MaxResumePct
+    const updatedItem: PreviewItem = {
         ...item,
         UserData: {
             ...item.UserData,
             PlaybackPositionTicks: positionTicks,
             PlayedPercentage: playedPercentage,
-            Played: item.UserData.Played || playedPercentage >= programDataStore.serverSettings.MaxResumePct
+            Played: played
         }
-    })
+    }
+    programDataStore.updateItem(updatedItem)
+    
+    updateItemProgressDom(itemId, playedPercentage)
+    updateEndTimeDisplay(updatedItem)
+    if (played !== item.UserData.Played) updateBlurDom(programDataStore, itemId, played)
+    adjustWatchedCount(programDataStore, item, item.UserData.Played, played, item.UserData.PlaybackPositionTicks, positionTicks)
 }
 
 function onVideoRateChange(): void {

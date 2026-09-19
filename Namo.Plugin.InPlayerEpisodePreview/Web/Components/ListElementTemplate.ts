@@ -13,6 +13,22 @@ import {ExpandedItemLayout} from "../Models/ExpandedItemLayout"
 export const setItemOverlayActive = (itemId: string, isActive: boolean) =>
     document.getElementById(`cardOverlay-${itemId}`)?.classList.toggle('hide', isActive)
 
+// Updates or creates the progress bar of a rendered list item
+export const updateItemProgressDom = (itemId: string, percentage: number): void => {
+    const foreground = document.getElementById(`item-${itemId}`)?.querySelector<HTMLElement>('.itemProgressBarForeground')
+    if (foreground) {
+        foreground.style.width = `${percentage}%`
+        return
+    }
+
+    const scalable = document.getElementById(`previewItemImageCard-${itemId}`)?.parentElement
+    if (!scalable || !percentage) return
+    scalable.querySelector('#cardOverlay-' + itemId)?.insertAdjacentHTML('beforebegin',
+        `<div class="innerCardFooter fullInnerCardFooter innerCardFooterClear itemProgressBar">
+            <div class="itemProgressBarForeground" style="width:${percentage}%;"></div>
+        </div>`)
+}
+
 // Index number span for the title row, e.g. "<span>1</span>" or "<span>1-2</span>" for a multi-episode file.
 // Empty for Movies, or items without an IndexNumber.
 const indexNumberHtml = (item: PreviewItem, groupType: ItemType): string => {

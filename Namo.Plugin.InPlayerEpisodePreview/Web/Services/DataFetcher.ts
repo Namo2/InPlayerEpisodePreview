@@ -39,7 +39,7 @@ function playedRuntimeContribution(item: PreviewItem, played: boolean, playbackP
     return played ? (item.RunTimeTicks ?? 0) : playbackPositionTicks
 }
 
-function adjustWatchedCount(
+export function adjustWatchedCount(
     programDataStore: ProgramDataStore,
     item: PreviewItem,
     wasPlayed: boolean,
@@ -48,12 +48,12 @@ function adjustWatchedCount(
     newPlaybackPositionTicks: number
 ): void {
     if (!programDataStore.pluginSettings.ShowWatchedCount) return
-    if (wasPlayed === isPlayed) return
 
-    const deltaPlayedCount = isPlayed ? 1 : -1
+    const deltaPlayedCount = Number(isPlayed) - Number(wasPlayed)
     const deltaPlayedRuntimeTicks =
         playedRuntimeContribution(item, isPlayed, newPlaybackPositionTicks) -
         playedRuntimeContribution(item, wasPlayed, oldPlaybackPositionTicks)
+    if (deltaPlayedCount === 0 && deltaPlayedRuntimeTicks === 0) return
 
     const updatedGroup = programDataStore.adjustGroupWatchStats(item.Id, deltaPlayedCount, deltaPlayedRuntimeTicks)
     if (updatedGroup) updateWatchedCountDom(programDataStore, updatedGroup)

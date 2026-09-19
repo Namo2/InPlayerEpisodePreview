@@ -11,5 +11,31 @@
   },
   "dependencies": {
     "ts-loader": "^9.6.2"
+  },
+  "overrides": {
+    "browserslist": {
+      "browserslist": "4.28.7"
+    },
+    "css-loader": {
+      "browserslist": "4.28.7"
+    },
+    "minimizer-webpack-plugin": {
+      "browserslist": "4.28.7"
+    },
+    "style-loader": {
+      "browserslist": "4.28.7"
+    },
+    "ts-loader": {
+      "browserslist": "4.28.7"
+    },
+    "update-browserslist-db": {
+      "browserslist": "4.28.7"
+    },
+    "webpack": {
+      "browserslist": "4.28.7"
+    },
+    "webpack-cli": {
+      "browserslist": "4.28.7"
+    }
   }
 }

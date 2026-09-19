@@ -16,7 +16,7 @@ export class GroupListElementTemplate extends BaseTemplate {
                  class="listItem listItem-button actionSheetMenuItem emby-button previewListItem"
                  is="emby-button"
                  data-id="${this.group.groupId}">
-                <button class="listItem previewItemTitle" type="button">
+                <button class="listItem previewItemTitle previewGroupListItemTitle" type="button">
                     <span class="${this.isCurrentGroup ? "material-icons check" : ""}"></span>
                     <div class="listItemBody actionsheetListItemBody">
                         <span class="actionSheetItemText">${this.group.groupName}</span>

@@ -40,6 +40,7 @@
 }
 .previewGroupWatchedCount {
     cursor: pointer;
+    pointer-events: auto;
     margin-left: auto;
     margin-right: 0.4em;
     padding: 0.2em 0.6em;
@@ -53,6 +54,11 @@
 .previewGroupWatchedCount:hover {
     opacity: 1;
     background-color: rgba(255, 255, 255, 0.12);
+}
+/* Remove button highlighting when hovering over the group statistics */
+.previewGroupListItemTitle:has(.previewGroupWatchedCount:hover) {
+    background: none !important;
+    box-shadow: none !important;
 }
 .previewPopupScroller {
     max-height: 60vh;
@@ -80,6 +86,9 @@
 }
 .previewItemTitle {
     pointer-events: none;
+}
+.previewGroupListItemTitle {
+    width: 100%;
 }
 .previewItemImageCard {
     max-width: 30%;

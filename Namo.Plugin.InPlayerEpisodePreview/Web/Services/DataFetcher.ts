@@ -1,7 +1,7 @@
 import {ProgramDataStore} from "./ProgramDataStore";
 import {PreviewItem} from "../Models/PreviewData/PreviewItem";
 import {Group} from "../Models/PreviewData/Group";
-import {renderWatchedCountInnerHtml} from "../Models/PreviewData/WatchProgress";
+import {nextWatchCountDisplayMode, renderWatchedCountInnerHtml} from "../Models/PreviewData/WatchProgress";
 
 type UserDataChangedEntry = {
     ItemId: string
@@ -16,16 +16,25 @@ type WebSocketMessage = {
     Data: any
 }
 
-export function updateWatchedCountDom(programDataStore: ProgramDataStore, group: Group): void {
-    const html = renderWatchedCountInnerHtml(group, programDataStore.pluginSettings.WatchCountDisplayMode)
+export function renderWatchedCountInto(programDataStore: ProgramDataStore, element: HTMLElement, group: Group): void {
+    const mode = element.dataset.mode !== undefined ? Number(element.dataset.mode) : programDataStore.pluginSettings.WatchCountDisplayMode
+    element.innerHTML = renderWatchedCountInnerHtml(group, mode)
+}
 
+export function cycleWatchedCountMode(programDataStore: ProgramDataStore, element: HTMLElement, group: Group): void {
+    const current = element.dataset.mode !== undefined ? Number(element.dataset.mode) : programDataStore.pluginSettings.WatchCountDisplayMode
+    element.dataset.mode = String(nextWatchCountDisplayMode(current, programDataStore.pluginSettings.WatchCountDisplayMode))
+    renderWatchedCountInto(programDataStore, element, group)
+}
+
+export function updateWatchedCountDom(programDataStore: ProgramDataStore, group: Group): void {
     if (group.groupId === programDataStore.activeGroupId) {
         const popupWatchedCount = document.getElementById('popupTitleContainer')?.querySelector<HTMLElement>('.previewGroupWatchedCount')
-        if (popupWatchedCount) popupWatchedCount.innerHTML = html
+        if (popupWatchedCount) renderWatchedCountInto(programDataStore, popupWatchedCount, group)
     }
 
     const groupListWatchedCount = document.getElementById(`group-${group.groupId}`)?.querySelector<HTMLElement>('.previewGroupWatchedCount')
-    if (groupListWatchedCount) groupListWatchedCount.innerHTML = html
+    if (groupListWatchedCount) renderWatchedCountInto(programDataStore, groupListWatchedCount, group)
 }
 
 export function updateBlurDom(programDataStore: ProgramDataStore, itemId: string, played: boolean): void {

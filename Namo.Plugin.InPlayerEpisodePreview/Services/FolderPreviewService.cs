@@ -29,8 +29,6 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
         if (!Config.ShowWatchedCount)
             return new WatchStats(0, 0, 0, 0);
 
-        bool needsRuntime = (WatchCountDisplayMode)Config.WatchCountDisplayMode != WatchCountDisplayMode.Count;
-
         int totalCount = 0;
         int playedCount = 0;
         long totalTicks = 0;
@@ -43,9 +41,6 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
             bool played = userData?.Played ?? false;
             if (played)
                 playedCount++;
-
-            if (!needsRuntime)
-                continue;
 
             long itemTicks = item.RunTimeTicks ?? 0;
             totalTicks += itemTicks;

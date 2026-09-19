@@ -2,7 +2,7 @@ import {BaseTemplate} from "./BaseTemplate";
 import {ProgramDataStore} from "../Services/ProgramDataStore";
 import {ItemType} from "../Models/ItemType";
 import {Group} from "../Models/PreviewData/Group";
-import {renderWatchedCountInnerHtml} from "../Models/PreviewData/WatchProgress";
+import {renderWatchedCountInto} from "../Services/DataFetcher";
 
 export class PopupTitleTemplate extends BaseTemplate {
     constructor(container: HTMLElement, positionAfterIndex: number, private programDataStore: ProgramDataStore) {
@@ -35,7 +35,7 @@ export class PopupTitleTemplate extends BaseTemplate {
 
     public setWatchedCount(group: Group) {
         const watchedCountElement = this.getElement().querySelector<HTMLElement>('.previewGroupWatchedCount')
-        if (watchedCountElement) watchedCountElement.innerHTML = renderWatchedCountInnerHtml(group, this.programDataStore.pluginSettings.WatchCountDisplayMode)
+        if (watchedCountElement) renderWatchedCountInto(this.programDataStore, watchedCountElement, group)
     }
     
     public setVisible(isVisible: boolean) {

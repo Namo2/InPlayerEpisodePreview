@@ -5,7 +5,7 @@ import {DialogContainerTemplate} from "./Components/DialogContainerTemplate";
 import {PlaybackHandler} from "./Services/PlaybackHandler";
 import {ListElementFactory} from "./ListElementFactory";
 import {PopupTitleTemplate} from "./Components/PopupTitleTemplate";
-import {adjustWatchedCount, DataFetcher, updateBlurDom} from "./Services/DataFetcher";
+import {adjustWatchedCount, DataFetcher, cycleWatchedCountMode, updateBlurDom} from "./Services/DataFetcher";
 import {ItemType} from "./Models/ItemType";
 import {PluginSettings} from "./Models/PluginSettings";
 import {ServerSettings} from "./Models/ServerSettings";
@@ -232,6 +232,16 @@ function captureSourceCollection(currentRoutePath: string): void {
 // https://github.com/jellyfin/jellyfin-web/blob/release-10.11.z/src/components/shortcuts.js#L216
 const PLAYBACK_TRIGGER_ACTIONS: Set<string> = new Set(['play', 'resume', 'playallfromhere'])
 function onDocumentClickCapture(event: MouseEvent): void {
+    // Cycle group stat display mode
+    const watchedCountElement = (event.target as HTMLElement)?.closest?.<HTMLElement>('#previewPopup .previewGroupWatchedCount')
+    if (watchedCountElement) {
+        event.stopPropagation()
+        const groupElement = watchedCountElement.closest<HTMLElement>('[id^="group-"]')
+        const group = groupElement ? programDataStore.groups.find(g => `group-${g.groupId}` === groupElement.id) : programDataStore.activeGroup
+        if (group) cycleWatchedCountMode(programDataStore, watchedCountElement, group)
+        return
+    }
+
     // Only capture native events and ignore any from the Preview List
     if ((event.target as HTMLElement)?.closest?.('#previewPopup')) return
 

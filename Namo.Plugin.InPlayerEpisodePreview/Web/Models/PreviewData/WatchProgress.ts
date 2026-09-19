@@ -96,3 +96,13 @@ export const renderWatchedCountInnerHtml = (group: Group, mode: WatchCountDispla
     const progress = getWatchProgressPercent(group, mode)
     return `${getWatchProgressIconHtml(progress)}<span class="previewGroupWatchedCountText">${formatWatchedCountText(group, mode)}</span>`
 }
+
+// Cycles Count -> Time -> Percentage. The time format follows the plugin setting, HoursMinutes unless it is AllUnits.
+export const nextWatchCountDisplayMode = (mode: WatchCountDisplayMode, defaultMode: WatchCountDisplayMode): WatchCountDisplayMode => {
+    const timeMode = defaultMode === WatchCountDisplayMode.AllUnits ? WatchCountDisplayMode.AllUnits : WatchCountDisplayMode.HoursMinutes
+    switch (mode) {
+        case WatchCountDisplayMode.Count: return timeMode
+        case WatchCountDisplayMode.Percentage: return WatchCountDisplayMode.Count
+        default: return WatchCountDisplayMode.Percentage
+    }
+}

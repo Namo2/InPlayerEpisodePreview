@@ -452,7 +452,9 @@ public class InPlayerPreviewController : ControllerBase
             _ => [groupItem]
         };
 
-        var stats = _folderPreviewService.GetWatchStats(children, user);
+        var stats = groupItem is Folder and not (Season or Playlist or BoxSet)
+            ? _folderPreviewService.GetVideoWatchStats(children.OfType<Video>(), user)
+            : _folderPreviewService.GetWatchStats(children, user);
         return Ok(new WatchedCountResult(stats.PlayedItemCount, stats.TotalItemCount, stats.PlayedRuntimeTicks, stats.TotalRuntimeTicks));
     }
 

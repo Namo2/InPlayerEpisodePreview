@@ -56,6 +56,12 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
     }
 
     /// <summary>
+    /// Like <see cref="GetWatchStats"/>, but counts additional video parts as their own entries, matching the listed items
+    /// </summary>
+    public WatchStats GetVideoWatchStats(IEnumerable<Video> videos, User user)
+        => GetWatchStats(ExpandAdditionalParts(videos, user).Select(v => (BaseItem)v.Item), user);
+
+    /// <summary>
     /// </summary>
     public List<PreviewGroup> GetFolderGroups(Folder folder, User user)
     {
@@ -66,8 +72,7 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
         if (libraryManager.GetItemById(folder.ParentId) is Folder parent)
             return BuildFolderGroups(GetCachedFolderChildren(parent, user), parent.Id, user);
 
-        List<Video> videosInFolder = [..ownChildren.OfType<Video>()];
-        var stats = GetWatchStats(videosInFolder, user);
+        var stats = GetVideoWatchStats(ownChildren.OfType<Video>(), user);
         return [new PreviewGroup(folder.Id, folder.Name, 0, stats.PlayedItemCount, stats.TotalItemCount, stats.PlayedRuntimeTicks, stats.TotalRuntimeTicks)];
     }
 
@@ -81,18 +86,18 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
         List<PreviewGroup> groups = [];
         foreach (var subfolder in children.OfType<Folder>().OrderBy(f => f.SortName))
         {
-            List<Video> videosInSubfolder = [..GetCachedFolderChildren(subfolder, user).OfType<Video>()];
+            var videosInSubfolder = GetCachedFolderChildren(subfolder, user).OfType<Video>().ToList();
             if (videosInSubfolder.Count == 0)
                 continue;
 
-            var subfolderStats = GetWatchStats(videosInSubfolder, user);
+            var subfolderStats = GetVideoWatchStats(videosInSubfolder, user);
             groups.Add(new PreviewGroup(subfolder.Id, subfolder.Name, groups.Count, subfolderStats.PlayedItemCount, subfolderStats.TotalItemCount, subfolderStats.PlayedRuntimeTicks, subfolderStats.TotalRuntimeTicks));
         }
 
         List<Video> looseVideos = [..children.OfType<Video>()];
         if (looseVideos.Count > 0)
         {
-            var looseStats = GetWatchStats(looseVideos, user);
+            var looseStats = GetVideoWatchStats(looseVideos, user);
             groups.Add(new PreviewGroup(looseVideosGroupId, "Videos", groups.Count, looseStats.PlayedItemCount, looseStats.TotalItemCount, looseStats.PlayedRuntimeTicks, looseStats.TotalRuntimeTicks));
         }
 

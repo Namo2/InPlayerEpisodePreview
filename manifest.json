@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "2.4.0.3",
+        "changelog": "## Changelog\n### Features\n- Include Videos with multiple parts (can be toggled in the plugin settings)\n- Auto close the preview popup when starting a new episode (can be toggled in the plugin settings)\n-Switch the display mode for the season summary by clicking on the label\n### Fixes\n- Episode playstate will not be reset anymore on a rewatch\n- Spoiler blur will now be updated immediately when triggering the playstate button inside the preview popup\n- Video progress bar and season summary will now be live updated\n- Season summary will now be displayed at the correct position during season selection\n- Empty descriptions will now be shown empty instead of \"loading...\"",
+        "targetAbi": "12.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.4.0/InPlayerEpisodePreview_2.4.0.3-12.0.zip",
+        "checksum": "b9a58cf11e362d4e4f38359d849363bb",
+        "timestamp": "2026-09-19T20:41:17Z"
+      },
+      {
+        "version": "2.4.0.2",
+        "changelog": "## Changelog\n### Features\n- Include Videos with multiple parts (can be toggled in the plugin settings)\n- Auto close the preview popup when starting a new episode (can be toggled in the plugin settings)\n-Switch the display mode for the season summary by clicking on the label\n### Fixes\n- Episode playstate will not be reset anymore on a rewatch\n- Spoiler blur will now be updated immediately when triggering the playstate button inside the preview popup\n- Video progress bar and season summary will now be live updated\n- Season summary will now be displayed at the correct position during season selection\n- Empty descriptions will now be shown empty instead of \"loading...\"",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.4.0/InPlayerEpisodePreview_2.4.0.2-10.11.0.zip",
+        "checksum": "f7ec038041fcc6182bb6989678785999",
+        "timestamp": "2026-09-19T20:41:17Z"
+      },
+      {
+        "version": "2.4.0.1",
+        "changelog": "## Changelog\n### Features\n- Include Videos with multiple parts (can be toggled in the plugin settings)\n- Auto close the preview popup when starting a new episode (can be toggled in the plugin settings)\n-Switch the display mode for the season summary by clicking on the label\n### Fixes\n- Episode playstate will not be reset anymore on a rewatch\n- Spoiler blur will now be updated immediately when triggering the playstate button inside the preview popup\n- Video progress bar and season summary will now be live updated\n- Season summary will now be displayed at the correct position during season selection\n- Empty descriptions will now be shown empty instead of \"loading...\"",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.4.0/InPlayerEpisodePreview_2.4.0.1-10.10.7.zip",
+        "checksum": "c31d679bee46caf25da130e83d922968",
+        "timestamp": "2026-09-19T20:41:17Z"
+      },
+      {
         "version": "2.3.0.3",
         "changelog": "## Changelog\n- Multi-Episode files will now be shown with their correct index range\n- Virtual seasons will now be displayed in the preview if real files exists",
         "targetAbi": "12.0",

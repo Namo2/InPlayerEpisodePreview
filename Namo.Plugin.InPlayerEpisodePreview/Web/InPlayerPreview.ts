@@ -128,8 +128,33 @@ function getLatestUserRatingItemId(): string | null {
     return getActiveRatingButton()?.getAttribute('data-id') ?? null
 }
 
+let pendingItemSwitchButton: Element | null = null
+let itemSwitchObserver: MutationObserver | null = null
+
+function onVideoEmptied(): void {
+    lastTrackedPositionSecond = -1
+    itemSwitchObserver?.disconnect()
+    pendingItemSwitchButton = getActiveRatingButton()
+    if (!pendingItemSwitchButton) return
+    
+    itemSwitchObserver = new MutationObserver(() => stopWaitingForItemSwitch())
+    itemSwitchObserver.observe(pendingItemSwitchButton, { attributes: true, attributeFilter: ['data-id'] })
+}
+
+function stopWaitingForItemSwitch(): void {
+    itemSwitchObserver?.disconnect()
+    itemSwitchObserver = null
+    pendingItemSwitchButton = null
+}
+
 let lastTrackedPositionSecond: number = -1
 function onVideoTimeUpdate(this: HTMLVideoElement): void {
+    if (pendingItemSwitchButton) {
+        // A recreated OSD has a new button. The observed one never updates.
+        if (pendingItemSwitchButton === getActiveRatingButton()) return
+        stopWaitingForItemSwitch()
+    }
+
     const positionSecond = Math.floor(this.currentTime)
     if (positionSecond === lastTrackedPositionSecond) return
     lastTrackedPositionSecond = positionSecond
@@ -329,6 +354,7 @@ function viewShowEventHandler(): void {
             const videoElement = document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')
             videoElement?.addEventListener('timeupdate', onVideoTimeUpdate)
             videoElement?.addEventListener('ratechange', onVideoRateChange)
+            videoElement?.addEventListener('emptied', onVideoEmptied)
         }
 
         const fetchPreviewItemType = async (itemId: string): Promise<ItemType> => {
@@ -533,21 +559,14 @@ function viewShowEventHandler(): void {
 
             contentDiv.innerHTML = '' // remove the loading spinner
             const viewToken = programDataStore.beginNewView()
-
-            // A standalone movie has no meaningful group name of its own; an item sourced from a Playlist/BoxSet
-            // already has that collection's real name, so only the standalone-movie case gets relabeled.
+            
             const isStandaloneMovie = programDataStore.type === ItemType.Movie
             const isSourcedFromCollection = programDataStore.type === ItemType.Playlist || programDataStore.type === ItemType.BoxSet
-
-            // Label the movie's own group as the collection search up front, even before any results are known.
-            // A movie folder group keeps its folder name.
+            
             if (isStandaloneMovie && programDataStore.pluginSettings.SearchContainingCollections) {
                 programDataStore.groups = programDataStore.groups.map((g, i) => i === 0 && g.groupId === itemId ? { ...g, groupName: SEARCH_COLLECTIONS_GROUP_NAME } : g)
             }
-
-            // Only search once per fresh group-fetch (not on every popup reopen while cached groups already include the search results).
-            // getContainingCollections itself is memoized per item for the whole page session, so even this can't re-trigger the
-            // expensive backend scan more than once per item, no matter how often the popup is reopened while it's pending.
+            
             const isSearchingCollections = (isStandaloneMovie || isSourcedFromCollection) && programDataStore.pluginSettings.SearchContainingCollections && programDataStore.groups.length === 1
             let collectionsSearchDone = !isSearchingCollections
             const collectionsSearch: Promise<void> = isSearchingCollections
@@ -618,6 +637,8 @@ function viewShowEventHandler(): void {
         const videoElement = document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')
         videoElement?.removeEventListener('timeupdate', onVideoTimeUpdate)
         videoElement?.removeEventListener('ratechange', onVideoRateChange)
+        videoElement?.removeEventListener('emptied', onVideoEmptied)
+        stopWaitingForItemSwitch()
         lastTrackedPositionSecond = -1
 
         preloadObserver?.disconnect()

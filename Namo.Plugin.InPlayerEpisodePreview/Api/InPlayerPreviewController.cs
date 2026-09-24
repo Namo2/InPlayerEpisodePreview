@@ -356,6 +356,22 @@ public class InPlayerPreviewController : ControllerBase
             return Ok(new ItemPreviewDataResult(BaseItemKind.Folder, null, groups, parentFolder.Id, activeVideoIndex));
         }
 
+        if (_config.DisplayMovieFolderSiblings && item is Movie
+            && _libraryManager.GetItemById(item.ParentId) is Folder movieFolder
+            && movieFolder is not (AggregateFolder or CollectionFolder or UserRootFolder)
+            && !movieFolder.IsTopParent)
+        {
+            var videosInFolder = _folderPreviewService.GetCachedFolderChildren(movieFolder, user).OfType<Video>().OrderBy(v => v.SortName).ToList();
+            if (videosInFolder.Count > 1)
+            {
+                var expandedVideos = _folderPreviewService.ExpandAdditionalParts(videosInFolder, user);
+                var activeVideoIndex = Math.Max(0, expandedVideos.FindIndex(v => v.Item.Id == item.Id));
+                var folderStats = _folderPreviewService.GetVideoWatchStats(videosInFolder, user);
+                var folderGroup = new PreviewGroup(movieFolder.Id, movieFolder.Name, 0, folderStats.PlayedItemCount, folderStats.TotalItemCount, folderStats.PlayedRuntimeTicks, folderStats.TotalRuntimeTicks);
+                return Ok(new ItemPreviewDataResult(BaseItemKind.Movie, null, [folderGroup], movieFolder.Id, activeVideoIndex));
+            }
+        }
+
         var itemStats = _folderPreviewService.GetWatchStats([item], user);
         var itemGroup = new PreviewGroup(item.Id, null, 0, itemStats.PlayedItemCount, itemStats.TotalItemCount, itemStats.PlayedRuntimeTicks, itemStats.TotalRuntimeTicks);
         return Ok(new ItemPreviewDataResult(itemDto.Type, null, [itemGroup], item.Id, 0));

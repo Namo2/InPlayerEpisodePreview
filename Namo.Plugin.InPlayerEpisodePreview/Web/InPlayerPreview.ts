@@ -540,8 +540,9 @@ function viewShowEventHandler(): void {
             const isSourcedFromCollection = programDataStore.type === ItemType.Playlist || programDataStore.type === ItemType.BoxSet
 
             // Label the movie's own group as the collection search up front, even before any results are known.
+            // A movie folder group keeps its folder name.
             if (isStandaloneMovie && programDataStore.pluginSettings.SearchContainingCollections) {
-                programDataStore.groups = programDataStore.groups.map((g, i) => i === 0 ? { ...g, groupName: SEARCH_COLLECTIONS_GROUP_NAME } : g)
+                programDataStore.groups = programDataStore.groups.map((g, i) => i === 0 && g.groupId === itemId ? { ...g, groupName: SEARCH_COLLECTIONS_GROUP_NAME } : g)
             }
 
             // Only search once per fresh group-fetch (not on every popup reopen while cached groups already include the search results).

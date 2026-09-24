@@ -44,6 +44,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool SearchContainingCollections { get; set; } = true;
 
     /// <summary>
+    /// Whether a movie not played from a Collection/Playlist lists the other videos in its folder.
+    /// </summary>
+    public bool DisplayMovieFolderSiblings { get; set; } = false;
+
+    /// <summary>
     /// Whether to show Virtual (missing/unaired) items
     /// </summary>
     public bool DisplayMissingEpisodes { get; set; } = false;

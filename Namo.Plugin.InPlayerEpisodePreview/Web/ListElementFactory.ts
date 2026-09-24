@@ -14,7 +14,7 @@ import {Logger} from "./Services/Logger";
 
 // The backend already returns Playlists/BoxSets and Folders in their own manual item/dissplay order
 // sorting should only apply for season-based (Episode) groups, where it reflects actual episode order.
-const preserveBackendOrderTypes: Set<ItemType> = new Set([ItemType.Playlist, ItemType.BoxSet, ItemType.Folder])
+const preserveBackendOrderTypes: Set<ItemType> = new Set([ItemType.Playlist, ItemType.BoxSet, ItemType.Folder, ItemType.Movie])
 
 export class ListElementFactory {
     constructor(private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore, private logger: Logger) { }

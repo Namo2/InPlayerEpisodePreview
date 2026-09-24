@@ -127,6 +127,14 @@
                 </div>
                 <div class="checkboxContainer checkboxContainer-withDescription">
                     <label class="emby-checkbox-label">
+                        <input id="displayMovieFolderSiblings" is="emby-checkbox" name="displayMovieFolderSiblings"
+                               type="checkbox"/>
+                        <span>Show other videos in the same folder for movies</span>
+                    </label>
+                    <div class="fieldDescription">Lists the other videos of a movie's folder when the movie is not played from a Collection/Playlist. Movies directly in the library root are not affected</div>
+                </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
                         <input id="autoClosePreview" is="emby-checkbox" name="autoClosePreview"
                                type="checkbox"/>
                         <span>Close preview when starting an item</span>
@@ -201,6 +209,7 @@
                 document.querySelector('#expandedItemLayoutContainer').classList.toggle('hide', !config.ExpandAllItems)
                 document.querySelector('#watchCountDisplayMode').value = config.WatchCountDisplayMode
                 document.querySelector('#searchContainingCollections').checked = config.SearchContainingCollections
+                document.querySelector('#displayMovieFolderSiblings').checked = config.DisplayMovieFolderSiblings
                 document.querySelector('#displayAdditionalVideoParts').checked = config.DisplayAdditionalVideoParts
                 document.querySelector('#autoClosePreview').checked = config.AutoClosePreview
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
@@ -236,6 +245,7 @@
             config.ExpandedItemLayout = parseInt(document.querySelector('#expandedItemLayout').value, 10)
             config.WatchCountDisplayMode = parseInt(document.querySelector('#watchCountDisplayMode').value, 10)
             config.SearchContainingCollections = document.querySelector('#searchContainingCollections').checked
+            config.DisplayMovieFolderSiblings = document.querySelector('#displayMovieFolderSiblings').checked
             config.DisplayAdditionalVideoParts = document.querySelector('#displayAdditionalVideoParts').checked
             config.AutoClosePreview = document.querySelector('#autoClosePreview').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10

@@ -1,6 +1,7 @@
 import {BaseTemplate} from "./BaseTemplate"
 import {FavoriteIconTemplate} from "./QuickActions/FavoriteIconTemplate"
 import {PlayStateIconTemplate} from "./QuickActions/PlayStateIconTemplate"
+import {PlayIconTemplate} from "./QuickActions/PlayIconTemplate"
 import {PlaybackHandler} from "../Services/PlaybackHandler"
 import {ItemDetailsTemplate} from "./ItemDetails"
 import {ProgramDataStore} from "../Services/ProgramDataStore"
@@ -10,8 +11,10 @@ import {togglePlayedStateLocally} from "../Services/DataFetcher"
 import {ExpandedItemLayout} from "../Models/ExpandedItemLayout"
 
 // Shows/hides the "start playback" overlay for a rendered list item
-export const setItemOverlayActive = (itemId: string, isActive: boolean) =>
+export const setItemOverlayActive = (itemId: string, isActive: boolean): void => {
     document.getElementById(`cardOverlay-${itemId}`)?.classList.toggle('hide', isActive)
+    document.getElementById(`playButton-${itemId}`)?.toggleAttribute('disabled', isActive)
+}
 
 // Updates or creates the progress bar of a rendered list item
 export const updateItemProgressDom = (itemId: string, percentage: number): void => {
@@ -45,6 +48,7 @@ export class ListElementTemplate extends BaseTemplate {
     private readonly quickActionContainer: HTMLElement
     private playStateIcon: PlayStateIconTemplate
     private favoriteIcon: FavoriteIconTemplate
+    private playIcon?: PlayIconTemplate
 
     constructor(container: HTMLElement, positionAfterIndex: number, private item: PreviewItem, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex)
@@ -56,12 +60,15 @@ export class ListElementTemplate extends BaseTemplate {
         // create quick actions
         this.playStateIcon = new PlayStateIconTemplate(this.quickActionContainer, -1, this.item)
         this.favoriteIcon = new FavoriteIconTemplate(this.quickActionContainer, 0, this.item)
+        if (!this.programDataStore.pluginSettings.ExpandAllItems)
+            this.playIcon = new PlayIconTemplate(this.quickActionContainer, -1, this.item, this.item.Id === this.programDataStore.activeMediaSourceId)
     }
 
     getTemplate(): string {
         // add quick actions
         this.playStateIcon.render()
         this.favoriteIcon.render()
+        this.playIcon?.render()
 
         // add item details/info
         const detailsContainer: HTMLDivElement = document.createElement('div')
@@ -182,12 +189,13 @@ export class ListElementTemplate extends BaseTemplate {
         renderedElement.querySelector('.previewItemDescription')
             ?.addEventListener('click', (e: MouseEvent) => e.stopPropagation())
 
-        const itemImageCard: HTMLElement = document.getElementById(`start-item-${this.item.Id}`)
-        itemImageCard.addEventListener('click', (e: MouseEvent) => {
+        const startPlayback = (e: MouseEvent): void => {
             e.stopPropagation()
-            this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks)
+            void this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks)
             if (this.programDataStore.pluginSettings.AutoClosePreview)
                 document.getElementById('previewPopup')?.remove()
-        })
+        }
+        document.getElementById(`start-item-${this.item.Id}`).addEventListener('click', startPlayback)
+        document.getElementById(`playButton-${this.item.Id}`)?.addEventListener('click', startPlayback)
     }
 }

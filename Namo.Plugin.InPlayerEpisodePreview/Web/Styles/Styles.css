@@ -81,6 +81,10 @@
 .previewQuickActionContainer {
     margin-left: auto;
 }
+.previewQuickActionContainer button:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
 .previewItemContainer {
     width: 100%;
 }

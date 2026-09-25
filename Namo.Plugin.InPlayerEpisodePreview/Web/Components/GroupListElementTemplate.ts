@@ -29,6 +29,7 @@ export class GroupListElementTemplate extends BaseTemplate {
 
     public render(clickHandler: Function): void {
         const renderedElement: HTMLElement = this.addElementToContainer();
+        renderedElement.querySelector<HTMLElement>('.actionSheetItemText').title = this.group.groupName;
         renderedElement.addEventListener('click', (e: MouseEvent): void => clickHandler(e));
     }
 }

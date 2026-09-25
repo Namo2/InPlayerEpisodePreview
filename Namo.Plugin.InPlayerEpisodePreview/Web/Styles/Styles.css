@@ -37,6 +37,11 @@
 }
 .previewPopupTitle h1.actionSheetTitle {
     margin-left: 0 !important;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .previewGroupWatchedCount {
     cursor: pointer;
@@ -93,6 +98,15 @@
 }
 .previewGroupListItemTitle {
     width: 100%;
+}
+.previewGroupListItemTitle .listItemBody {
+    min-width: 0;
+}
+.previewGroupListItemTitle .actionSheetItemText {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .previewItemImageCard {
     max-width: 30%;

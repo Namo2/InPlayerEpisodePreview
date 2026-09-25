@@ -26,7 +26,9 @@ export class PopupTitleTemplate extends BaseTemplate {
     }
 
     public setText(text: string) {
-        this.getElement().querySelector('h1').innerText = text
+        const title = this.getElement().querySelector('h1')
+        title.innerText = text
+        title.title = text
     }
 
     public setSwitchable(switchable: boolean) {

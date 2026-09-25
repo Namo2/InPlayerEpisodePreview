@@ -83,11 +83,13 @@ export class ListElementTemplate extends BaseTemplate {
         const useSideBySideLayout: boolean = this.programDataStore.pluginSettings.ExpandAllItems
             && this.programDataStore.pluginSettings.ExpandedItemLayout === ExpandedItemLayout.SideBySide
 
+        const indexNumber: string = indexNumberHtml(this.item, this.programDataStore.type)
+
         // language=HTML
         const titleRow: string = `
             <div class="previewItemContainer flex">
-                <button class="listItem previewItemTitle" type="button">
-                    ${indexNumberHtml(this.item, this.programDataStore.type)}
+                <button class="listItem previewItemTitle${indexNumber ? '' : ' previewItemTitle-noIndex'}" type="button">
+                    ${indexNumber}
                     <div class="listItemBody actionsheetListItemBody">
                         <span class="actionSheetItemText">${this.item.Name}</span>
                     </div>

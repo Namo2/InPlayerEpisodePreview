@@ -96,6 +96,9 @@
 .previewItemTitle {
     pointer-events: none;
 }
+.previewItemTitle.previewItemTitle-noIndex .actionsheetListItemBody {
+    padding-inline-start: 0 !important;
+}
 .previewGroupListItemTitle {
     width: 100%;
 }

@@ -7,8 +7,10 @@ import {ItemDetailsTemplate} from "./ItemDetails"
 import {ProgramDataStore} from "../Services/ProgramDataStore"
 import {PreviewItem} from "../Models/PreviewData/PreviewItem"
 import {ItemType} from "../Models/ItemType"
-import {togglePlayedStateLocally} from "../Services/DataFetcher"
+import {adjustWatchedCount, togglePlayedStateLocally, updateBlurDom} from "../Services/DataFetcher"
 import {ExpandedItemLayout} from "../Models/ExpandedItemLayout"
+import {carryPositionOver, VersionSelectTemplate} from "./VersionSelectTemplate"
+import {ItemVersion} from "../Models/PreviewData/ItemVersion"
 
 // Shows/hides the "start playback" overlay for a rendered list item
 export const setItemOverlayActive = (itemId: string, isActive: boolean): void => {
@@ -32,6 +34,26 @@ export const updateItemProgressDom = (itemId: string, percentage: number): void 
         </div>`)
 }
 
+// Show a "Show more" button if description exceeds max height
+export const applyDescriptionReadMore = (itemContainer: Element): void => {
+    const description = itemContainer.querySelector<HTMLElement>('.previewItemDescription')
+    const readMoreButton = itemContainer.querySelector<HTMLElement>('.previewItemReadMoreButton')
+    if (!description || !readMoreButton) return
+
+    description.classList.remove('expanded')
+    readMoreButton.textContent = 'Show more'
+
+    const isOverflowing = description.scrollHeight > description.clientHeight
+    readMoreButton.classList.toggle('hide', !isOverflowing)
+    if (!isOverflowing) return
+
+    readMoreButton.onclick = (e: MouseEvent): void => {
+        e.stopPropagation()
+        const expanded = description.classList.toggle('expanded')
+        readMoreButton.textContent = expanded ? 'Show less' : 'Show more'
+    }
+}
+
 // Index number span for the title row, e.g. "<span>1</span>" or "<span>1-2</span>" for a multi-episode file.
 // Empty for Movies, or items without an IndexNumber.
 const indexNumberHtml = (item: PreviewItem, groupType: ItemType): string => {
@@ -49,6 +71,12 @@ export class ListElementTemplate extends BaseTemplate {
     private playStateIcon: PlayStateIconTemplate
     private favoriteIcon: FavoriteIconTemplate
     private playIcon?: PlayIconTemplate
+    private versionSelect?: VersionSelectTemplate
+    private versions: ItemVersion[] = []
+    private hasUserDataPerVersion: boolean = false
+    private versionsLoad?: Promise<void>
+    // Version this item plays in the current session
+    private playingVersionId?: string
 
     constructor(container: HTMLElement, positionAfterIndex: number, private item: PreviewItem, private playbackHandler: PlaybackHandler, private programDataStore: ProgramDataStore) {
         super(container, positionAfterIndex)
@@ -193,11 +221,154 @@ export class ListElementTemplate extends BaseTemplate {
 
         const startPlayback = (e: MouseEvent): void => {
             e.stopPropagation()
+            if (this.versions.length) {
+                this.playSelectedVersion()
+                return
+            }
+
             void this.playbackHandler.play(this.item.Id, this.item.UserData.PlaybackPositionTicks)
             if (this.programDataStore.pluginSettings.AutoClosePreview)
                 document.getElementById('previewPopup')?.remove()
         }
         document.getElementById(`start-item-${this.item.Id}`).addEventListener('click', startPlayback)
         document.getElementById(`playButton-${this.item.Id}`)?.addEventListener('click', startPlayback)
+
+        if ((this.item.MediaSourceCount ?? 0) > 1)
+            this.renderVersionSelect()
+    }
+
+    // Versions load once the item gets expanded
+    public ensureVersionsLoaded(): void {
+        if (!this.versionSelect || this.versionsLoad) return
+        this.versionsLoad = this.loadVersions()
+    }
+
+    private get isPlaying(): boolean {
+        return this.item.Id === this.programDataStore.activeMediaSourceId
+    }
+
+    private renderVersionSelect(): void {
+        const detailsElement = document.getElementById(`item-${this.item.Id}-details`)
+        if (!detailsElement) return
+
+        this.versionSelect = new VersionSelectTemplate(detailsElement, detailsElement.children.length - 1, this.item.Id, this.item.MediaSourceCount)
+        this.versionSelect.render(
+            (versionId: string) => this.showVersion(versionId),
+            () => this.playSelectedVersion())
+    }
+
+    private async loadVersions(): Promise<void> {
+        const result = await this.playbackHandler.getVersions(this.item.Id)
+        if (!result || result.Versions.length < 2) {
+            this.versionSelect.remove()
+            return
+        }
+
+        this.versions = result.Versions
+        this.hasUserDataPerVersion = result.HasUserDataPerVersion
+        // Unknown playing version: first one is the server's default
+        const selectedVersion = (this.isPlaying && this.versions.find(v => v.Id === result.ActiveVersionId)) || this.versions[0]
+        this.versionSelect.setVersions(this.versions, selectedVersion.Id)
+
+        if (this.isPlaying) {
+            const item = this.programDataStore.getItemById(this.item.Id)
+            if (item) this.setPlayingVersion(selectedVersion, item.UserData.PlaybackPositionTicks)
+        }
+        this.showVersion(selectedVersion.Id)
+    }
+
+    private playSelectedVersion(): void {
+        const version = this.versions.find(v => v.Id === this.versionSelect.selectedVersionId)
+        if (!version) return
+
+        const isPlaying = this.isPlaying
+        if (isPlaying && version.Id === this.playingVersionId) return
+
+        const videoElement = document.querySelector<HTMLVideoElement>('video.htmlvideoplayer')
+        const positionTicks = isPlaying && videoElement
+            ? Math.floor(videoElement.currentTime * 10_000_000)
+            : version.Item.UserData.PlaybackPositionTicks
+
+        // Item becomes the playing one, its store data must match the started version for progress tracking
+        this.setPlayingVersion(version, positionTicks)
+        this.showVersion(version.Id)
+
+        void this.playbackHandler.play(this.item.Id, positionTicks, version.Id)
+        if (this.programDataStore.pluginSettings.AutoClosePreview)
+            document.getElementById('previewPopup')?.remove()
+    }
+
+    // Stores runtime, progress and played state of the playing version on this item
+    private setPlayingVersion(version: ItemVersion, positionTicks: number): void {
+        this.playingVersionId = version.Id
+        this.versionSelect.setPlayingVersion(version.Id)
+
+        const item = this.programDataStore.getItemById(this.item.Id)
+        if (!item) return
+
+        const runTimeTicks = version.Item.RunTimeTicks || item.RunTimeTicks
+        const played = version.Item.UserData.Played
+        this.programDataStore.updateItem({
+            ...item,
+            RunTimeTicks: runTimeTicks,
+            UserData: {
+                ...item.UserData,
+                PlaybackPositionTicks: positionTicks,
+                PlayedPercentage: runTimeTicks ? (positionTicks / runTimeTicks) * 100 : item.UserData.PlayedPercentage,
+                Played: played
+            }
+        })
+        adjustWatchedCount(this.programDataStore, item, item.UserData.Played, played, item.UserData.PlaybackPositionTicks, positionTicks)
+    }
+
+    // Renders the given version's data into this item. Display only, playback stays untouched.
+    private showVersion(versionId: string): void {
+        const version = this.versions.find(v => v.Id === versionId)
+        const element = document.getElementById(`item-${this.item.Id}`)
+        if (!version || !element) return
+
+        const isPlayingVersion = this.isPlaying && version.Id === this.playingVersionId
+        const storeItem = this.programDataStore.getItemById(this.item.Id) ?? this.item
+        const displayItem: PreviewItem = isPlayingVersion
+            ? { ...version.Item, Id: this.item.Id, RunTimeTicks: storeItem.RunTimeTicks, UserData: storeItem.UserData }
+            : this.isPlaying
+                ? carryPositionOver({ ...version.Item, Id: this.item.Id }, storeItem.UserData.PlaybackPositionTicks)
+                : { ...version.Item, Id: this.item.Id }
+
+        const title = element.querySelector('.previewItemTitle .actionSheetItemText')
+        if (title) title.textContent = displayItem.Name ?? ''
+        
+        const detailsElement = document.getElementById(`item-${this.item.Id}-details`)
+        const versionRow = this.versionSelect.getElement()
+        if (detailsElement && versionRow) {
+            const detailsContainer = document.createElement('div')
+            new ItemDetailsTemplate(detailsContainer, -1, displayItem).render()
+            Array.from(detailsElement.children).filter(child => child !== versionRow).forEach(child => child.remove())
+            versionRow.before(...Array.from(detailsContainer.firstElementChild.children))
+        }
+
+        // Version without own image keeps the listed item's image
+        const [imageItemId, imageTag] = version.Item.PrimaryImageTag
+            ? [version.Item.Id, version.Item.PrimaryImageTag]
+            : [this.item.Id, this.item.PrimaryImageTag]
+        const imageCard = document.getElementById(`previewItemImageCard-${this.item.Id}`)
+        if (imageCard) imageCard.style.backgroundImage = `url('../Items/${imageItemId}/Images/Primary?tag=${imageTag}')`
+
+        const description = element.querySelector('.previewItemDescription')
+        const content = element.querySelector('.previewListItemContent')
+        if (description && content) {
+            description.innerHTML = displayItem.Description ?? ''
+            applyDescriptionReadMore(content)
+        }
+
+        if (this.programDataStore.pluginSettings.ShowWatchProgress)
+            updateItemProgressDom(this.item.Id, displayItem.UserData.PlayedPercentage ?? 0)
+        updateBlurDom(this.programDataStore, this.item.Id, displayItem.UserData.Played)
+        
+        const quickActionsMatchVersion = !this.hasUserDataPerVersion || version.Id === this.item.Id
+        for (const buttonId of [`playStateButton-${this.item.Id}`, `favoriteButton-${this.item.Id}`])
+            document.getElementById(buttonId)?.toggleAttribute('disabled', !quickActionsMatchVersion)
+
+        this.versionSelect.setButtonEnabled(!isPlayingVersion)
     }
 }

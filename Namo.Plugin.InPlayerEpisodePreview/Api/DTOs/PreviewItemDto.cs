@@ -15,4 +15,5 @@ public record PreviewItemDto(
     float? CriticRating,
     string? Description,
     string? PrimaryImageTag,
+    int? MediaSourceCount,
     PreviewItemUserDataDto UserData);

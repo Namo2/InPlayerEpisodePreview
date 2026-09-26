@@ -30,6 +30,7 @@ public static class PreviewItemDtoMapper
             dto.CriticRating,
             dto.Overview,
             primaryImageTag,
+            dto.MediaSourceCount,
             userData);
     }
 }

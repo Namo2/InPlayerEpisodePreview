@@ -18,16 +18,13 @@
 .previewListItem-sideBySide .previewItemTitle .actionSheetItemText {
     font-size: 1.3em;
 }
-.previewListItem-sideBySide .previewItemDescription {
-    margin-top: 1em;
-}
 .previewListItem-sideBySide .previewListItemContent .itemMiscInfo.previewItemDetails {
     margin-left: 0.5em !important;
 }
 .previewPopup {
     animation: 140ms ease-out 0s 1 normal both running scaleup;
     position: fixed;
-    margin: 0px;
+    margin: 0;
     bottom: 1.5vh;
     left: 50vw;
     width: 48vw;
@@ -85,6 +82,7 @@
 }
 .previewQuickActionContainer {
     margin-left: auto;
+    margin-right: -0.5em;
 }
 .previewQuickActionContainer button:disabled {
     opacity: 0.3;
@@ -126,7 +124,6 @@
 .previewItemDescription {
     margin-left: 0.5em;
     margin-top: 0.5em;
-    margin-right: 1.5em;
     display: block;
     overflow: hidden;
     max-height: 150px;
@@ -194,4 +191,33 @@
     width: 1.95em !important;
     height: 1.95em !important;
     z-index: auto !important;
+}
+.previewVersionRow {
+    align-items: center;
+    margin-left: auto;
+    margin-right: 0.4em;
+    gap: 0.3em;
+}
+.previewVersionSelect {
+    width: auto;
+    max-width: 14em;
+    height: auto;
+    line-height: normal;
+    padding: 0 0.4em;
+    border-radius: 0.2em;
+    font-size: inherit;
+    font-family: inherit;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+.previewVersionPlayButton.paper-icon-button-light {
+    margin: 0 0.29em 0 0;
+    padding: 0.1em 0.556em 0.1em 0.1em;
+}
+.previewVersionPlayButton.paper-icon-button-light > .material-icons {
+    font-size: 1.3em;
+}
+.previewVersionPlayButton:disabled {
+    opacity: 0.3;
+    cursor: default;
 }

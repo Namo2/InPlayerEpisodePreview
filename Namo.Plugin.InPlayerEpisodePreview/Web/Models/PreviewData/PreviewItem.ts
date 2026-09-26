@@ -12,5 +12,7 @@ export type PreviewItem = {
     CriticRating?: number
     Description?: string
     PrimaryImageTag?: string
+    // Is set by the server, if the item has alternate versions
+    MediaSourceCount?: number
     UserData: UserData
 }

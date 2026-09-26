@@ -19,6 +19,7 @@ using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Session;
 using Namo.Plugin.InPlayerEpisodePreview.Api.DTOs;
 using Namo.Plugin.InPlayerEpisodePreview.Configuration;
+using Namo.Plugin.InPlayerEpisodePreview.JellyfinVersionSpecific;
 using Namo.Plugin.InPlayerEpisodePreview.Services;
 
 namespace Namo.Plugin.InPlayerEpisodePreview.Api;
@@ -41,6 +42,8 @@ public class InPlayerPreviewController : ControllerBase
     private readonly IUserManager _userManager;
     private readonly IDtoService _dtoService;
     private readonly IAuthorizationContext _authorizationContext;
+    private readonly IMediaSourceManager _mediaSourceManager;
+    private readonly IUserDataManager _userDataManager;
     private readonly FolderPreviewService _folderPreviewService;
 
     private readonly PluginConfiguration _config;
@@ -55,7 +58,7 @@ public class InPlayerPreviewController : ControllerBase
     /// </summary>
     private static readonly DtoOptions PreviewDtoOptions = new(false)
     {
-        Fields = [ItemFields.Overview],
+        Fields = [ItemFields.Overview, ItemFields.MediaSourceCount],
         ImageTypes = [ImageType.Primary],
         ImageTypeLimit = 1
     };
@@ -73,6 +76,8 @@ public class InPlayerPreviewController : ControllerBase
         IUserManager userManager,
         IDtoService dtoService,
         IAuthorizationContext authorizationContext,
+        IMediaSourceManager mediaSourceManager,
+        IUserDataManager userDataManager,
         FolderPreviewService folderPreviewService)
     {
         _assembly = Assembly.GetExecutingAssembly();
@@ -86,6 +91,8 @@ public class InPlayerPreviewController : ControllerBase
         _userManager = userManager;
         _dtoService = dtoService;
         _authorizationContext = authorizationContext;
+        _mediaSourceManager = mediaSourceManager;
+        _userDataManager = userDataManager;
         _folderPreviewService = folderPreviewService;
 
         _config = InPlayerEpisodePreviewPlugin.Instance!.Configuration;
@@ -120,11 +127,12 @@ public class InPlayerPreviewController : ControllerBase
     /// </summary>
     /// <param name="id"></param>
     /// <param name="ticks"></param>
+    /// <param name="mediaSourceId">Alternate version to play. Server default version if empty.</param>
     /// <returns></returns>
     [HttpGet("Items/{id}/Play/{ticks}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> StartMedia([FromRoute] Guid id, [FromRoute] long ticks = 0)
+    public async Task<ActionResult> StartMedia([FromRoute] Guid id, [FromRoute] long ticks = 0, [FromQuery] string? mediaSourceId = null)
     {
         SessionInfo? session = await ResolveCurrentSessionAsync();
         if (session is null)
@@ -147,6 +155,7 @@ public class InPlayerPreviewController : ControllerBase
                 ItemIds = [item.Id],
                 StartPositionTicks = ticks,
                 PlayCommand = PlayCommand.PlayNow,
+                MediaSourceId = string.IsNullOrEmpty(mediaSourceId) ? null : mediaSourceId,
             }, CancellationToken.None);
 
         return NoContent();
@@ -497,6 +506,67 @@ public class InPlayerPreviewController : ControllerBase
         }
 
         return Ok(_folderPreviewService.GetContainingCollectionGroups(item, user));
+    }
+
+    /// <summary>
+    /// Returns all alternate versions of the given item, and which one the current session is playing.
+    /// </summary>
+    [HttpGet("Users/{userId}/Items/{itemId}/Versions")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> GetItemVersions([FromRoute] Guid userId, [FromRoute] Guid itemId)
+    {
+        var user = _userManager.GetUserById(userId);
+        if (user is null)
+        {
+            _logger.LogInformation("GetItemVersions: user {0} not found", userId);
+            return NotFound();
+        }
+
+        var item = _libraryManager.GetItemById(itemId);
+        if (item is null)
+        {
+            _logger.LogInformation("GetItemVersions: item {0} not found", itemId);
+            return NotFound();
+        }
+
+        // Only videos have alternate versions. GetStaticMediaSources throws for items without media sources.
+        if (item is not Video)
+            return Ok(new ItemVersionsResult([], null, VersionProgressHelper.HasUserDataPerVersion));
+
+        List<ItemVersionDto> versions = [];
+        foreach (var source in _mediaSourceManager.GetStaticMediaSources(item, false, user))
+        {
+            if (!Guid.TryParse(source.Id, out var versionId))
+                continue;
+
+            var versionItem = versionId == item.Id ? item : _libraryManager.GetItemById(versionId) ?? item;
+            var progressItem = VersionProgressHelper.GetProgressItem(item, versionItem);
+            var userData = _userDataManager.GetUserDataDto(progressItem, user);
+
+            var versionDto = _dtoService.GetBaseItemDto(versionItem, PreviewDtoOptions, user).ToPreviewItemDto();
+            versions.Add(new ItemVersionDto(
+                versionId.ToString("N"),
+                source.Name,
+                versionDto with
+                {
+                    RunTimeTicks = versionDto.RunTimeTicks ?? source.RunTimeTicks,
+                    UserData = new PreviewItemUserDataDto(
+                        userData?.PlayedPercentage,
+                        userData?.PlaybackPositionTicks ?? 0,
+                        userData?.IsFavorite ?? false,
+                        userData?.Played ?? false)
+                }));
+        }
+
+        // Displayed (primary) item = NowPlayingItem
+        // Played version = MediaSourceId.
+        string? activeVersionId = null;
+        var session = await ResolveCurrentSessionAsync();
+        if (session?.FullNowPlayingItem?.Id == item.Id && Guid.TryParse(session.PlayState?.MediaSourceId, out var playingVersionId))
+            activeVersionId = playingVersionId.ToString("N");
+
+        return Ok(new ItemVersionsResult(versions, activeVersionId, VersionProgressHelper.HasUserDataPerVersion));
     }
 
     /// <summary>

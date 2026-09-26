@@ -16,6 +16,7 @@ import {PreviewItem} from "./Models/PreviewData/PreviewItem";
 import {activateSpinner, spinnerHtml} from "./Components/Spinner";
 import {setItemOverlayActive, updateItemProgressDom} from "./Components/ListElementTemplate";
 import {updateEndTimeDisplay} from "./Components/ItemDetails";
+import {carryPositionOver, getSelectedVersionRunTimeTicks, isPreviewingOtherVersion} from "./Components/VersionSelectTemplate";
 
 import './Styles/Styles.css'
 
@@ -187,16 +188,25 @@ function onVideoTimeUpdate(this: HTMLVideoElement): void {
     }
     programDataStore.updateItem(updatedItem)
     
-    updateItemProgressDom(itemId, playedPercentage)
-    updateEndTimeDisplay(updatedItem)
-    if (played !== item.UserData.Played) updateBlurDom(programDataStore, itemId, played)
+    if (isPreviewingOtherVersion(itemId)) {
+        const previewedItem = carryPositionOver({ ...updatedItem, RunTimeTicks: getSelectedVersionRunTimeTicks(itemId) ?? updatedItem.RunTimeTicks }, positionTicks)
+        updateItemProgressDom(itemId, previewedItem.UserData.PlayedPercentage)
+        updateEndTimeDisplay(previewedItem)
+    } else {
+        updateItemProgressDom(itemId, playedPercentage)
+        updateEndTimeDisplay(updatedItem)
+        if (played !== item.UserData.Played) updateBlurDom(programDataStore, itemId, played)
+    }
     adjustWatchedCount(programDataStore, item, item.UserData.Played, played, item.UserData.PlaybackPositionTicks, positionTicks)
 }
 
 function onVideoRateChange(): void {
     document.querySelectorAll<HTMLElement>('.endsAt[data-item-id]').forEach(element => {
         const item = programDataStore.getItemById(element.dataset.itemId)
-        if (item) updateEndTimeDisplay(item)
+        if (!item) return
+        updateEndTimeDisplay(isPreviewingOtherVersion(item.Id)
+            ? carryPositionOver({ ...item, RunTimeTicks: getSelectedVersionRunTimeTicks(item.Id) ?? item.RunTimeTicks }, item.UserData.PlaybackPositionTicks)
+            : item)
     })
 }
 

@@ -1,4 +1,4 @@
-import {ListElementTemplate} from "./Components/ListElementTemplate";
+import {applyDescriptionReadMore, ListElementTemplate} from "./Components/ListElementTemplate";
 import {PreviewItem} from "./Models/PreviewData/PreviewItem";
 import {ProgramDataStore} from "./Services/ProgramDataStore";
 import {Group, UNKNOWN_WATCHED_COUNT} from "./Models/PreviewData/Group";
@@ -12,7 +12,7 @@ import {activateSpinner, spinnerHtml} from "./Components/Spinner";
 import {updateWatchedCountDom} from "./Services/DataFetcher";
 import {Logger} from "./Services/Logger";
 
-// The backend already returns Playlists/BoxSets and Folders in their own manual item/dissplay order
+// The backend returns Playlists/BoxSets and Folders in their own manual item/display order
 // sorting should only apply for season-based (Episode) groups, where it reflects actual episode order.
 const preserveBackendOrderTypes: Set<ItemType> = new Set([ItemType.Playlist, ItemType.BoxSet, ItemType.Folder, ItemType.Movie])
 
@@ -42,31 +42,12 @@ export class ListElementFactory {
         }
     }
 
-    // Show a "Show more" button if description exceeds max height
-    private applyDescriptionReadMore(itemContainer: Element): void {
-        const description = itemContainer.querySelector<HTMLElement>('.previewItemDescription')
-        const readMoreButton = itemContainer.querySelector<HTMLElement>('.previewItemReadMoreButton')
-        if (!description || !readMoreButton) return
-
-        description.classList.remove('expanded')
-        readMoreButton.textContent = 'Show more'
-
-        const isOverflowing = description.scrollHeight > description.clientHeight
-        readMoreButton.classList.toggle('hide', !isOverflowing)
-        if (!isOverflowing) return
-
-        readMoreButton.onclick = (e: MouseEvent): void => {
-            e.stopPropagation()
-            const expanded = description.classList.toggle('expanded')
-            readMoreButton.textContent = expanded ? 'Show less' : 'Show more'
-        }
-    }
-
     // Reveals an item's content
-    private expandItem(itemContainer: Element, markSelected: boolean): void {
+    private expandItem(itemContainer: Element, markSelected: boolean, template: ListElementTemplate): void {
         itemContainer.classList.remove('hide');
         if (markSelected) itemContainer.classList.add('selectedListItem');
-        this.applyDescriptionReadMore(itemContainer);
+        applyDescriptionReadMore(itemContainer);
+        template.ensureVersionsLoaded();
     }
 
     private async renderItem(item: PreviewItem, parentDiv: HTMLElement, positionAfterIndex: number): Promise<void> {
@@ -84,7 +65,7 @@ export class ListElementFactory {
             });
 
             const itemContainer: Element = document.getElementById(`item-${item.Id}`).querySelector('.previewListItemContent');
-            this.expandItem(itemContainer, true);
+            this.expandItem(itemContainer, true, itemListElementTemplate);
 
             // scroll to the selected item
             itemContainer.parentElement.scrollIntoView({ block: "start" });
@@ -92,9 +73,9 @@ export class ListElementFactory {
 
         const itemNode: Element = document.getElementById(`item-${item.Id}`).querySelector('.previewListItemContent');
         if (this.programDataStore.pluginSettings.ExpandAllItems) {
-            this.expandItem(itemNode, item.Id === this.programDataStore.activeMediaSourceId);
+            this.expandItem(itemNode, item.Id === this.programDataStore.activeMediaSourceId, itemListElementTemplate);
         } else if (item.Id === this.programDataStore.activeMediaSourceId) {
-            this.expandItem(itemNode, true);
+            this.expandItem(itemNode, true, itemListElementTemplate);
         }
     }
 

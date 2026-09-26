@@ -8,6 +8,7 @@ export enum Endpoints {
     GROUP_ITEMS = "/Users/{userId}/Groups/{groupId}/Items",
     GROUP_WATCHED_COUNT = "/Users/{userId}/Groups/{groupId}/WatchedCount",
     CONTAINING_COLLECTIONS = "/Users/{userId}/Items/{itemId}/ContainingCollections",
+    ITEM_VERSIONS = "/Users/{userId}/Items/{itemId}/Versions",
     SET_SOURCE_COLLECTION = "/Users/{userId}/{deviceId}/SourceCollection/{collectionId}",
     PLUGIN_SETTINGS = "/PluginSettings"
 }

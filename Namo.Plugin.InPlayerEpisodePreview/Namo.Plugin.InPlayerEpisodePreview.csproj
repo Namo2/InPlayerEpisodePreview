@@ -51,7 +51,17 @@
     <WebpackSourceFiles Include="Web\**\*.css" />
   </ItemGroup>
 
-  <Target Name="BuildWebpack" BeforeTargets="BeforeBuild" Inputs="@(WebpackSourceFiles);webpack.config.js;tsconfig.json" Outputs="Web\InPlayerPreview.js">
-    <Exec Command="npx webpack --config webpack.config.js" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  <PropertyGroup>
+    <WebpackMode Condition="'$(WebpackMode)' == '' And '$(Configuration)' == 'Debug'">development</WebpackMode>
+    <WebpackMode Condition="'$(WebpackMode)' == ''">production</WebpackMode>
+    <WebpackModeFile>$(BaseIntermediateOutputPath)webpack-mode.txt</WebpackModeFile>
+  </PropertyGroup>
+    
+  <Target Name="WriteWebpackMode">
+    <WriteLinesToFile File="$(WebpackModeFile)" Lines="$(WebpackMode)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <Target Name="BuildWebpack" BeforeTargets="BeforeBuild" DependsOnTargets="WriteWebpackMode" Inputs="@(WebpackSourceFiles);webpack.config.js;tsconfig.json;$(WebpackModeFile)" Outputs="Web\InPlayerPreview.js">
+    <Exec Command="npx webpack --config webpack.config.js --mode $(WebpackMode)" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 </Project>

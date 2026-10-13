@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Reflection;
+using Microsoft.Net.Http.Headers;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
@@ -19,6 +19,7 @@ using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Session;
 using Namo.Plugin.InPlayerEpisodePreview.Api.DTOs;
 using Namo.Plugin.InPlayerEpisodePreview.Configuration;
+using Namo.Plugin.InPlayerEpisodePreview.Helpers;
 using Namo.Plugin.InPlayerEpisodePreview.JellyfinVersionSpecific;
 using Namo.Plugin.InPlayerEpisodePreview.Services;
 
@@ -32,9 +33,6 @@ namespace Namo.Plugin.InPlayerEpisodePreview.Api;
 [Authorize]
 public class InPlayerPreviewController : ControllerBase
 {
-    private readonly Assembly _assembly;
-    private readonly string _playerPreviewScriptPath;
-
     private readonly ILogger<InPlayerPreviewController> _logger;
     private readonly ILibraryManager _libraryManager;
     private readonly IServerConfigurationManager _configurationManager;
@@ -80,10 +78,6 @@ public class InPlayerPreviewController : ControllerBase
         IUserDataManager userDataManager,
         FolderPreviewService folderPreviewService)
     {
-        _assembly = Assembly.GetExecutingAssembly();
-        _playerPreviewScriptPath =
-            $"{InPlayerEpisodePreviewPlugin.Instance?.GetType().Namespace}.Web.InPlayerPreview.js";
-
         _libraryManager = libraryManager;
         _logger = logger;
         _configurationManager = configurationManager;
@@ -109,16 +103,21 @@ public class InPlayerPreviewController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Produces("application/javascript")]
-    public ActionResult GetClientScript()
+    public ActionResult GetClientScript([FromQuery] string? v)
     {
-        var scriptStream = _assembly.GetManifestResourceStream(_playerPreviewScriptPath);
+        var scriptStream = ClientScript.Open();
         if (scriptStream == null)
         {
-            _logger.LogError("Embedded client script not found at resource path {0}", _playerPreviewScriptPath);
+            _logger.LogError("Embedded client script not found at resource path {0}", ClientScript.ResourcePath);
             return NotFound();
         }
 
-        return File(scriptStream, "application/javascript");
+        // Hashed URL content never changes. Other URLs must revalidate via ETag.
+        Response.Headers.CacheControl = v == ClientScript.Hash
+            ? "public, max-age=31536000, immutable"
+            : "no-cache";
+
+        return File(scriptStream, "application/javascript", null, new EntityTagHeaderValue($"\"{ClientScript.Hash}\""));
     }
 
     /// <summary>

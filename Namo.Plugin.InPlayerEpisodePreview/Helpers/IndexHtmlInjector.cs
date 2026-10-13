@@ -98,6 +98,6 @@ public static class IndexHtmlInjector
         string versionTag = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0.0";
         
         return
-            $"<script plugin=\"InPlayerEpisodePreview\" version=\"{versionTag}\" src=\"{basePath}/InPlayerPreview/ClientScript\"></script>";
+            $"<script plugin=\"InPlayerEpisodePreview\" version=\"{versionTag}\" src=\"{basePath}/InPlayerPreview/ClientScript?v={ClientScript.Hash}\" defer></script>";
     }
 }

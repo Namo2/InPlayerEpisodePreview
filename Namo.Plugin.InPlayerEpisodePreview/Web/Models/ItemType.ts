@@ -35,5 +35,7 @@
     UserRootFolder,
     UserView,
     Video,
-    Year
+    Year,
+    // Plugin-only type for pre-roll intros. Never enabled for previews.
+    Intro
 }

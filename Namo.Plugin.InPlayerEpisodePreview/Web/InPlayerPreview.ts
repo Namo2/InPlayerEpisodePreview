@@ -455,38 +455,28 @@ function viewShowEventHandler(): void {
                 if (pendingPreloadItemId === itemId) pendingPreloadItemId = null
             })
         }
-
-        // Wait that data-id gets populated by Jellyfin
+        
+        // Playing item can change without new viewshow, e.g. pre-roll intro → episode.
         function schedulePreload(): void {
-            const itemId = getLatestUserRatingItemId()
-            if (itemId) {
-                preloadPreviewData(itemId)
-                return
-            }
+            let checkedItemId: string | null = null
 
-            const target = getActiveRatingButton()
-            if (!target) {
-                // The rating button itself hasn't been created yet - wait for the OSD to finish building it, then retry.
-                preloadObserver?.disconnect()
-                preloadObserver = new MutationObserver(() => {
-                    if (!getActiveRatingButton()) return
+            const checkPlayingItem = (): void => {
+                if (previewButton) {
                     preloadObserver?.disconnect()
                     preloadObserver = null
-                    schedulePreload()
-                })
-                preloadObserver.observe(document.body, { childList: true, subtree: true })
-                return
+                    return
+                }
+
+                const itemId = getLatestUserRatingItemId()
+                if (!itemId || itemId === checkedItemId) return
+                checkedItemId = itemId
+                preloadPreviewData(itemId)
             }
 
             preloadObserver?.disconnect()
-            preloadObserver = new MutationObserver(() => {
-                const id = target.getAttribute('data-id')
-                if (!id) return
-                preloadObserver?.disconnect()
-                preloadObserver = null
-                preloadPreviewData(id)
-            })
-            preloadObserver.observe(target, { attributes: true, attributeFilter: ['data-id'] })
+            preloadObserver = new MutationObserver(checkPlayingItem)
+            preloadObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-id'] })
+            checkPlayingItem()
         }
 
         schedulePreload()

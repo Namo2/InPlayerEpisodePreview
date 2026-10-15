@@ -64,7 +64,7 @@ public class FolderPreviewService(ILibraryManager libraryManager, IUserDataManag
         if (ownChildren.OfType<Folder>().Any())
             return BuildFolderGroups(ownChildren, folder.Id, user);
 
-        if (libraryManager.GetItemById(folder.ParentId) is Folder parent)
+        if (folder.GetParent() is Folder parent)
             return BuildFolderGroups(GetCachedFolderChildren(parent, user), parent.Id, user);
 
         var stats = GetVideoWatchStats(ownChildren.OfType<Video>(), user);

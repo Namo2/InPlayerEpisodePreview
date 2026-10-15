@@ -64,6 +64,20 @@ public class InPlayerPreviewController : ControllerBase
     private const int UnknownWatchedCount = -1;
 
     /// <summary>
+    /// Preview type for pre-roll intros. No BaseItemKind. Frontend never enables it.
+    /// </summary>
+    private const string IntroPreviewType = "Intro";
+
+    /// <summary>
+    /// Provider id the Local Intros plugin (and its forks) sets on its intro items.
+    /// </summary>
+    private const string PreRollProviderId = "prerolls.video";
+
+    // Intro plugins create their items outside any library, so these have no parent
+    private static bool IsPreRollIntro(BaseItem item)
+        => item.ProviderIds.ContainsKey(PreRollProviderId) || (item is Video && item.GetParent() is null);
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="InPlayerPreviewController"/> class.
     /// </summary>
     public InPlayerPreviewController(
@@ -252,6 +266,9 @@ public class InPlayerPreviewController : ControllerBase
             return NotFound();
         }
 
+        if (IsPreRollIntro(item))
+            return Ok(IntroPreviewType);
+
         // If this item was navigated into from a Playlist/BoxSet details page,
         // GetItemPreviewData reports it as Playlist/BoxSet rather than e.g. Movie
         if (SourceCollectionByDevice.TryGetValue($"{userId}:{deviceId}", out var sourceId)
@@ -266,7 +283,7 @@ public class InPlayerPreviewController : ControllerBase
         if (item is Episode)
             return Ok(BaseItemKind.Episode);
 
-        if (item.GetBaseItemKind() == BaseItemKind.Video && _libraryManager.GetItemById(item.ParentId) is Folder)
+        if (item.GetBaseItemKind() == BaseItemKind.Video && item.GetParent() is Folder)
             return Ok(BaseItemKind.Folder);
 
         return Ok(item.GetBaseItemKind());
@@ -353,7 +370,7 @@ public class InPlayerPreviewController : ControllerBase
 
         var itemDto = _dtoService.GetBaseItemDtos([item], PreviewDtoOptions, user)[0];
         
-        if (itemDto.Type == BaseItemKind.Video && _libraryManager.GetItemById(item.ParentId) is Folder parentFolder)
+        if (itemDto.Type == BaseItemKind.Video && item.GetParent() is Folder parentFolder)
         {
             var groups = _folderPreviewService.GetFolderGroups(parentFolder, user);
 
@@ -365,7 +382,7 @@ public class InPlayerPreviewController : ControllerBase
         }
 
         if (_config.DisplayMovieFolderSiblings && item is Movie
-            && _libraryManager.GetItemById(item.ParentId) is Folder movieFolder
+            && item.GetParent() is Folder movieFolder
             && movieFolder is not (AggregateFolder or CollectionFolder or UserRootFolder)
             && !movieFolder.IsTopParent)
         {

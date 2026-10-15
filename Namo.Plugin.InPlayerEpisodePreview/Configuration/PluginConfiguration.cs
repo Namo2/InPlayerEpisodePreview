@@ -65,6 +65,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool DisplayAdditionalVideoParts { get; set; } = true;
 
     /// <summary>
+    /// Whether an item with multiple versions shows the version dropdown and switch button.
+    /// </summary>
+    public bool ShowAlternateVersions { get; set; } = true;
+
+    /// <summary>
     /// Whether to show the watch progress bar on an item's image card in the preview
     /// </summary>
     public bool ShowWatchProgress { get; set; } = true;

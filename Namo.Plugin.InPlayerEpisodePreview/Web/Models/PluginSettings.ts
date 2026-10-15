@@ -17,6 +17,7 @@ export type PluginSettings = {
     ExpandAllItems: boolean,
     ExpandedItemLayout: ExpandedItemLayout,
     AutoClosePreview: boolean,
+    ShowAlternateVersions: boolean,
     LogLevel: LogLevel,
 }
 
@@ -34,5 +35,6 @@ export const DefaultPluginSettings: PluginSettings = {
     ExpandAllItems: false,
     ExpandedItemLayout: ExpandedItemLayout.Default,
     AutoClosePreview: true,
+    ShowAlternateVersions: true,
     LogLevel: LogLevel.Information,
 }

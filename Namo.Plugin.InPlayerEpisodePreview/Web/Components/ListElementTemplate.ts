@@ -233,7 +233,7 @@ export class ListElementTemplate extends BaseTemplate {
         document.getElementById(`start-item-${this.item.Id}`).addEventListener('click', startPlayback)
         document.getElementById(`playButton-${this.item.Id}`)?.addEventListener('click', startPlayback)
 
-        if ((this.item.MediaSourceCount ?? 0) > 1)
+        if (this.programDataStore.pluginSettings.ShowAlternateVersions && (this.item.MediaSourceCount ?? 0) > 1)
             this.renderVersionSelect()
     }
 

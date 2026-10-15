@@ -149,6 +149,14 @@
                     </label>
                     <div class="fieldDescription">Shows each part of a stacked video (e.g. files named "Part 1"/"Part 2") in folders as its own entry in the list</div>
                 </div>
+                <div class="checkboxContainer checkboxContainer-withDescription">
+                    <label class="emby-checkbox-label">
+                        <input id="showAlternateVersions" is="emby-checkbox" name="showAlternateVersions"
+                               type="checkbox"/>
+                        <span>Show alternate versions</span>
+                    </label>
+                    <div class="fieldDescription">Shows a version dropdown and switch button for items with multiple versions (e.g. 4K and 1080p files)</div>
+                </div>
 
 
                 <hr>
@@ -212,6 +220,7 @@
                 document.querySelector('#displayMovieFolderSiblings').checked = config.DisplayMovieFolderSiblings
                 document.querySelector('#displayAdditionalVideoParts').checked = config.DisplayAdditionalVideoParts
                 document.querySelector('#autoClosePreview').checked = config.AutoClosePreview
+                document.querySelector('#showAlternateVersions').checked = config.ShowAlternateVersions
                 document.querySelector('#episodePageSize').value = config.EpisodePageSize
                 document.querySelector('#logLevel').value = config.LogLevel
 
@@ -248,6 +257,7 @@
             config.DisplayMovieFolderSiblings = document.querySelector('#displayMovieFolderSiblings').checked
             config.DisplayAdditionalVideoParts = document.querySelector('#displayAdditionalVideoParts').checked
             config.AutoClosePreview = document.querySelector('#autoClosePreview').checked
+            config.ShowAlternateVersions = document.querySelector('#showAlternateVersions').checked
             config.EpisodePageSize = parseInt(document.querySelector('#episodePageSize').value, 10) || 10
             config.LogLevel = parseInt(document.querySelector('#logLevel').value, 10)
 

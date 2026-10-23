@@ -80,7 +80,9 @@
 .previewPopupScroller::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.6);
 }
-.previewQuickActionContainer {
+
+.previewQuickActionContainer,
+.previewVersionRow {
     margin-left: auto;
     margin-right: -0.5em;
 }
@@ -152,8 +154,9 @@
     justify-content: start !important;
 }
 
-/* Lock the position of this details, so that no theme can change it */
+/* Lock the position and width of this details, so that no theme can change them */
 .previewListItemContent .itemMiscInfo.previewItemDetails {
+    max-width: none !important;
     position: relative !important;
     top: auto !important;
     left: 0 !important;
@@ -194,8 +197,6 @@
 }
 .previewVersionRow {
     align-items: center;
-    margin-left: auto;
-    margin-right: 0.4em;
     gap: 0.3em;
 }
 .previewVersionSelect {

@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/Namo2/InPlayerEpisodePreview/refs/heads/master/Images/logo.png",
     "versions": [
       {
+        "version": "2.5.0.3",
+        "changelog": "## Changelog\n### Features\n- Switch between alternate versions of an item (e.g. 4K and 1080p) directly inside the preview\n- Play button for collapsed list items\n- List other video files inside a standalone movie's folder (can be toggled on in the plugin settings)\n### Fixes\n- The preview button will now appear for episodes that start with a pre-roll intro (e.g. from the Local Intros plugin)\n- Jellyfin pages will now load faster, the plugin script is smaller, no longer blocks page loading and is cached by the browser\n- Long group names will now be truncated, the full name is shown on hover\n- List items without an index number will no longer show a gap in front of their title\n- Playback progress will no longer be applied to the wrong item right after switching to another item\n### Maintenance\n- Removed the Jellyfin SDK type/build dependency\n- Bumped frontend build dependencies to their latest versions",
+        "targetAbi": "12.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.5.0/InPlayerEpisodePreview_2.5.0.3-12.0.zip",
+        "checksum": "8d9c65b62849b8c58404ac82947c89a4",
+        "timestamp": "2026-10-23T12:30:30Z"
+      },
+      {
+        "version": "2.5.0.2",
+        "changelog": "## Changelog\n### Features\n- Switch between alternate versions of an item (e.g. 4K and 1080p) directly inside the preview\n- Play button for collapsed list items\n- List other video files inside a standalone movie's folder (can be toggled on in the plugin settings)\n### Fixes\n- The preview button will now appear for episodes that start with a pre-roll intro (e.g. from the Local Intros plugin)\n- Jellyfin pages will now load faster, the plugin script is smaller, no longer blocks page loading and is cached by the browser\n- Long group names will now be truncated, the full name is shown on hover\n- List items without an index number will no longer show a gap in front of their title\n- Playback progress will no longer be applied to the wrong item right after switching to another item\n### Maintenance\n- Removed the Jellyfin SDK type/build dependency\n- Bumped frontend build dependencies to their latest versions",
+        "targetAbi": "10.11.0",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.5.0/InPlayerEpisodePreview_2.5.0.2-10.11.0.zip",
+        "checksum": "779b6d0415a8cef3f5cd88dadd0ce214",
+        "timestamp": "2026-10-23T12:30:30Z"
+      },
+      {
+        "version": "2.5.0.1",
+        "changelog": "## Changelog\n### Features\n- Switch between alternate versions of an item (e.g. 4K and 1080p) directly inside the preview\n- Play button for collapsed list items\n- List other video files inside a standalone movie's folder (can be toggled on in the plugin settings)\n### Fixes\n- The preview button will now appear for episodes that start with a pre-roll intro (e.g. from the Local Intros plugin)\n- Jellyfin pages will now load faster, the plugin script is smaller, no longer blocks page loading and is cached by the browser\n- Long group names will now be truncated, the full name is shown on hover\n- List items without an index number will no longer show a gap in front of their title\n- Playback progress will no longer be applied to the wrong item right after switching to another item\n### Maintenance\n- Removed the Jellyfin SDK type/build dependency\n- Bumped frontend build dependencies to their latest versions",
+        "targetAbi": "10.10.7",
+        "sourceUrl": "https://github.com/Namo2/InPlayerEpisodePreview/releases/download/v2.5.0/InPlayerEpisodePreview_2.5.0.1-10.10.7.zip",
+        "checksum": "953d341fe0213b8319017b957bd3eb29",
+        "timestamp": "2026-10-23T12:30:30Z"
+      },
+      {
         "version": "2.4.0.3",
         "changelog": "## Changelog\n### Features\n- Include Videos with multiple parts (can be toggled in the plugin settings)\n- Auto close the preview popup when starting a new episode (can be toggled in the plugin settings)\n- Switch the display mode for the season summary by clicking on the label\n### Fixes\n- Episode playstate will not be reset anymore on a rewatch\n- Spoiler blur will now be updated immediately when triggering the playstate button inside the preview popup\n- Video progress bar and season summary will now be live updated\n- Season summary will now be displayed at the correct position during season selection\n- Empty descriptions will now be shown empty instead of \"loading...\"",
         "targetAbi": "12.0",
